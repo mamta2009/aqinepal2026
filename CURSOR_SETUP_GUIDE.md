@@ -1,74 +1,81 @@
 # 🎯 COMPLETE PACKAGE GUIDE - Use in Cursor Code
 
-You now have `early-warning-system.zip` with everything ready to go.
+You can work from a **git clone** (recommended) or from an **`early-warning-system.zip`** extract. Both contain the same application tree under **`early-warning-system/`**.
 
-**Technical truth (API resolver, env vars, provenance/A2A, notifications):** keep [`early-warning-system/docs/IMPLEMENTATION_SNAPSHOT.md`](early-warning-system/docs/IMPLEMENTATION_SNAPSHOT.md) updated when wiring integrations.
+**Public repository:** [https://github.com/mamta2009/aqinepal2026](https://github.com/mamta2009/aqinepal2026)  
+**Technical truth (API resolver, env vars, provenance/A2A, notifications, admin APIs):** [`early-warning-system/docs/IMPLEMENTATION_SNAPSHOT.md`](early-warning-system/docs/IMPLEMENTATION_SNAPSHOT.md) — update it when wiring integrations.
 
 ---
 
-## 📦 What's Inside the ZIP
+## 📦 What's in `early-warning-system/`
 
 ```
 early-warning-system/
 ├── backend/
-│   ├── main.py                 ← FastAPI application (READY TO USE)
-│   ├── cities_config.py        ← CITIES_CONFIG (8 demo municipalities; AQ + registration)
-│   ├── notification_auth.py    ← Optional NOTIFICATION_API_KEY + Twilio webhook signature
-│   ├── notifications_api.py ← Registration, broadcast, evaluate, Twilio webhooks, analytics
-│   ├── twilio_notify.py       ← SMS / WhatsApp via Twilio (sandbox + production From)
-│   ├── db_state.py            ← Shared MongoDB handle for notification collections
-│   ├── requirements.txt       ← Python dependencies (install from this directory)
-│   └── .env.example           ← Template; copy to .env (see Setup Environment)
+│   ├── main.py                 ← FastAPI app; mounts /frontend, landing pages, /documentation, /admin/dashboard
+│   ├── admin_panel.py          ← Operator JSON APIs under /api/admin/*
+│   ├── cities_config.py        ← CITIES_CONFIG (demo municipalities; AQ + registration)
+│   ├── notification_auth.py    ← NOTIFICATION_API_KEY + Twilio webhook signature helpers
+│   ├── notifications_api.py    ← Registration, broadcast, evaluate, webhooks, analytics
+│   ├── twilio_notify.py        ← SMS / WhatsApp via Twilio
+│   ├── db_state.py             ← Shared MongoDB handle
+│   ├── requirements.txt
+│   └── .env.example            ← Primary template; copy to backend/.env
 ├── landing/
-│   └── registration_portal.html ← Optional: health-worker signup UI (/registration)
+│   ├── landing.html            ← GET /  (marketing landing)
+│   ├── documentation.html       ← GET /documentation (diagrams hub; not full docs/ tree)
+│   ├── registration_portal.html ← GET /registration
+│   ├── admin_dashboard.html     ← GET /admin/dashboard (operator console; API key + PIN)
+│   └── assets/
 ├── frontend/
-│   └── index.html              ← Dashboard (READY TO USE)
+│   └── index.html              ← Dashboard at /frontend/index.html
 ├── config/
-│   └── .env.example            ← Environment setup
-├── README.md                   ← Quick start guide
-├── .gitignore                  ← Git ignore rules
-└── docs/                       ← (Documentation folder)
+│   └── .env.example            ← Optional second file; fills only unset vars after backend/.env
+├── docs/
+│   ├── IMPLEMENTATION_SNAPSHOT.md
+│   ├── tech/                   ← Diagrams surfaced on /documentation
+│   └── blockchain-ai/
+├── docs-private/               ← Internal drafts; still in git — not mounted as browse-all docs
+├── README.md
+└── .gitignore
 ```
 
 ---
 
 ## 🚀 OPEN IN CURSOR (2 minutes)
 
-### Step 1: Extract ZIP
+### Step 1a: Clone from GitHub (recommended)
 ```bash
-# On Mac/Linux
+git clone https://github.com/mamta2009/aqinepal2026.git
+cd aqinepal2026/early-warning-system   # or open repo root and cd into early-warning-system/
+```
+
+### Step 1b: Or extract ZIP
+```bash
 unzip early-warning-system.zip
 cd early-warning-system
-
-# On Windows
-# Double-click the ZIP file to extract
-# Open the folder
 ```
 
 ### Step 2: Open in Cursor
 ```bash
-# Option A: From command line
 cursor .
-
-# Option B: In Cursor
-# File → Open Folder → Select early-warning-system
+# File → Open Folder → select the folder that contains backend/ and landing/
 ```
 
-### Step 3: Cursor sees:
+### Step 3: Cursor sees (typical)
 ```
-📁 early-warning-system (at root)
+📁 early-warning-system
   📁 backend
-    📄 main.py              ← Open this file
-    📄 notifications_api.py  ← Alerts / contacts / webhooks
-    📄 requirements.txt
+    📄 main.py, admin_panel.py, notifications_api.py …
+    📄 requirements.txt, .env.example
   📁 landing
-    📄 registration_portal.html  ← GET /registration
+    📄 landing.html, documentation.html, registration_portal.html, admin_dashboard.html
   📁 frontend
-    📄 index.html          ← Open this file
+    📄 index.html
   📁 config
-    📄 .env.example        ← Copy to .env
-  📄 README.md             ← Read this first
-  📄 .gitignore
+    📄 .env.example
+  📁 docs …
+  📄 README.md
 ```
 
 ---
@@ -118,25 +125,33 @@ cp .env.example .env
 - **`NOTIFICATION_API_KEY`** — if set, admin notification routes require **`Authorization: Bearer <key>`** or **`X-API-Key`**. Public: register, verify, webhook POSTs, `GET /registration`, WhatsApp sandbox info.
 - **AQ evaluate / automation** — **`ALERT_EVAL_COOLDOWN_MINUTES`** (default ~60; Mongo-backed dedupe per city for **`POST /api/alerts/evaluate`**). **Daily surge** — **`DAILY_REPORT_NOTIFY_ENABLED`**, **`DAILY_SPIKE_CASE_MULTIPLIER`** (default 1.5), **`DAILY_SPIKE_MIN_PRIOR_REPORTS`** (minimum prior rows for a baseline average).
 
-Quick URLs (same origin as API): **`http://localhost:8000/frontend/index.html`** (dashboard → **Register for alerts** → **`/registration`**) and **`http://localhost:8000/registration`** (form → **`POST /api/contacts/register`**). See **Notifications** section below for routes.
+Quick URLs (same origin as API): **`http://127.0.0.1:8000/frontend/index.html`**, **`http://127.0.0.1:8000/registration`** (→ **`POST /api/contacts/register`**), **`http://127.0.0.1:8000/documentation`**, **`http://127.0.0.1:8000/admin/dashboard`**. See **Notifications** below for API routes.
 
 ### 4. Run Backend
 ```bash
 cd ../backend
 source .venv/bin/activate   # if not already
-python main.py
 
-# Or with auto-reload:
-python -m uvicorn main:app --reload
+# Recommended (explicit host; avoids blank page if you paste 0.0.0.0 into the browser)
+python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+
+# Or: python main.py  (if your tree still wires this to uvicorn)
 ```
 
-The server serves both the API and static files: open the dashboard at **`http://localhost:8000/frontend/index.html`** so the UI and API share the same origin (recommended). Opening `frontend/index.html` as a `file://` URL still falls back to `http://localhost:8000` for API calls.
+The server serves the API and static mounts. Use **`http://127.0.0.1:8000`** (or **`http://localhost:8000`**) in the browser — **`http://0.0.0.0:8000` often shows a blank page.**
 
-### 5. Open Dashboard
-```
-Preferred (same origin): http://localhost:8000/frontend/index.html
-Alternative: open frontend/index.html from disk (API still targets localhost:8000)
-```
+### 5. Open the app (same origin)
+| What | URL |
+|------|-----|
+| Marketing landing | `http://127.0.0.1:8000/` |
+| Documentation hub | `http://127.0.0.1:8000/documentation` |
+| Registration | `http://127.0.0.1:8000/registration` |
+| Data dashboard | `http://127.0.0.1:8000/frontend/index.html` |
+| Operator admin | `http://127.0.0.1:8000/admin/dashboard` (needs **`NOTIFICATION_API_KEY`** + PIN; see **`docs/IMPLEMENTATION_SNAPSHOT.md`** → *Operator admin*) |
+| OpenAPI | `http://127.0.0.1:8000/docs` |
+| Route map | `http://127.0.0.1:8000/api/system-discovery` |
+
+Opening `frontend/index.html` as `file://` may still call the API if the dashboard falls back to `localhost:8000` — prefer URLs above.
 
 ---
 
@@ -154,8 +169,8 @@ Alternative: open frontend/index.html from disk (API still targets localhost:800
 ✅ notifications_api router — registration, broadcast, analytics, Twilio webhooks (see below)
 
 # Run:
-python main.py
-# → http://localhost:8000  (API + /frontend)
+python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+# → http://127.0.0.1:8000  (API + /frontend + landing + /documentation + /admin/dashboard)
 ```
 
 ### Notifications stack (`notifications_api.py`, `twilio_notify.py`, `db_state.py`)
@@ -311,44 +326,33 @@ You should see:
 
 ## ✅ SUCCESS CHECKLIST
 
-- [ ] ZIP extracted
+- [ ] Repo cloned **or** ZIP extracted (`early-warning-system/` as app root)
 - [ ] Opened in Cursor
-- [ ] Backend dependencies installed
-- [ ] main.py running (no errors)
-- [ ] API endpoints responding
-- [ ] Dashboard loading
-- [ ] City selector working
-- [ ] Data showing in charts
-- [ ] (Optional) MongoDB running and `MONGODB_URL` set — `notification_registry: true` on `/api/health`
-- [ ] (Optional) Twilio/Resend keys set if testing SMS, WhatsApp, or email flows
+- [ ] Backend venv + `pip install -r requirements.txt`
+- [ ] `uvicorn` running (no startup errors), browser uses **`127.0.0.1:8000`** (not **`0.0.0.0`**)
+- [ ] API endpoints responding (`/api/health`, etc.)
+- [ ] **`http://127.0.0.1:8000/frontend/index.html`** — dashboard loading
+- [ ] Landing **`/`** or registration **`/registration`** if you test enrolment
+- [ ] City selector working; charts show weekly cases
+- [ ] (Optional) MongoDB + **`MONGODB_URL`** → `notification_registry: true` on **`/api/health`**
+- [ ] (Optional) **`http://127.0.0.1:8000/documentation`** — diagram hub  
+- [ ] (Optional) **`http://127.0.0.1:8000/admin/dashboard`** — **`NOTIFICATION_API_KEY`** + PIN (see **`docs/IMPLEMENTATION_SNAPSHOT.md`**)
+- [ ] (Optional) Twilio / Resend keys for SMS, WhatsApp, or email flows
 
 ---
 
 ## 🎯 NEXT STEPS IN CURSOR
 
 ### Option 1: Deploy to Render (30 minutes)
+The application source already lives at **[github.com/mamta2009/aqinepal2026](https://github.com/mamta2009/aqinepal2026)**. For a fresh machine: clone, set env on the host, deploy `early-warning-system/backend` with `uvicorn` (see **`render.yaml`** in the repo).
+
 ```bash
-# In Cursor Terminal
-
-# 1. Initialize git
-git init
-git add .
-git commit -m "Initial commit"
-
-# 2. Create GitHub repo
-# Go to github.com, create repo
-# Add remote
-
-git remote add origin https://github.com/username/early-warning-system
-git branch -M main
-git push -u origin main
-
-# 3. Connect to Render
-# Go to render.com
-# New Web Service
-# Connect GitHub repo
-# Deploy!
+git clone https://github.com/mamta2009/aqinepal2026.git
+cd aqinepal2026
+# Configure Render (or another host) to run from early-warning-system with your .env secrets
 ```
+
+Fork or create a **private** repo copy if you must not publish `docs-private/` or other materials — then point Render at that remote instead.
 
 ### Option 2: Modify & Enhance (1-2 hours)
 ```
@@ -434,8 +438,8 @@ python -m uvicorn main:app --reload --port 8001
 
 ### Issue: "CORS error in dashboard"
 ```
-Prefer http://localhost:8000/frontend/index.html (same origin = no CORS for API)
-Opening from file:// uses http://localhost:8000 for API; ensure CORS middleware is on (it is)
+Prefer http://127.0.0.1:8000/frontend/index.html (same origin = no CORS for API)
+Opening from file:// may call http://localhost:8000 for API; ensure the backend is up and CORS middleware is on (it is)
 ```
 
 ### Issue: "No data showing in charts"
@@ -479,17 +483,16 @@ For production, use an approved WhatsApp sender and review Twilio/template requi
 
 ## 🚀 YOU'RE READY!
 
-Download the ZIP → Extract → Open in Cursor → Run → See it work
+**Clone** [aqinepal2026](https://github.com/mamta2009/aqinepal2026) (or extract the ZIP) → Open `early-warning-system/` in Cursor → install deps → Run `uvicorn` → Open the URLs in the table above.
 
-Everything is pre-built. You just need to:
-1. Extract
+1. Clone or extract  
 2. Open in Cursor  
-3. Run `python main.py`
-4. Open dashboard in browser
-5. Done!
+3. `pip install -r backend/requirements.txt` (from a venv in `backend/`)  
+4. `python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000` from `backend/`  
+5. Open **`http://127.0.0.1:8000/`** or the dashboard/documentation links  
 
 From there, you can:
-- Deploy to Render (automatic)
+- Deploy via Render (see **`early-warning-system/render.yaml`**) or another **`uvicorn` host — point it at **`github.com/mamta2009/aqinepal2026`**
 - Modify with Cursor's AI
 - Add real data when ready
 - Show UNICEF a working system
@@ -499,20 +502,23 @@ From there, you can:
 ## 📁 FILE LOCATIONS
 
 ```
-📥 Download: early-warning-system.zip (16KB)
-📂 Extract: early-warning-system/ folder
-🎯 Open: In Cursor as a workspace
-▶️ Run: python backend/main.py
-🌐 View: http://localhost:8000/frontend/index.html  
-Register UI: http://localhost:8000/registration (when `landing/registration_portal.html` is present)  
-📤 Deploy: git push → Render auto-deploys
+📥 Source: git clone https://github.com/mamta2009/aqinepal2026.git (or early-warning-system.zip)
+📂 App root: aqinepal2026/early-warning-system/ (or unzip folder)
+🎯 Open: Cursor → that folder (contains backend/, landing/, frontend/)
+▶️ Run: cd backend && source .venv/bin/activate && python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+🌐 Landing:    http://127.0.0.1:8000/
+📖 Docs hub:    http://127.0.0.1:8000/documentation
+📝 Register:   http://127.0.0.1:8000/registration
+📊 Dashboard:  http://127.0.0.1:8000/frontend/index.html
+🔧 Admin:      http://127.0.0.1:8000/admin/dashboard
+📤 Deploy:      Render (see early-warning-system/render.yaml) or any uvicorn-capable host
 ```
 
 ---
 
 ## ⏱️ TIMELINE
 
-- **Right now**: Extract and open in Cursor (2 min)
+- **Right now**: Clone or unzip; open **`early-warning-system/`** in Cursor (~2 min)
 - **Next 5 min**: Run backend, test API
 - **Next 5 min**: Open dashboard, verify it works
 - **Next 30 min**: (Optional) Deploy to Render
@@ -524,11 +530,11 @@ Register UI: http://localhost:8000/registration (when `landing/registration_port
 
 ## FINAL CHECKLIST
 
-- ✅ ZIP downloaded: early-warning-system.zip
-- ✅ Everything inside: backend, frontend, config
-- ✅ Ready to open: In Cursor or any editor
-- ✅ Ready to run: `python main.py`
-- ✅ Ready to deploy: Push to GitHub → Render auto-deploys
-- ✅ Ready to show: Working system today
+- ✅ Repo cloned or ZIP extracted (`early-warning-system/` visible)
+- ✅ `backend/.venv` + `pip install -r requirements.txt`
+- ✅ `backend/.env` from `.env.example` (never commit `.env`)
+- ✅ `uvicorn` running on `127.0.0.1:8000`
+- ✅ Landing / documentation / registration / dashboard reachable in browser
+- ✅ (Optional) `NOTIFICATION_API_KEY` + MongoDB → `/admin/dashboard` + registry features
 
-**You're all set. Extract the ZIP and let's go!** 🚀
+**You're all set.** 🚀

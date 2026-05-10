@@ -1,340 +1,128 @@
-# 🎉 FINAL PACKAGE SUMMARY
+# 📦 Nepal AQI early-warning — package summary
 
-## ✅ You Now Have Everything
+## ✅ What you have
 
-### 📥 ZIP Package: `early-warning-system.zip` (16 KB)
+### Source code (GitHub — recommended)
 
-Contains:
-```
-✅ backend/main.py              (Complete FastAPI with all endpoints)
-✅ frontend/index.html          (Production dashboard v3)
-✅ config/.env.example          (Environment setup)
-✅ requirements.txt             (Python dependencies)
-✅ README.md                    (Quick start guide)
-✅ .gitignore                   (Git configuration)
+**Repository:** [https://github.com/mamta2009/aqinepal2026](https://github.com/mamta2009/aqinepal2026)
+
+```bash
+git clone https://github.com/mamta2009/aqinepal2026.git
+cd aqinepal2026/early-warning-system
 ```
 
-### 📚 Documentation in /outputs:
-```
-✅ CURSOR_SETUP_GUIDE.md        (How to use in Cursor)
-✅ DEPLOY_IN_ONE_HOUR.md        (Implementation walkthrough)
-✅ REALISTIC_APPROACH_SYNTHETIC_DATA.md (Health data strategy)
-✅ 50+ other guides              (Complete documentation)
-```
+Documentation for behaviour and APIs: **[`early-warning-system/docs/IMPLEMENTATION_SNAPSHOT.md`](early-warning-system/docs/IMPLEMENTATION_SNAPSHOT.md)**.  
+Hands-on Cursor walkthrough (same URLs and layout): **[`CURSOR_SETUP_GUIDE.md`](CURSOR_SETUP_GUIDE.md)** (repo root).
+
+### Optional ZIP delivery
+
+An **`early-warning-system.zip`** (if someone shared one) mirrors the **`early-warning-system/`** folder: backend, **`landing/`** (marketing, **`/documentation`**, **`/registration`**, **`/admin/dashboard`**), **`frontend/`**, **`config/`**, **`docs/`**.
 
 ---
 
-## 🚀 GETTING STARTED (3 STEPS)
+## 🚀 Getting started (~10 minutes)
 
-### Step 1: Extract ZIP
 ```bash
-unzip early-warning-system.zip
-cd early-warning-system
-```
-
-### Step 2: Open in Cursor
-```bash
-cursor .
-# OR: File → Open Folder → Select early-warning-system
-```
-
-### Step 3: Run
-```bash
-cd backend
+git clone https://github.com/mamta2009/aqinepal2026.git
+cd aqinepal2026/early-warning-system/backend
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-python main.py
+cp .env.example .env
+# Edit .env — Mongo keys, AQ keys, NOTIFICATION_API_KEY, etc.
+
+python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-That's it. System is live at `http://localhost:8000`
+Use **`http://127.0.0.1:8000`** in the browser (avoid **`http://0.0.0.0:8000`** — often blank).
+
+| Page | URL |
+|------|-----|
+| Marketing landing | `http://127.0.0.1:8000/` |
+| Documentation hub | `http://127.0.0.1:8000/documentation` |
+| Registration | `http://127.0.0.1:8000/registration` |
+| Dashboard | `http://127.0.0.1:8000/frontend/index.html` |
+| Operator admin | `http://127.0.0.1:8000/admin/dashboard` |
+| OpenAPI | `http://127.0.0.1:8000/docs` |
 
 ---
 
-## 📊 What You Get
+## 📚 Documentation index (in-repo)
 
-### Immediately Working:
-```
-✅ FastAPI backend with all endpoints
-✅ Realistic health data (WHO-pattern based)
-✅ Production dashboard with all features
-✅ Live air-quality resolver (WeatherAPI.com direct → WAQI → RapidAPI) + supplementary OpenWeather routes
-✅ Response `provenance` for agents (`deployment_role`, confidence tier)
-✅ Geographic mode selector (Regional/National)
-✅ 8 Bagmati Province cities configured
-✅ AI forecast integration ready
-✅ Blockchain structure in place
-✅ Ready to add real MongoDB connection
-```
+| File | Purpose |
+|------|---------|
+| [`README.md`](README.md) | Repo overview + pointers into `early-warning-system/` |
+| [`early-warning-system/README.md`](early-warning-system/README.md) | App quick start, structure, URLs |
+| [`early-warning-system/docs/IMPLEMENTATION_SNAPSHOT.md`](early-warning-system/docs/IMPLEMENTATION_SNAPSHOT.md) | Canonical APIs, env, Mongo, AQ resolver, **`/api/admin/*`** |
+| [`CURSOR_SETUP_GUIDE.md`](CURSOR_SETUP_GUIDE.md) | Cursor-centric setup and troubleshooting |
+| [`early-warning-system/docs/blockchain-ai/`](early-warning-system/docs/blockchain-ai/) | Optional Polygon on-chain logging |
 
-### Can Add Anytime:
-```
-⏳ Real DHIS2 case surveillance (batch ETL remains project-specific beyond /api/dhis2/system-check)
-⏳ Blockchain on-chain logging (optional gas; off by default — see docs/blockchain-ai/)
-⏳ Further AI validation on partner data
-⏳ SMS alerts (Twilio stubs in .env)
-📄 Resolver order & env reference: `early-warning-system/docs/IMPLEMENTATION_SNAPSHOT.md`
-```
+Older “`/outputs`” or duplicate guides elsewhere may exist from packaging history; **`IMPLEMENTATION_SNAPSHOT.md`** wins when wording conflicts with the running code.
 
 ---
 
-## 🎯 TIMELINE
+## ✅ What runs out of the box
 
-| Time | Action | Status |
-|------|--------|--------|
-| **Now** | Extract ZIP, open in Cursor | ✅ Ready |
-| **5 min** | Run backend, test endpoints | ✅ Ready |
-| **10 min** | Open dashboard, verify working | ✅ Ready |
-| **1 hour** | Deploy to Render (GitHub → Render) | ✅ Ready |
-| **Today** | Working system with realistic data | ✅ Ready |
-| **This week** | Add real DHIS2 health data | ⏳ Next step |
-| **Next week** | Show UNICEF complete system | 🎯 Goal |
-
----
-
-## 💡 WHAT'S REALISTIC DATA?
-
-The system comes with a **health data generator** that creates realistic respiratory cases based on:
-
-```
-✅ WHO epidemiological patterns for Nepal
-✅ Seasonal variations (winter high, summer low)
-✅ Weekly patterns (lower on weekends)
-✅ Population-adjusted case rates
-✅ Age group distributions
-✅ Outcome percentages (recovered, severe, deceased)
-
-This is NOT random. It's scientifically realistic.
-Perfect for proving the SYSTEM works.
-```
-
-**When you get real DHIS2 data, swap it in seamlessly.**
+- FastAPI backend, static **`/frontend`**, **`landing/`** pages, **`GET /documentation`**, **`GET /admin/dashboard`**
+- Synthetic weekly health patterns (**`health_data_generator.py`**) unless you integrate DHIS2 or other feeds
+- Air-quality resolver (**WeatherAPI → WAQI → Rapid**, per snapshot) plus supplementary weather routes where keys exist
+- **`provenance`** / A2A-style hints on responses when integrations return data
+- Regional/national demo mode flags in payloads
+- Optional MongoDB enrollees, logs, broadcasts when **`MONGODB_URL`** (or **`DATABASE_URL`**) is set
+- Optional Twilio / Resend when configured; **`NOTIFICATION_API_KEY`** protects operator notification JSON routes (and admin JSON under **`/api/admin/*`**)
+- Blockchain helpers and optional gas-spend on Polygon — **off by default** (`docs/blockchain-ai/`)
 
 ---
 
-## 🔗 IN CURSOR, YOU CAN:
-
-### 1. Edit Files Directly
-```
-Click on main.py → Edit with AI
-Ask: "Add MongoDB connection"
-Ask: "Add blockchain verification"
-Ask: "Improve dashboard styling"
-```
-
-### 2. Run Terminal Commands
-```
-python main.py
-curl http://localhost:8000/api/health
-```
-
-### 3. Create New Files
-```
-Ask AI to create: blockchain_integration.py
-Ask AI to create: ai_models.py
-Ask AI to create: health_data_generator.py
-```
-
-### 4. Deploy to Render
-```
-git init
-git add .
-git commit -m "Initial"
-git push origin main
-# Render auto-deploys!
-```
-
----
-
-## 📋 FILE CHECKLIST
-
-In your ZIP you have:
+## 📋 Repository layout (app tree)
 
 ```
 early-warning-system/
-├─ backend/
-│  ├─ main.py ..................... ✅ Copy-paste ready
-│  └─ requirements.txt ............. ✅ pip install ready
-├─ frontend/
-│  └─ index.html .................. ✅ Open-in-browser ready
-├─ config/
-│  └─ .env.example ................. ✅ Optional setup
-├─ README.md ....................... ✅ Quick start included
-├─ .gitignore ...................... ✅ Git ready
-├─ docs/
-│  ├─ IMPLEMENTATION_SNAPSHOT.md ..... ✅ AQ/weather resolver, env, provenance / A2A
-│  └─ … diagrams + blockchain-ai
+├── backend/           ← main.py, admin_panel.py, notifications_api.py, …
+├── landing/           ← landing.html, documentation.html, registration_portal.html, admin_dashboard.html
+├── frontend/index.html
+├── config/.env.example
+├── docs/
+├── docs-private/       ← Internal drafts — still in git; see README there
+├── render.yaml
+└── README.md
 ```
 
 ---
 
-## ⚡ 10-MINUTE QUICK START
+## ⚡ Smoke test (quick)
 
 ```bash
-# 1. Extract (1 min)
-unzip early-warning-system.zip
-cd early-warning-system
-
-# 2. Install (3 min)
-cd backend
-pip install -r requirements.txt
-
-# 3. Run (1 min)
-python main.py
-# Server at http://localhost:8000
-
-# 4. Test API (1 min)
-curl http://localhost:8000/api/health
-curl http://localhost:8000/api/cases/week/Kathmandu
-
-# 5. Open Dashboard (1 min)
-# In browser: http://localhost:8000/frontend/index.html
-
-# 6. Done! (2 min remaining)
-# System working with realistic health data
+curl http://127.0.0.1:8000/api/health
+curl http://127.0.0.1:8000/api/cases/week/Kathmandu
+curl "http://127.0.0.1:8000/api/air-quality/current?city=Kathmandu"
 ```
 
 ---
 
-## 🎬 NEXT STEPS
+## 📤 Deploy
 
-### Option A: Deploy Today (30 min)
-```
-1. git init
-2. Create GitHub repo
-3. git push
-4. Connect Render
-5. Live URL: https://your-app.onrender.com
-```
-
-### Option B: Enhance Today (2 hours)
-```
-1. Use Cursor AI to improve code
-2. Add MongoDB integration
-3. Add real API endpoints
-4. Improve styling
-5. Deploy
-```
-
-### Option C: Get Real Data Today (1 hour)
-```
-1. Call health ministry
-2. Get real DHIS2 data
-3. Update endpoint
-4. Replace synthetic data
-5. Dashboard shows REAL cases
-```
+1. Repo is already on GitHub: **mamta2009/aqinepal2026**. Fork or mirror to a **private** repo if you must exclude materials under **`docs-private/`** from publication.
+2. Connect **Render** (or another host): run **`uvicorn`** from **`early-warning-system/backend`** with production env vars. See **`early-warning-system/render.yaml`** as a starting blueprint.
+3. Hosting cost depends on provider and tiers — size the service to traffic and MongoDB separately.
 
 ---
 
-## 🏆 WHY THIS PACKAGE WINS
-
-### For You:
-```
-✅ Everything pre-built
-✅ Just extract and run
-✅ Cursor-ready code
-✅ Well-commented
-✅ Production-ready
-✅ No configuration hell
-```
-
-### For UNICEF:
-```
-✅ Working system
-✅ Realistic data
-✅ Clear architecture
-✅ Geographic strategy shown
-✅ Proven technology stack
-✅ Ready for scale
-```
-
-### For Health Workers:
-```
-✅ Beautiful dashboard
-✅ Easy to use
-✅ Real predictions
-✅ Mobile responsive
-✅ Works offline
-```
-
----
-
-## 📞 TROUBLESHOOTING QUICK FIXES
+## 🔧 Troubleshooting (short)
 
 | Problem | Fix |
 |---------|-----|
-| "Module not found" | `pip install -r requirements.txt` |
-| "Port 8000 in use" | `python -m uvicorn main:app --reload --port 8001` |
-| "Dashboard not loading" | Check API_BASE in index.html (line ~540) |
-| "No data showing" | Make sure backend is running |
-| "CORS error" | CORS is enabled, restart backend |
+| “Module not found” | Activate **`backend/.venv`**; `pip install -r backend/requirements.txt` |
+| Port **8000** in use | `python -m uvicorn main:app --reload --host 127.0.0.1 --port 8001` |
+| Blank browser page | Use **`127.0.0.1`** or **`localhost`**, not **`0.0.0.0`** |
+| CORS | Prefer **`http://127.0.0.1:8000/frontend/index.html`** (same origin as API) |
+| Admin JSON **401** / **403** | Set **`NOTIFICATION_API_KEY`** in **`backend/.env`**; send **`Authorization: Bearer …`** |
 
 ---
 
-## ✨ YOU HAVE EVERYTHING YOU NEED
+## 🎯 Realistic demo data vs production
 
-```
-✅ Complete code (backend + frontend)
-✅ Documentation (50+ guides)
-✅ Realistic data (health data generator)
-✅ Ready to deploy (git + Render compatible)
-✅ Cursor compatible (clean code)
-✅ Production ready (security + CORS + error handling)
-✅ Scalable architecture (regional + national modes)
-✅ Real-world ready (contacts + timeline)
-```
+Weekly case curves are **synthetic WHO-style patterns** suitable to prove dashboards and alerting — **not** a substitute for ministry surveillance until you swap the pipeline. See **`IMPLEMENTATION_SNAPSHOT.md`** for what is keyed vs heuristic.
 
 ---
 
-## 🎯 THE REAL DEAL
-
-This ZIP is not:
-```
-❌ Demo code
-❌ Sample project
-❌ Tutorial template
-❌ Toy implementation
-```
-
-This ZIP is:
-```
-✅ Production-grade code
-✅ UNICEF-ready system
-✅ Deployment-ready
-✅ Real respiratory health system
-✅ Open-source + scalable
-```
-
----
-
-## 🚀 FINAL INSTRUCTIONS
-
-1. **Download**: `early-warning-system.zip`
-2. **Extract**: `unzip early-warning-system.zip`
-3. **Open**: `cursor .`
-4. **Run**: `python backend/main.py`
-5. **View**: `http://localhost:8000/frontend/index.html`
-6. **Done!** System working
-7. **Next**: Deploy or add real data
-8. **Goal**: Show UNICEF and win funding
-
----
-
-## 💪 YOU'RE READY
-
-Everything is here. Everything works. Everything is ready.
-
-**Extract the ZIP. Open in Cursor. Run the code. See it work.**
-
-The rest is just deployment and data.
-
-**Go build something amazing.** 🚀
-
----
-
-**Package Created**: May 5, 2024  
-**Ready For**: Production  
-**Cost to Deploy**: $7/month (Render)  
-**Time to UNICEF**: 1 week  
-**Impact**: Lives saved through early warning  
-
-Good luck! 🙌
+**Last aligned with docs:** May 2026 (repository **aqinepal2026**, branch **main**). Update this file if the canonical snapshot or URLs change.

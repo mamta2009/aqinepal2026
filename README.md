@@ -23,7 +23,7 @@ pip install -r requirements.txt
 cp .env.example .env    # optionally also merge keys from ../config/.env.example
 # Edit .env (Mongo URL, notification keys, AQ keys as needed)
 
-python -m uvicorn main:app --reload
+python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Then open **http://127.0.0.1:8000/** (marketing landing), **http://127.0.0.1:8000/documentation**, **http://127.0.0.1:8000/registration**, and (with operator credentials configured) **http://127.0.0.1:8000/admin/dashboard**.
