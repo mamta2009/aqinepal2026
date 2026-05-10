@@ -4,7 +4,7 @@
 
 This guide shows you exactly how to add blockchain logging and AI predictions to your existing FastAPI backend.
 
-> **Nepal Early Warning repo alignment:** the running service’s **air quality, weather, provenance, and env** are documented in **[`../IMPLEMENTATION_SNAPSHOT.md`](../IMPLEMENTATION_SNAPSHOT.md)**. Sample route names in this guide may differ from [`main.py`](../../backend/main.py) (e.g. prefer `/api/air-quality/current`, `/api/models/predict/week/{city}`).
+> **Nepal Early Warning repo alignment:** [**`github.com/mamta2009/aqinepal2026`**](https://github.com/mamta2009/aqinepal2026). Live **air quality, weather, provenance, env, Mongo, notifications, and admin APIs** live in **[`../IMPLEMENTATION_SNAPSHOT.md`](../IMPLEMENTATION_SNAPSHOT.md)** — treat that file as authoritative. Sample `main.py` fragments in this guide are educational; routes may diverge from current [`main.py`](../../backend/main.py) (e.g. prefer `/api/air-quality/current`, `/api/models/predict/week/{city}`, `/api/admin/*`).
 
 ---
 

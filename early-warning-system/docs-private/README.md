@@ -1,7 +1,8 @@
 # Private / internal docs
 
-Files here are **not** exposed by the demo website. Only `docs/tech/` is served at `/documentation/media/tech/…`; the rest of `docs/` (including `blockchain-ai/` markdown and Python references) is not mounted for browsing.  
-Keep partner-restricted or draft strategy material in this folder.
+HTML text in this repository is served only where FastAPI mounts it: the **marketing** pages, **`/registration`**, **`/documentation`** (diagrams + linked media), **`/frontend/index.html`**, and **`/admin/dashboard`**. Only `docs/tech/` is exposed under **`/documentation/media/tech/…`**; Markdown under `docs/blockchain-ai/` and this **`docs-private/`** tree is **not** browsable via those URLs—but **files still exist in the git checkout**, so anyone with repo access can read them. For partner-sensitive PDFs/strategy drafts, confirm whether the **`aqinepal2026`** visibility model is acceptable or keep copies outside the public repo.
+
+Keep partner-restricted or draft strategy material here *by convention* and reconcile wording with runnable behaviour before external use.
 
 - `UNICEF_REQUIREMENTS_STRATEGY.md` — internal messaging checklist; cross-check runnable claims against **`../docs/IMPLEMENTATION_SNAPSHOT.md`**. Exported HTML mirrors this file (run script below).
 - `UNICEF_reg_mamta.md` — internal registration / submission workbook. Addendum bullets point to **`IMPLEMENTATION_SNAPSHOT.md`**.

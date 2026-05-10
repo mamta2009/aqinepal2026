@@ -2,7 +2,7 @@
 
 Concise technical truth for **`early-warning-system/`** backends, env, and public API behaviour. Prefer this over older marketing summaries when wording registrations or integrations.
 
-**Last aligned with codebase:** backend `main.py`, `cities_config.py`, `notification_auth.py`, `external_integrations.py`, `aq_snapshot_sync.py`, `notifications_api.py`, `twilio_notify.py`, `frontend/index.html` (early 2026).
+**Last aligned with codebase:** backend `main.py`, `admin_panel.py`, `cities_config.py`, `notification_auth.py`, `external_integrations.py`, `aq_snapshot_sync.py`, `notifications_api.py`, `twilio_notify.py`, `landing/admin_dashboard.html`, `frontend/index.html` (early 2026).
 
 ---
 
@@ -114,13 +114,42 @@ Configured sources include: `weatherapi_com`, `waqi`, `rapidapi_weather_air_qual
 | DHIS2 | **`GET /api/dhis2/system-check`** |
 | Persistence | **`POST /api/health/cases/daily-report`** → MongoDB **`respiratory_daily_reports`** when **`MONGODB_URL`** / **`DATABASE_URL`** valid; optional **`DAILY_REPORT_NOTIFY_ENABLED`** surge messaging (see snapshot **Automation** row); persisted AQ + audit: **`GET /api/air-quality/snapshots`**, **`POST /api/air-quality/snapshots/refresh`**, **`POST /api/action-log`**, **`GET /api/action-log/{facility_id}`**, **`GET /api/data/export`** |
 | Notifications | **`POST /api/contacts/register`**, **`POST /api/contacts/verify`**; list / get / preferences; **`POST /api/notifications/send`**, **`POST /api/alerts/broadcast`**, **`POST /api/alerts/evaluate`**; webhooks; **`GET /api/analytics/*`** — see **Notifications & alerts** (optional **`NOTIFICATION_API_KEY`**) |
+| Operator admin | **`GET /admin/dashboard`** (HTML); **`POST /api/admin/console-unlock-pin`**; **`/api/admin/*`** JSON — see section **Operator admin** below (**`NOTIFICATION_API_KEY`** on JSON routes). |
 | Index | **`GET /api/system-discovery`** — canonical endpoint map (+ OpenAPI **`/docs`**) |
+
+---
+
+## Operator admin (`admin_panel.py`, `GET /admin/dashboard`)
+
+Browser UI: **`GET /admin/dashboard`** serves **`landing/admin_dashboard.html`** (enrollee table, system status including Mongo + integration flags, **24-hour** activity summary, recent **`action_logs`**, optional blockchain widgets). **`GET /documentation`** is surfaced on that page so non-engineering operators can open the diagrams/explanations hub.
+
+**PIN vs API key**
+
+- **`POST /api/admin/console-unlock-pin`** — validates operator PIN only for the dashboard UX shell. Env: **`ADMIN_CONSOLE_PIN`** or **`REGISTRATION_DIRECTORY_SECRET`**, otherwise the dev fallback documented in **`admin_panel.py`**. Incorrect PIN yields **401** with delay hardening.
+- All JSON routes in the table below use **`Depends(require_strict_notification_api_key)`**: callers must send **`Authorization: Bearer <NOTIFICATION_API_KEY>`** or **`X-API-Key: <NOTIFICATION_API_KEY>`**.
+
+The HTML console stores that API key in **`sessionStorage`** (per browser tab).
+
+| Route | Purpose |
+|-------|---------|
+| **`GET /api/admin/system-status`** | Mongo reachable + boolean “key present” hints for integrations. |
+| **`GET /api/admin/activity/summary`** | Approximate counters for roughly the past **24 hours** (pulse check for operators). |
+| **`GET /api/admin/activity/recent-action-logs`** | Latest facility / preparedness **`action_logs`** rows for review. |
+| **`GET /api/admin/registrants`** | Listed enrollees (filters/query per handler). |
+| **`POST /api/admin/registrants`** | Operator-side create (aligned with **`ContactRegistration`** persistence). |
+| **`PATCH /api/admin/registrants/{contact_id}`** | Update enrollee lifecycle fields as implemented in **`admin_panel.py`**. |
+| **`DELETE /api/admin/registrants/{contact_id}`** | Archive/delete semantics as implemented in **`admin_panel.py`**. |
+| **`PATCH /api/admin/contacts/{contact_id}/password`** | Set password for enrollee auth where configured. |
+| **`GET /api/admin/blockchain/overview`** | Polygon / on-chain logger readiness summary. |
+| **`PATCH /api/admin/blockchain/runtime-network`** | Temporary network switch until process restart (**set `.env` for durable production**). |
 
 ---
 
 ## Frontend dashboard
 
 **`frontend/index.html`**: header links to **`/registration`** and **`/documentation`**; **`GET /api/runtime-config`** for API base; **Regional/National** mode UI; AQ card and compare table use **`/api/air-quality/current`** (with **`provenance`** in status/compare when present); chart note states WeatherAPI-first messaging for headline readings.
+
+**`landing/admin_dashboard.html`**: operator console (tables, modals, documentation links); uses **`/api/admin/*`** routes above after unlock.
 
 ---
 

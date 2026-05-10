@@ -1,159 +1,145 @@
-# Early Warning System - Quick Start
+# Early warning system (Nepal AQI demo)
 
-## Setup (5 minutes)
+FastAPI backend, static **landing**, **registration**, **documentation hub**, dashboard UI, and **operator admin console**. Technical behaviour (env keys, AQ resolver order, MongoDB, notifications, provenance JSON) is maintained in **`docs/IMPLEMENTATION_SNAPSHOT.md`** — prefer that file over older marketing summaries when describing what the deployment actually does.
 
-### 1. Install Dependencies
-```bash
-cd backend
-pip install -r requirements.txt
-```
-
-### 2. Configure Environment
-```bash
-cd ../config
-cp .env.example .env
-# Edit .env with your settings
-```
-
-### 3. Run Backend
-```bash
-cd ../backend
-python -m uvicorn main:app --reload
-# Server runs at http://localhost:8000
-```
-
-### 4. Open the app
-```
-Landing page:  http://localhost:8000/
-Dashboard:     http://localhost:8000/frontend/index.html
-API discovery: http://localhost:8000/api/system-discovery
-API docs:      http://localhost:8000/docs
-
-Or open the dashboard directly: file:///path/to/early-warning-system/frontend/index.html
-```
-
-Canonical technical detail (**resolver order, env keys, provenance JSON, deployment labels**): see **[`docs/IMPLEMENTATION_SNAPSHOT.md`](docs/IMPLEMENTATION_SNAPSHOT.md)**.
+**Repository:** [github.com/mamta2009/aqinepal2026](https://github.com/mamta2009/aqinepal2026)
 
 ---
 
-## API Endpoints (Ready to Use)
+## Setup (about 10 minutes)
+
+### 1. Python dependencies
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### 2. Environment variables
+
+Templates:
+
+- **`backend/.env.example`** — primary template (Mongo, AQ keys, Twilio/Resend, admin keys)
+- **`config/.env.example`** — optional second file; merged after `backend/.env` for unset keys only
+
+```bash
+cd backend
+cp .env.example .env
+# Optionally copy additional keys from ../config/.env.example into backend/.env
+```
+
+**Do not commit `backend/.env`.** Git ignores `.env`; use `.env.example` for placeholders only.
+
+### 3. Run the API
+
+```bash
+cd backend
+python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Use **`127.0.0.1`** or **`localhost`** in the browser ([`main.py`](backend/main.py) warns that `http://0.0.0.0:8000` often appears blank).
+
+### 4. Main browser URLs
+
+| Page | URL | Notes |
+|------|-----|--------|
+| Marketing landing | `http://127.0.0.1:8000/` | [`landing/landing.html`](landing/landing.html) |
+| Documentation hub | `http://127.0.0.1:8000/documentation` | Diagrams + links; not full `docs/` tree |
+| Registration | `http://127.0.0.1:8000/registration` | Public enrollee flow |
+| Data dashboard UI | `http://127.0.0.1:8000/frontend/index.html` | AQ / cases / hooks to registration & docs |
+| Operator admin | `http://127.0.0.1:8000/admin/dashboard` | Requires **`NOTIFICATION_API_KEY`** per request; PIN gate reads **`ADMIN_CONSOLE_PIN`** (or `REGISTRATION_DIRECTORY_SECRET`; dev fallback documented in code) |
+
+- **Interactive API docs:** [`http://127.0.0.1:8000/docs`](http://127.0.0.1:8000/docs)
+- **Route map:** [`http://127.0.0.1:8000/api/system-discovery`](http://127.0.0.1:8000/api/system-discovery)
+
+Operator help copy on the dashboard points to **`/documentation`** for non-technical admins.
+
+---
+
+## Example API calls
 
 ### Air quality & weather
 
 ```bash
-# Headline AQ (WeatherAPI → WAQI → Rapid; see IMPLEMENTATION_SNAPSHOT.md)
-curl "http://localhost:8000/api/air-quality/current?city=Kathmandu"
+# Headline AQ (resolver order → IMPLEMENTATION_SNAPSHOT.md)
+curl "http://127.0.0.1:8000/api/air-quality/current?city=Kathmandu"
 
-# Current weather (WeatherAPI direct if key set; else Rapid)
-curl "http://localhost:8000/api/weather/current?city=Kathmandu"
+curl "http://127.0.0.1:8000/api/weather/current?city=Kathmandu"
 
-# OpenWeatherMap (supplementary; requires OPENWEATHER_API_KEY)
-curl "http://localhost:8000/api/weather/openweather/current?city=Kathmandu"
-curl "http://localhost:8000/api/weather/openweather/air-pollution?city=Kathmandu"
+curl "http://127.0.0.1:8000/api/weather/openweather/current?city=Kathmandu"
 ```
 
-Responses often include **`source`** and **`provenance`** ( **`deployment_role`**, confidence tier, A2A hints).
+Responses may include **`source`** and **`provenance`** (`deployment_role`, confidence tier, A2A hints).
 
-### Health Check
+### Core checks
+
 ```bash
-curl http://localhost:8000/api/health
+curl http://127.0.0.1:8000/api/health
+curl http://127.0.0.1:8000/api/cities
+curl http://127.0.0.1:8000/api/deployment-status
 ```
 
-### Get Cases for This Week
+### Synthetic health demos
+
 ```bash
-curl http://localhost:8000/api/cases/week/Kathmandu
+curl http://127.0.0.1:8000/api/cases/week/Kathmandu
+curl http://127.0.0.1:8000/api/cases/all-cities
 ```
 
-### Get All Cities
-```bash
-curl http://localhost:8000/api/cases/all-cities
-```
-
-### Get Deployment Status
-```bash
-curl http://localhost:8000/api/deployment-status
-```
+Weekly patterns come from **`health_data_generator.py`** unless you plug in DHIS2 or another source.
 
 ---
 
-## Dashboard Features
-
-- 📍 Geographic mode selector (Regional/National)
-- 🎯 City selection (8 Bagmati cities)
-- 📊 Real-time metrics
-- 🤖 AI forecasts
-- ⛓️ Blockchain integration
-- 📝 Action logging
-- ⚙️ Settings panel
-
----
-
-## Next Steps
-
-1. **Deploy to Render**
-   - Push to GitHub
-   - Connect Render
-   - Auto-deploys on push
-
-2. **Get Real Data**
-   - Call health ministry
-   - Integrate DHIS2
-   - Replace synthetic data
-
-3. **Show UNICEF**
-   - Deploy working system
-   - Demonstrate impact
-   - Submit for funding
-
----
-
-## Project Structure
+## Project structure
 
 ```
 early-warning-system/
 ├── backend/
-│   ├── main.py              (FastAPI application)
-│   └── requirements.txt      (Python dependencies)
+│   ├── main.py                 # FastAPI app, mounts landing + docs + admin page
+│   ├── admin_panel.py          # /api/admin/* operator JSON APIs
+│   ├── notifications_api.py    # registration, alerts, webhooks (see snapshot)
+│   ├── requirements.txt
+│   └── .env.example
 ├── frontend/
-│   └── index.html           (Dashboard)
+│   └── index.html              # Dashboard
 ├── config/
-│   └── .env.example         (Environment template)
+│   └── .env.example
 ├── docs/
-│   ├── IMPLEMENTATION_SNAPSHOT.md (canonical API/env/provenance truth)
-│   ├── tech/
-│   ├── blockchain-ai/
-│   └── ...
-├── docs-private/            (partner-only drafts; not web-mounted by default)
-├── landing/
-└── README.md                (This file)
+│   ├── IMPLEMENTATION_SNAPSHOT.md   # Canonical behaviour reference
+│   ├── tech/                        # Diagrams surfaced on /documentation
+│   └── blockchain-ai/               # On-chain logging notes + ZIP mirrors
+├── docs-private/               # Partner/internal drafts — verify claims vs snapshot
+├── landing/                    # landing.html, registration_portal.html, admin_dashboard.html, assets
+├── render.yaml                 # Render.com blueprint (optional)
+└── README.md                   # This file
 ```
 
 ---
 
-## Key Features
+## Highlights
 
-✅ **Open-Source** - MIT Licensed  
-✅ **Blockchain Verified** - Polygon integration  
-✅ **AI-Powered** - 78% forecast accuracy  
-✅ **Geographic Scalable** - Regional + national ready  
-✅ **Production Ready** - Deploy today  
-✅ **Cost Effective** - $7/month hosting  
+- **MongoDB-backed** enrollees and notification logs when `MONGODB_URL` / `DATABASE_URL` is set.
+- **Multi-channel alerts** via Twilio (SMS/WhatsApp) and Resend (email) when keys are configured.
+- **Blockchain hooks** optional (`POLYGON_*`); defaults keep on-chain spends off — see **`docs/blockchain-ai/README.md`**.
+- **Regional demo cities** driven by **`backend/cities_config.py`** (Bagmati-area + configured extensions).
+- **Deployment:** push to GitHub and connect **`render.yaml`** (or another host running `uvicorn`).
 
 ---
 
-## Contact & Support
+## Documentation index
 
-- GitHub: https://github.com/yourusername/early-warning-system
-- Documentation: See /docs folder
-- Issues: GitHub issues
-- Email: your.email@example.com
+| Document | Audience |
+|---------|----------|
+| [`docs/IMPLEMENTATION_SNAPSHOT.md`](docs/IMPLEMENTATION_SNAPSHOT.md) | Engineers / integrators — env, APIs, Mongo, AQ pipeline |
+| [`docs/blockchain-ai/README.md`](docs/blockchain-ai/README.md) | Turning on Polygon logging safely |
+| [`docs/blockchain-ai/INTEGRATION_GUIDE.md`](docs/blockchain-ai/INTEGRATION_GUIDE.md) | Historical step-by-step (sample code may differ from `main.py`; prefer snapshot routes) |
+| [`docs-private/README.md`](docs-private/README.md) | How internal UNICEF drafts relate to runnable truth |
+| [`landing/LANDING_PAGE_GUIDE.md`](landing/LANDING_PAGE_GUIDE.md) | Editing static pages |
 
 ---
 
 ## License
 
-MIT License - See LICENSE file
-
----
-
-Ready to save lives? Let's go! 🚀
+Specify a **`LICENSE`** file in this repository when you finalize distribution terms; until then assume **all rights reserved** unless otherwise stated elsewhere.

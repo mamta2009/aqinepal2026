@@ -2,6 +2,8 @@
 
 Contents from **`frontend/blockchain_AI.zip`** are mirrored here for review and versioning.
 
+**Upstream application repo:** [`github.com/mamta2009/aqinepal2026`](https://github.com/mamta2009/aqinepal2026)
+
 **API surface, AQ resolver, env keys, and `provenance` schema:** see **[`../IMPLEMENTATION_SNAPSHOT.md`](../IMPLEMENTATION_SNAPSHOT.md)** (root `docs/`).
 
 ## What runs in the server
