@@ -36,7 +36,7 @@ Open **`http://127.0.0.1:8000/`** (landing) or **`http://127.0.0.1:8000/frontend
 
 ```text
 `main.py` already mounts `/frontend`, serves `landing/landing.html` at `/`,
-and exposes `/documentation` when those files exist. No copy step required.
+and exposes `/guides` when those files exist. No copy step required.
 ```
 
 ### Option 3: Render deployment

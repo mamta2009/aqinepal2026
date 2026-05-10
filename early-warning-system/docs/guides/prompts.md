@@ -2,7 +2,7 @@
 
 These were the suggested prompts vs what the repo implements now.
 
-**Resolver order, env variables, and provenance fields:** see **`early-warning-system/docs/IMPLEMENTATION_SNAPSHOT.md`**.
+**Resolver order, env variables, and provenance fields:** see **`early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md`**.
 
 ### For `backend/main.py`
 

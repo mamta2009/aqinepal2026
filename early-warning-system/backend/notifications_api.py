@@ -2,7 +2,7 @@
 Registration, broadcast alerts, webhooks, and analytics (ported from notification_cursor.zip).
 Requires MongoDB and optional Twilio / Resend configuration.
 
-Architecture diagram (on-disk, also embedded under /documentation):
+Architecture diagram (on-disk; embedded on **`/guides`**):
 ``docs/tech/NOTIFICATION_FLOW_DIAGRAM.svg``
 """
 

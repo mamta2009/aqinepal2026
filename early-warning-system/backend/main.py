@@ -31,6 +31,7 @@ import aq_snapshot_sync
 import blockchain_integration
 import db_state
 import external_integrations
+import guide_documents
 from cities_config import CITIES_CONFIG
 from facility_auth import FacilityCaller, load_facility_caller
 from health_data_generator import HealthDataGenerator
@@ -79,6 +80,9 @@ def reload_onchain_tx_logger_global() -> dict[str, Any]:
         "onchain_logging_active": active,
         "effective_network": effective_polygon_network(),
     }
+
+
+def _public_deployment_mode_label() -> str:
     """Uppercase deployment mode from ``DEPLOYMENT_MODE`` (default REGIONAL)."""
     return (os.getenv("DEPLOYMENT_MODE") or "REGIONAL").strip().upper() or "REGIONAL"
 
@@ -1568,7 +1572,7 @@ async def submit_daily_report(
 
 _landing_root = os.path.normpath(os.path.join(_backend_root, "..", "landing"))
 _landing_html = os.path.join(_landing_root, "landing.html")
-_documentation_html = os.path.join(_landing_root, "documentation.html")
+_guides_hub_html = os.path.join(_landing_root, "guides.html")
 _admin_dashboard_html = os.path.join(_landing_root, "admin_dashboard.html")
 _intelladapt_logo_path = Path(_landing_root) / "assets" / "intelladapt-logo.png"
 _docs_root = os.path.normpath(os.path.join(_backend_root, "..", "docs"))
@@ -1582,7 +1586,9 @@ def _system_discovery_payload() -> dict:
         "status": "🟢 Running",
         "features": ["Open-Source MIT", "Blockchain Verified (Polygon)", "AI-Powered (78% accuracy)"],
         "landing": "/",
-        "documentation": "/documentation",
+        "guides": "/guides",
+        "guides_markdown_preview": "/guides/md/{filepath}",
+        "documentation_legacy_redirect": "/documentation",
         "dashboard": "/frontend/index.html",
         "docs": "/docs",
         "api_base": "/api",
@@ -1633,7 +1639,9 @@ def _system_discovery_payload() -> dict:
             "notifications_send": "POST /api/notifications/send",
             "twilio_test": "POST /api/notifications/twilio/test",
             "whatsapp_sandbox_info": "/api/notifications/whatsapp/sandbox-info",
-            "documentation_page": "/documentation",
+            "guides_hub": "/guides",
+            "guides_markdown": "/guides/md/…",
+            "documentation_page": "/guides",
         },
     }
 
@@ -1656,16 +1664,40 @@ async def landing_page():
     return JSONResponse(_system_discovery_payload())
 
 
-@app.get("/documentation", response_class=HTMLResponse)
-async def documentation_hub():
-    """Technical docs hub: public diagrams from docs/tech + landing/assets/diagrams; not full docs/."""
-    path = Path(_documentation_html)
+@app.get("/guides", response_class=HTMLResponse)
+async def guides_hub():
+    """Public guides hub: diagrams from docs/tech + markdown index under docs/guides (see /guides/md/…)."""
+    path = Path(_guides_hub_html)
     if path.is_file():
         try:
             return HTMLResponse(content=path.read_text(encoding="utf-8"))
         except OSError:
             logger.exception("Could not read %s — 404", path)
-    raise HTTPException(status_code=404, detail="documentation.html missing")
+    raise HTTPException(status_code=404, detail="guides.html missing")
+
+
+@app.get("/guides/md/{filepath:path}", response_class=HTMLResponse)
+async def guides_markdown_page(filepath: str):
+    """Render a *.md file from docs/guides/ as HTML."""
+    gp = guide_documents.safe_markdown_under(guide_documents.GUIDES_MARKDOWN_ROOT, filepath)
+    if gp is None:
+        raise HTTPException(status_code=404, detail="Guide markdown not found")
+    _title, page = guide_documents.render_markdown_page(gp)
+    return HTMLResponse(page)
+
+
+@app.get("/documentation")
+async def documentation_legacy_redirect():
+    """Old path; Guides hub moved to `/guides`."""
+    return RedirectResponse(url="/guides", status_code=307)
+
+
+@app.get("/documentation/media/tech/{path:path}")
+async def documentation_technology_media_redirect(path: str):
+    """Old media URL under /documentation; tech SVGs live at /guides/media/tech/…."""
+    if ".." in path:
+        raise HTTPException(status_code=400, detail="invalid path")
+    return RedirectResponse(url=f"/guides/media/tech/{path}", status_code=307)
 
 
 @app.get("/admin/dashboard", response_class=HTMLResponse)
@@ -1707,9 +1739,9 @@ if os.path.isdir(_landing_assets_dir):
 
 if os.path.isdir(_docs_technology_dir):
     app.mount(
-        "/documentation/media/tech",
+        "/guides/media/tech",
         StaticFiles(directory=_docs_technology_dir),
-        name="documentation_technology",
+        name="guides_technology_media",
     )
 
 _frontend_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "frontend"))

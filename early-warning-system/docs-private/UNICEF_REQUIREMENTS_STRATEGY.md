@@ -9,7 +9,7 @@ UNICEF wants solutions that are:
 
 This guide shows how to **realistically integrate all three** without adding unnecessary complexity.
 
-**Product implementation reference (fact-check before claims):** canonical technical snapshot in the repo — **`early-warning-system/docs/IMPLEMENTATION_SNAPSHOT.md`** (resolver order, env, `provenance`/`deployment_role`, deployment JSON).
+**Product implementation reference (fact-check before claims):** canonical technical snapshot in the repo — **`early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md`** (resolver order, env, `provenance`/`deployment_role`, deployment JSON).
 
 ---
 

@@ -11,12 +11,12 @@ git clone https://github.com/mamta2009/aqinepal2026.git
 cd aqinepal2026/early-warning-system
 ```
 
-Documentation for behaviour and APIs: **[`early-warning-system/docs/IMPLEMENTATION_SNAPSHOT.md`](early-warning-system/docs/IMPLEMENTATION_SNAPSHOT.md)**.  
-Hands-on Cursor walkthrough (same URLs and layout): **[`CURSOR_SETUP_GUIDE.md`](CURSOR_SETUP_GUIDE.md)** (repo root).
+Documentation for behaviour and APIs: **[`IMPLEMENTATION_SNAPSHOT.md`](IMPLEMENTATION_SNAPSHOT.md)** (this folder).  
+Hands-on Cursor walkthrough: **[`CURSOR_SETUP_GUIDE.md`](CURSOR_SETUP_GUIDE.md)** — same **`/guides`** URLs as the running site.
 
 ### Optional ZIP delivery
 
-An **`early-warning-system.zip`** (if someone shared one) mirrors the **`early-warning-system/`** folder: backend, **`landing/`** (marketing, **`/documentation`**, **`/registration`**, **`/admin/dashboard`**), **`frontend/`**, **`config/`**, **`docs/`**.
+An **`early-warning-system.zip`** (if someone shared one) mirrors the **`early-warning-system/`** folder: backend, **`landing/`** (marketing **`/guides`** via **`guides.html`**, **`/registration`**, **`/admin/dashboard`**), **`frontend/`**, **`config/`**, **`docs/`** (guides under **`docs/guides/`**).
 
 ---
 
@@ -38,7 +38,7 @@ Use **`http://127.0.0.1:8000`** in the browser (avoid **`http://0.0.0.0:8000`** 
 | Page | URL |
 |------|-----|
 | Marketing landing | `http://127.0.0.1:8000/` |
-| Documentation hub | `http://127.0.0.1:8000/documentation` |
+| Guides hub | `http://127.0.0.1:8000/guides` |
 | Registration | `http://127.0.0.1:8000/registration` |
 | Dashboard | `http://127.0.0.1:8000/frontend/index.html` |
 | Operator admin | `http://127.0.0.1:8000/admin/dashboard` |
@@ -50,11 +50,13 @@ Use **`http://127.0.0.1:8000`** in the browser (avoid **`http://0.0.0.0:8000`** 
 
 | File | Purpose |
 |------|---------|
-| [`README.md`](README.md) | Repo overview + pointers into `early-warning-system/` |
-| [`early-warning-system/README.md`](early-warning-system/README.md) | App quick start, structure, URLs |
-| [`early-warning-system/docs/IMPLEMENTATION_SNAPSHOT.md`](early-warning-system/docs/IMPLEMENTATION_SNAPSHOT.md) | Canonical APIs, env, Mongo, AQ resolver, **`/api/admin/*`** |
-| [`CURSOR_SETUP_GUIDE.md`](CURSOR_SETUP_GUIDE.md) | Cursor-centric setup and troubleshooting |
-| [`early-warning-system/docs/blockchain-ai/`](early-warning-system/docs/blockchain-ai/) | Optional Polygon on-chain logging |
+| [`README.md`](../../../README.md) | Repository root — points into `early-warning-system/` |
+| [`../../README.md`](../../README.md) | App **`early-warning-system/README.md`** stub (links here) |
+| [`IMPLEMENTATION_SNAPSHOT.md`](IMPLEMENTATION_SNAPSHOT.md) | Canonical APIs, env, Mongo, AQ resolver, **`/api/admin/*`** |
+| [`CURSOR_SETUP_GUIDE.md`](CURSOR_SETUP_GUIDE.md) | Cursor-centric setup |
+| [`README.md`](README.md) | **Guides index** — lists every **`docs/guides/*.md`** topic |
+| [`blockchain-ai/README.md`](blockchain-ai/README.md) | Polygon / on-chain Markdown (companion **`docs/blockchain-ai/*.py`** stubs) |
+| [`../blockchain-ai/README.md`](../blockchain-ai/README.md) | Short pointer from **`docs/blockchain-ai/`** into this folder |
 
 Older “`/outputs`” or duplicate guides elsewhere may exist from packaging history; **`IMPLEMENTATION_SNAPSHOT.md`** wins when wording conflicts with the running code.
 
@@ -62,7 +64,7 @@ Older “`/outputs`” or duplicate guides elsewhere may exist from packaging hi
 
 ## ✅ What runs out of the box
 
-- FastAPI backend, static **`/frontend`**, **`landing/`** pages, **`GET /documentation`**, **`GET /admin/dashboard`**
+- FastAPI backend, static **`/frontend`**, **`landing/`** pages, **`GET /guides`**, **`GET /admin/dashboard`**
 - Synthetic weekly health patterns (**`health_data_generator.py`**) unless you integrate DHIS2 or other feeds
 - Air-quality resolver (**WeatherAPI → WAQI → Rapid**, per snapshot) plus supplementary weather routes where keys exist
 - **`provenance`** / A2A-style hints on responses when integrations return data
@@ -78,11 +80,14 @@ Older “`/outputs`” or duplicate guides elsewhere may exist from packaging hi
 ```
 early-warning-system/
 ├── backend/           ← main.py, admin_panel.py, notifications_api.py, …
-├── landing/           ← landing.html, documentation.html, registration_portal.html, admin_dashboard.html
+├── landing/           ← landing.html, guides.html, registration_portal.html, admin_dashboard.html
 ├── frontend/index.html
 ├── config/.env.example
 ├── docs/
-├── docs-private/       ← Internal drafts — still in git; see README there
+│   ├── guides/                    ← Every public Markdown file + `/guides/md/…` rendering
+│   ├── tech/*.svg                 ← Architectural diagrams (/guides/media/tech/…)
+│   └── blockchain-ai/             ← Reference Python only (guides live under docs/guides/blockchain-ai/)
+├── docs-private/                  ← Internal markdown — `/admin/dashboard` → Private documentation
 ├── render.yaml
 └── README.md
 ```

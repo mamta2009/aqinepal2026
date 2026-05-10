@@ -1,27 +1,25 @@
-# Private / internal docs
+# Private / partner-restricted documentation
 
-HTML text in this repository is served only where FastAPI mounts it: the **marketing** pages, **`/registration`**, **`/documentation`** (diagrams + linked media), **`/frontend/index.html`**, and **`/admin/dashboard`**. Only `docs/tech/` is exposed under **`/documentation/media/tech/…`**; Markdown under `docs/blockchain-ai/` and this **`docs-private/`** tree is **not** browsable via those URLs—but **files still exist in the git checkout**, so anyone with repo access can read them. For partner-sensitive PDFs/strategy drafts, confirm whether the **`aqinepal2026`** visibility model is acceptable or keep copies outside the public repo.
+Markdown and exports under **`early-warning-system/docs-private/`** are **internal** UNICEF/strategy drafts. They intentionally **do not** appear as links on the public **Guides** page (`GET /guides`).
 
-Keep partner-restricted or draft strategy material here *by convention* and reconcile wording with runnable behaviour before external use.
+## How teammates read them safely
 
-- `UNICEF_REQUIREMENTS_STRATEGY.md` — internal messaging checklist; cross-check runnable claims against **`../docs/IMPLEMENTATION_SNAPSHOT.md`**. Exported HTML mirrors this file (run script below).
-- `UNICEF_reg_mamta.md` — internal registration / submission workbook. Addendum bullets point to **`IMPLEMENTATION_SNAPSHOT.md`**.
+On a trusted machine, unlocked operators use **`/admin/dashboard`**:
 
----
+1. Enter the PIN and save **`NOTIFICATION_API_KEY`** as usual  
+2. **Private documentation** → **Refresh file list** → pick a `*.md` path → **Open**  
+   (JSON endpoints: **`GET /api/admin/private-documentation/md-files`**, **`GET /api/admin/private-documentation/md?path=…`**)  
 
-## Keeping strategy work honest
+HTML marketing pages (`/`, `/registration`), the **Guides** hub (`/guides`), **`/guides/md/…`**, **`/frontend/index.html`**, and **`/admin/dashboard`** are the main browser surfaces described in **`../docs/guides/IMPLEMENTATION_SNAPSHOT.md`** when it references routes.
 
-Before pasting wording into UNICEF portals, compare claims to **`../docs/IMPLEMENTATION_SNAPSHOT.md`** (resolver order, synthetic vs keyed upstreams, `provenance.deployment_role`). Regenerate exported HTML/PDF after substantive edits (`scripts/export-unicef-strategy.sh`).
+Technical **diagrams** (non-confidential SVG) stay in **`docs/tech/`** and are exposed at **`/guides/media/tech/…`** (legacy **`/documentation/media/tech/…`** redirects).
 
-- **PDF / HTML:** from repo root:
+## Staying truthful
 
-  `./early-warning-system/scripts/export-unicef-strategy.sh` → `UNICEF_REQUIREMENTS_STRATEGY.{html,pdf}`
+Before exporting claims to UNICEF portals, reconcile wording with **`../docs/guides/IMPLEMENTATION_SNAPSHOT.md`** (resolver order, synthetic data, **`provenance.deployment_role`**). Export scripts:
 
-  `./early-warning-system/scripts/export-unicef-strategy.sh UNICEF_reg_mamta.md` → `UNICEF_reg_mamta.{html,pdf}`
+```bash
+./early-warning-system/scripts/export-unicef-strategy.sh
+```
 
-  Optional **second** argument is a **custom title** for the exported HTML/PDF metadata.
-
-  The script prefers **`xelatex`** or **`LuaLaTeX`** for Unicode (✅, tree-drawing trees, etc.); **`pdflatex` alone fails** on those glyphs. BasicTeX includes `xelatex` under `/Library/TeX/texbin`.
-
-Public technical diagrams remain under `docs/tech/`; concept SVGs linked from the documentation hub live under `landing/assets/diagrams/`.
-
+These files remain in **git**: if your GitHub repo is public, recognise that clones still contain **`docs-private/`** — confidentiality is organisational, not URL-hiding alone.

@@ -3,7 +3,7 @@
 You can work from a **git clone** (recommended) or from an **`early-warning-system.zip`** extract. Both contain the same application tree under **`early-warning-system/`**.
 
 **Public repository:** [https://github.com/mamta2009/aqinepal2026](https://github.com/mamta2009/aqinepal2026)  
-**Technical truth (API resolver, env vars, provenance/A2A, notifications, admin APIs):** [`early-warning-system/docs/IMPLEMENTATION_SNAPSHOT.md`](early-warning-system/docs/IMPLEMENTATION_SNAPSHOT.md) — update it when wiring integrations.
+**Technical truth (API resolver, env vars, provenance/A2A, notifications, admin APIs):** [`early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md`](early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md) — update it when wiring integrations.
 
 ---
 
@@ -12,7 +12,7 @@ You can work from a **git clone** (recommended) or from an **`early-warning-syst
 ```
 early-warning-system/
 ├── backend/
-│   ├── main.py                 ← FastAPI app; mounts /frontend, landing pages, /documentation, /admin/dashboard
+│   ├── main.py                 ← FastAPI app; mounts /frontend, landing pages, /guides, /admin/dashboard
 │   ├── admin_panel.py          ← Operator JSON APIs under /api/admin/*
 │   ├── cities_config.py        ← CITIES_CONFIG (demo municipalities; AQ + registration)
 │   ├── notification_auth.py    ← NOTIFICATION_API_KEY + Twilio webhook signature helpers
@@ -23,7 +23,7 @@ early-warning-system/
 │   └── .env.example            ← Primary template; copy to backend/.env
 ├── landing/
 │   ├── landing.html            ← GET /  (marketing landing)
-│   ├── documentation.html       ← GET /documentation (diagrams hub; not full docs/ tree)
+│   ├── guides.html       ← GET /guides (diagrams hub; not full docs/ tree)
 │   ├── registration_portal.html ← GET /registration
 │   ├── admin_dashboard.html     ← GET /admin/dashboard (operator console; API key + PIN)
 │   └── assets/
@@ -32,10 +32,13 @@ early-warning-system/
 ├── config/
 │   └── .env.example            ← Optional second file; fills only unset vars after backend/.env
 ├── docs/
-│   ├── IMPLEMENTATION_SNAPSHOT.md
-│   ├── tech/                   ← Diagrams surfaced on /documentation
-│   └── blockchain-ai/
-├── docs-private/               ← Internal drafts; still in git — not mounted as browse-all docs
+│   ├── guides/
+│   │   ├── IMPLEMENTATION_SNAPSHOT.md
+│   │   ├── CURSOR_SETUP_GUIDE.md …
+│   │   └── blockchain-ai/ …
+│   ├── tech/                   ← Diagrams surfaced on /guides/media/tech/…
+│   └── blockchain-ai/          ← Reference `.py` only (Markdown → `docs/guides/blockchain-ai/`)
+├── docs-private/               ← Internal drafts — operator-only Markdown preview in `/admin/dashboard`
 ├── README.md
 └── .gitignore
 ```
@@ -69,7 +72,7 @@ cursor .
     📄 main.py, admin_panel.py, notifications_api.py …
     📄 requirements.txt, .env.example
   📁 landing
-    📄 landing.html, documentation.html, registration_portal.html, admin_dashboard.html
+    📄 landing.html, guides.html, registration_portal.html, admin_dashboard.html
   📁 frontend
     📄 index.html
   📁 config
@@ -109,7 +112,7 @@ cp .env.example .env
 # (backend/.env loads first; config/.env fills only unset variables.)
 ```
 
-**Template files:** **`backend/.env.example`** (backend-centric keys + notifications security/automation) and **`config/.env.example`** (broader integration list). Keep them in sync with **`docs/IMPLEMENTATION_SNAPSHOT.md`** when adding env vars.
+**Template files:** **`backend/.env.example`** (backend-centric keys + notifications security/automation) and **`config/.env.example`** (broader integration list). Keep them in sync with **`docs/guides/IMPLEMENTATION_SNAPSHOT.md`** when adding env vars.
 
 **Blockchain (optional but real):**
 
@@ -125,7 +128,7 @@ cp .env.example .env
 - **`NOTIFICATION_API_KEY`** — if set, admin notification routes require **`Authorization: Bearer <key>`** or **`X-API-Key`**. Public: register, verify, webhook POSTs, `GET /registration`, WhatsApp sandbox info.
 - **AQ evaluate / automation** — **`ALERT_EVAL_COOLDOWN_MINUTES`** (default ~60; Mongo-backed dedupe per city for **`POST /api/alerts/evaluate`**). **Daily surge** — **`DAILY_REPORT_NOTIFY_ENABLED`**, **`DAILY_SPIKE_CASE_MULTIPLIER`** (default 1.5), **`DAILY_SPIKE_MIN_PRIOR_REPORTS`** (minimum prior rows for a baseline average).
 
-Quick URLs (same origin as API): **`http://127.0.0.1:8000/frontend/index.html`**, **`http://127.0.0.1:8000/registration`** (→ **`POST /api/contacts/register`**), **`http://127.0.0.1:8000/documentation`**, **`http://127.0.0.1:8000/admin/dashboard`**. See **Notifications** below for API routes.
+Quick URLs (same origin as API): **`http://127.0.0.1:8000/frontend/index.html`**, **`http://127.0.0.1:8000/registration`** (→ **`POST /api/contacts/register`**), **`http://127.0.0.1:8000/guides`**, **`http://127.0.0.1:8000/admin/dashboard`**. See **Notifications** below for API routes.
 
 ### 4. Run Backend
 ```bash
@@ -144,10 +147,10 @@ The server serves the API and static mounts. Use **`http://127.0.0.1:8000`** (or
 | What | URL |
 |------|-----|
 | Marketing landing | `http://127.0.0.1:8000/` |
-| Documentation hub | `http://127.0.0.1:8000/documentation` |
+| Guides hub | `http://127.0.0.1:8000/guides` |
 | Registration | `http://127.0.0.1:8000/registration` |
 | Data dashboard | `http://127.0.0.1:8000/frontend/index.html` |
-| Operator admin | `http://127.0.0.1:8000/admin/dashboard` (needs **`NOTIFICATION_API_KEY`** + PIN; see **`docs/IMPLEMENTATION_SNAPSHOT.md`** → *Operator admin*) |
+| Operator admin | `http://127.0.0.1:8000/admin/dashboard` (needs **`NOTIFICATION_API_KEY`** + PIN; see **`docs/guides/IMPLEMENTATION_SNAPSHOT.md`** → *Operator admin*) |
 | OpenAPI | `http://127.0.0.1:8000/docs` |
 | Route map | `http://127.0.0.1:8000/api/system-discovery` |
 
@@ -170,14 +173,14 @@ Opening `frontend/index.html` as `file://` may still call the API if the dashboa
 
 # Run:
 python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
-# → http://127.0.0.1:8000  (API + /frontend + landing + /documentation + /admin/dashboard)
+# → http://127.0.0.1:8000  (API + /frontend + landing + /guides + /admin/dashboard)
 ```
 
 ### Notifications stack (`notifications_api.py`, `twilio_notify.py`, `db_state.py`)
 
 When **`MONGODB_URL`** is configured, startup ensures indexes for contact registration and notification logs. Twilio and Resend are optional; configure only the channels you use.
 
-**Diagram (code-aligned):** [`early-warning-system/docs/tech/NOTIFICATION_FLOW_DIAGRAM.svg`](early-warning-system/docs/tech/NOTIFICATION_FLOW_DIAGRAM.svg) — also embedded on **`/documentation`** (*Notification & alert flow*). **Evaluate:** **`POST /api/alerts/evaluate`** pulls live AQ for a **`CITIES_CONFIG`** city and broadcasts when **`min_level`** and cooldown allow (cron-friendly). **Alternate:** your job may call **`/api/air-quality/current`** and then **`POST /api/alerts/broadcast`**. **Daily cases:** optional spike→broadcast after **`POST /api/health/cases/daily-report`** when daily surge env vars are enabled (see **Notifications** env bullets).
+**Diagram (code-aligned):** [`early-warning-system/docs/tech/NOTIFICATION_FLOW_DIAGRAM.svg`](early-warning-system/docs/tech/NOTIFICATION_FLOW_DIAGRAM.svg) — also embedded on **`/guides`** (*Notification & alert flow*). **Evaluate:** **`POST /api/alerts/evaluate`** pulls live AQ for a **`CITIES_CONFIG`** city and broadcasts when **`min_level`** and cooldown allow (cron-friendly). **Alternate:** your job may call **`/api/air-quality/current`** and then **`POST /api/alerts/broadcast`**. **Daily cases:** optional spike→broadcast after **`POST /api/health/cases/daily-report`** when daily surge env vars are enabled (see **Notifications** env bullets).
 
 **Representative routes** (when **`NOTIFICATION_API_KEY`** is set, routes marked 🔒 require Bearer or `X-API-Key`):
 
@@ -212,7 +215,7 @@ Point **Twilio** webhook URLs at your public API host + these paths when testing
 ```html
 <!-- Dashboard:
 ✅ API_BASE from GET /api/runtime-config (PUBLIC_API_ORIGIN / API_PATH_PREFIX when set)
-✅ Header links: /registration (Register for alerts), /documentation
+✅ Header links: /registration (Register for alerts), /guides
 ✅ Weekly respiratory bar chart: GET /api/cases/week/{city}
 ✅ Footer Chain line from GET /api/blockchain/status + last payload verification
 ✅ AQ card + compare: GET /api/air-quality/current (server resolver: WeatherAPI → WAQI → Rapid)
@@ -223,7 +226,7 @@ If you deploy elsewhere, open via that host so runtime-config resolves correctly
 
 ### config/.env.example
 ```
-Copy to config/.env. Key integrations (see docs/IMPLEMENTATION_SNAPSHOT.md for full resolver order):
+Copy to config/.env. Key integrations (see docs/guides/IMPLEMENTATION_SNAPSHOT.md for full resolver order):
 
 - WEATHERAPI_COM_API_KEY — direct WeatherAPI.com (preferred for AQ + /api/weather/current)
 - WAQI_TOKEN — WAQI / aqicn (AQ fallback)
@@ -243,7 +246,7 @@ Quick start instructions
 Project structure
 Next steps
 
-See also: docs/IMPLEMENTATION_SNAPSHOT.md (technical contract for demos)
+See also: docs/guides/IMPLEMENTATION_SNAPSHOT.md (technical contract for demos)
 ```
 
 ---
@@ -335,8 +338,8 @@ You should see:
 - [ ] Landing **`/`** or registration **`/registration`** if you test enrolment
 - [ ] City selector working; charts show weekly cases
 - [ ] (Optional) MongoDB + **`MONGODB_URL`** → `notification_registry: true` on **`/api/health`**
-- [ ] (Optional) **`http://127.0.0.1:8000/documentation`** — diagram hub  
-- [ ] (Optional) **`http://127.0.0.1:8000/admin/dashboard`** — **`NOTIFICATION_API_KEY`** + PIN (see **`docs/IMPLEMENTATION_SNAPSHOT.md`**)
+- [ ] (Optional) **`http://127.0.0.1:8000/guides`** — diagram hub  
+- [ ] (Optional) **`http://127.0.0.1:8000/admin/dashboard`** — **`NOTIFICATION_API_KEY`** + PIN (see **`docs/guides/IMPLEMENTATION_SNAPSHOT.md`**)
 - [ ] (Optional) Twilio / Resend keys for SMS, WhatsApp, or email flows
 
 ---
@@ -489,7 +492,7 @@ For production, use an approved WhatsApp sender and review Twilio/template requi
 2. Open in Cursor  
 3. `pip install -r backend/requirements.txt` (from a venv in `backend/`)  
 4. `python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000` from `backend/`  
-5. Open **`http://127.0.0.1:8000/`** or the dashboard/documentation links  
+5. Open **`http://127.0.0.1:8000/`** or the dashboard/guides links  
 
 From there, you can:
 - Deploy via Render (see **`early-warning-system/render.yaml`**) or another **`uvicorn` host — point it at **`github.com/mamta2009/aqinepal2026`**
@@ -507,7 +510,7 @@ From there, you can:
 🎯 Open: Cursor → that folder (contains backend/, landing/, frontend/)
 ▶️ Run: cd backend && source .venv/bin/activate && python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 🌐 Landing:    http://127.0.0.1:8000/
-📖 Docs hub:    http://127.0.0.1:8000/documentation
+📖 Docs hub:    http://127.0.0.1:8000/guides
 📝 Register:   http://127.0.0.1:8000/registration
 📊 Dashboard:  http://127.0.0.1:8000/frontend/index.html
 🔧 Admin:      http://127.0.0.1:8000/admin/dashboard

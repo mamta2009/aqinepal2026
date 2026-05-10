@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Documentation — Early Warning System</title>
+    <title>Guides — Early Warning System</title>
     <link rel="icon" type="image/png" href="/landing-assets/intelladapt-logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -178,7 +178,7 @@
     <nav>
         <a href="/" class="logo">
             <img src="/landing-assets/intelladapt-logo.png" alt="intellADAPT">
-            Documentation
+            Guides
         </a>
         <ul class="nav-links">
             <li><a href="/">Home</a></li>
@@ -194,14 +194,15 @@
     </nav>
 
     <div class="wrap">
-        <h1>Technical documentation</h1>
+        <h1>Guides &amp; technical diagrams</h1>
         <p class="lede">
-            Architecture diagrams, notification flow (Twilio / Resend / MongoDB), blockchain verification overview, Polygon test tokens, and API pointers for the Nepal respiratory early warning prototype.
+            Written guides (Markdown) plus architecture diagrams (<span class="mono">docs/tech/</span>) for the Nepal respiratory early-warning stack. Older bookmark <span class="mono">/documentation</span> redirects here; partner-internal Markdown lives under <strong>Admin → Private documentation</strong>.
         </p>
 
         <nav class="toc" aria-label="On this page">
             <h2>On this page</h2>
             <ul>
+                <li><a href="#markdown-guides">Public markdown guides</a></li>
                 <li>
                     <a href="#architecture">Architecture</a>
                     <ul>
@@ -215,35 +216,53 @@
                 <li><a href="#blockchain">Blockchain &amp; verification</a></li>
                 <li><a href="#polygon-test">Free test MATIC (Polygon testnets)</a></li>
                 <li><a href="#apis">APIs &amp; operations</a></li>
-                <li><a href="#repo-docs">Repository guides (markdown)</a></li>
             </ul>
         </nav>
 
+        <section id="markdown-guides">
+            <h2>Public markdown guides</h2>
+            <p>Open in the browser while the API is running (rendered HTML). Sources live under <span class="mono">docs/guides/</span> — all non-private Markdown is stored there.</p>
+            <div class="btn-row" style="margin-bottom:1rem;">
+                <a class="btn outline" href="/guides/md/APPLICATION_OVERVIEW.md">Overview &amp; quick start</a>
+                <a class="btn outline" href="/guides/md/IMPLEMENTATION_SNAPSHOT.md">Implementation snapshot</a>
+                <a class="btn outline" href="/guides/md/CURSOR_SETUP_GUIDE.md">Cursor setup guide</a>
+                <a class="btn outline" href="/guides/md/PACKAGE_COMPLETE.md">Package summary</a>
+            </div>
+            <div class="btn-row">
+                <a class="btn outline" href="/guides/md/prompts.md">Agent prompts</a>
+                <a class="btn outline" href="/guides/md/LANDING_PAGE_GUIDE.md">Landing page guide</a>
+                <a class="btn outline" href="/guides/md/README.md">Guides folder index</a>
+                <a class="btn outline" href="/guides/md/blockchain-ai/README.md">Blockchain README</a>
+                <a class="btn outline" href="/guides/md/blockchain-ai/INTEGRATION_GUIDE.md">Blockchain integration notes</a>
+            </div>
+            <div class="callout warn" style="margin-top:1rem;"><p style="margin:0;"><strong>Note:</strong> Restricted UNICEF/strategy drafts stay in <span class="mono">docs-private/</span> — they are <strong>not</strong> linked here; operators open them from <strong>Admin → Private documentation</strong> after unlocking the dashboard.</p></div>
+        </section>
+
         <section id="architecture">
             <h2>Architecture</h2>
-            <p>Tech diagrams live in <span class="mono">docs/tech/</span> on disk and are exposed at <span class="mono">/documentation/media/tech/…</span>. Concept framing SVGs ship under <span class="mono">landing/assets/diagrams/</span> (<span class="mono">/landing-assets/diagrams/…</span>).</p>
+            <p>Tech diagrams live in <span class="mono">docs/tech/</span> on disk and are exposed at <span class="mono">/guides/media/tech/…</span>. Concept framing SVGs ship under <span class="mono">landing/assets/diagrams/</span> (<span class="mono">/landing-assets/diagrams/…</span>).</p>
 
             <h3 id="architecture-platform">End-to-end platform</h3>
             <figure class="doc-figure">
-                <img src="/documentation/media/tech/early_warning_platform_architecture.svg" alt="Early warning platform architecture diagram" loading="lazy" width="960">
+                <img src="/guides/media/tech/early_warning_platform_architecture.svg" alt="Early warning platform architecture diagram" loading="lazy" width="960">
                 <figcaption>High-level platform architecture (sources, APIs, dashboard, alerting).</figcaption>
             </figure>
 
             <h3 id="architecture-backend-render">Backend &amp; hosted stack (FastAPI, MongoDB, Render)</h3>
             <figure class="doc-figure">
-                <img src="/documentation/media/tech/fastapi_mongodb_render_architecture.svg" alt="FastAPI MongoDB and Render deployment architecture" loading="lazy" width="960">
+                <img src="/guides/media/tech/fastapi_mongodb_render_architecture.svg" alt="FastAPI MongoDB and Render deployment architecture" loading="lazy" width="960">
                 <figcaption>How the API, document database (e.g. MongoDB Atlas), and a host such as Render fit together.</figcaption>
             </figure>
 
             <h3 id="architecture-frontend-tiers">Frontend tiers</h3>
             <figure class="doc-figure">
-                <img src="/documentation/media/tech/simple_frontend_architecture.svg" alt="Three-tier frontend architecture" loading="lazy" width="680">
+                <img src="/guides/media/tech/simple_frontend_architecture.svg" alt="Three-tier frontend architecture" loading="lazy" width="680">
                 <figcaption>Suggested frontend tiers: SMS → web dashboard → optional mobile.</figcaption>
             </figure>
             <h3 id="architecture-notification-flow">Notification &amp; alert flow</h3>
             <p>This matches the running backend: <span class="mono">notifications_api.py</span>, <span class="mono">twilio_notify.py</span>, <span class="mono">db_state.py</span>, and MongoDB (<span class="mono">early_warning</span>). Outbound SMS/WhatsApp use Twilio; email uses Resend when configured. There is <strong>no</strong> built-in timer from air quality to broadcast—an external job or operator calls <span class="mono">POST /api/alerts/broadcast</span> when you want automated escalation.</p>
             <figure class="doc-figure">
-                <img src="/documentation/media/tech/NOTIFICATION_FLOW_DIAGRAM.svg" alt="Notification flow: FastAPI, MongoDB, Twilio, Resend, webhooks" loading="lazy" width="1000">
+                <img src="/guides/media/tech/NOTIFICATION_FLOW_DIAGRAM.svg" alt="Notification flow: FastAPI, MongoDB, Twilio, Resend, webhooks" loading="lazy" width="1000">
                 <figcaption>Implementation flow (not a clinical timeline): registration, persistence, outbound channels, and Twilio webhook return paths.</figcaption>
             </figure>
         </section>
@@ -318,15 +337,6 @@
             <p>Weather and optional LLM proxies are documented in Swagger once your server is running.</p>
         </section>
 
-        <section id="repo-docs">
-            <h2>Markdown guides (in the repo)</h2>
-            <p>For deeper integration notes, clone the repo and open:</p>
-            <ul>
-                <li><span class="mono">docs/blockchain-ai/README.md</span> — what runs vs reference-only ZIP files.</li>
-                <li><span class="mono">docs/blockchain-ai/INTEGRATION_GUIDE.md</span> — step-by-step integration narrative.</li>
-            </ul>
-            <p>Partner-restricted or draft strategy docs are kept under <span class="mono">docs-private/</span> on disk — that folder is <strong>not</strong> mounted on the running site. Public diagrams here are limited to <span class="mono">/documentation/media/tech/…</span> and concept images under <span class="mono">/landing-assets/diagrams/…</span>.</p>
-        </section>
     </div>
 
     <footer>
@@ -336,7 +346,7 @@
             <a href="/registration">Register alerts</a> ·
             <a href="/admin/dashboard">Admin console</a> ·
             <a href="/docs" target="_blank" rel="noopener">API docs</a>
-            · Early Warning System — documentation hub
+            · Early Warning System — guides hub (<span class="mono">/guides</span>; legacy <span class="mono">/documentation</span> redirects)
         </p>
     </footer>
     <script>

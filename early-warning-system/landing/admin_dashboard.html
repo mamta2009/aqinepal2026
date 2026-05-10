@@ -77,6 +77,15 @@
             margin: 0 2px;
         }
         .admin-global-footer a:hover { text-decoration: underline; color: #bae6fd; }
+        /* Private Markdown preview (trusted server-rendered Markdown) */
+        #privateDocCanvas table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
+        #privateDocCanvas th, #privateDocCanvas td { border: 1px solid #475569; padding: 8px 10px; vertical-align: top; }
+        #privateDocCanvas th { background: #0f172a; color: #94a3b8; text-align: left; }
+        #privateDocCanvas pre { background: #0f172a; padding: 12px; border-radius: 8px; overflow: auto; font-size: 12px; margin: 10px 0; }
+        #privateDocCanvas code { background: #334155; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+        #privateDocCanvas pre code { background: transparent; padding: 0; }
+        #privateDocCanvas h1, #privateDocCanvas h2, #privateDocCanvas h3 { color: #f8fafc; margin: 1rem 0 0.5rem; font-size: 1.05rem; }
+        #privateDocCanvas ul, #privateDocCanvas ol { margin: 8px 0 8px 1.35rem; }
         h1 { font-size: 1.35rem; margin: 0 0 8px; }
         h2 { font-size: 1rem; margin: 0 0 12px; color: #94a3b8; font-weight: 600; }
         section { background: #1e293b; border-radius: 12px; padding: 18px; margin-bottom: 16px; max-width: 1200px; }
@@ -217,7 +226,7 @@
         <ul class="admin-nav-links">
             <li><a href="/">← Home</a></li>
             <li><a href="/frontend/index.html">Dashboard</a></li>
-            <li><a href="/documentation">Documentation</a></li>
+            <li><a href="/guides">Guides</a></li>
             <li><a href="/registration">Register alerts</a></li>
             <li><a href="/docs" target="_blank" rel="noopener noreferrer">API docs</a></li>
             <li><span aria-current="page" style="color:#e2e8f0;font-size:0.9rem;font-weight:600;">Admin</span></li>
@@ -266,16 +275,34 @@
     </section>
 
     <section id="docSection">
-        <h2>Documentation — help for operators</h2>
+        <h2>Guides — help for operators</h2>
         <p class="admin-explainer">
             You do not need to be technical to review health workers and enrollees. Use the guides below when you forget a word or workflow.
             Words like API or Mongo simply mean computer services that hold data and deliver messages.
             If something stays red or empty after <strong>Refresh</strong>, your IT teammate should check server settings (.env files and restarting the service).
         </p>
         <div class="doc-links">
-            <a href="/documentation" target="_blank" rel="noopener noreferrer">Full documentation hub — opens in a new tab</a>
+            <a href="/guides" target="_blank" rel="noopener noreferrer">Guides hub — diagrams &amp; written guides (new tab)</a>
             <a href="/registration" target="_blank" rel="noopener noreferrer">Public enrolment form patients use</a>
         </div>
+    </section>
+
+    <section id="privateDocsSection">
+        <h2>Private documentation (<code>docs-private/</code>)</h2>
+        <p class="admin-explainer">
+            Partner-restricted UNICEF/strategy Markdown is not linked on the public <strong>Guides</strong> page. Requires the API key saved above.
+        </p>
+        <button type="button" id="btnPrivateDocRefresh">Refresh file list</button>
+        <p id="privateDocMsg" class="muted" style="min-height:1.25em;margin-top:8px;"></p>
+        <div class="row-flex" style="align-items:flex-end;">
+            <label class="grow">Markdown file<br/>
+                <select id="privateDocSelect" aria-label="Private markdown file" style="max-width:100%;width:100%;">
+                    <option value="">Load list…</option>
+                </select>
+            </label>
+            <button type="button" id="btnPrivateDocOpen">Open</button>
+        </div>
+        <div id="privateDocCanvas" hidden style="margin-top:14px;background:#1e293b;border:1px solid #334155;border-radius:12px;padding:18px 20px 22px;max-height:560px;overflow:auto;font-size:14px;line-height:1.6;color:#e2e8f0;"></div>
     </section>
 
     <section id="chainSection">
@@ -435,7 +462,7 @@
     <p>
         <a href="/">Home</a> ·
         <a href="/frontend/index.html">Dashboard</a> ·
-        <a href="/documentation">Documentation</a> ·
+        <a href="/guides">Guides</a> ·
         <a href="/registration">Register alerts</a> ·
         <a href="/docs" target="_blank" rel="noopener noreferrer">API docs (Swagger)</a>
         <br/><span style="display:inline-block;margin-top:10px;color:#64748b;">Early warning operator console — Nepal / UNICEF demonstration platform</span>
@@ -522,6 +549,49 @@
     document.getElementById('clearKey').onclick = function () {
         sessionStorage.removeItem('ew_admin_key');
         document.getElementById('adminKey').value = '';
+    };
+
+    document.getElementById('btnPrivateDocRefresh').onclick = async function () {
+        var h = authHeaders();
+        var msg = document.getElementById('privateDocMsg');
+        var sel = document.getElementById('privateDocSelect');
+        var cv = document.getElementById('privateDocCanvas');
+        if (!h) { msg.textContent = 'Save API key first.'; return; }
+        msg.textContent = 'Loading…';
+        sel.innerHTML = '<option value="">— choose —</option>';
+        cv.hidden = true;
+        cv.innerHTML = '';
+        try {
+            var r = await fetch('/api/admin/private-documentation/md-files', { headers: h });
+            var j = await r.json().catch(function () { return {}; });
+            if (!r.ok) { msg.textContent = ''; alert(j.detail ? String(j.detail) : ('HTTP ' + r.status)); return; }
+            (j.paths || []).forEach(function (p) {
+                var o = document.createElement('option'); o.value = p; o.textContent = p; sel.appendChild(o);
+            });
+            msg.textContent = (j.paths && j.paths.length) ? ('' + j.paths.length + ' markdown file(s).') : 'No .md files found under docs-private/.';
+        } catch (e) { msg.textContent = ''; alert(String(e.message || e)); }
+    };
+
+    document.getElementById('btnPrivateDocOpen').onclick = async function () {
+        var h = authHeaders(); var sel = document.getElementById('privateDocSelect');
+        var cv = document.getElementById('privateDocCanvas'); var msg = document.getElementById('privateDocMsg');
+        if (!h) { alert('Save NOTIFICATION_API_KEY first.'); return; }
+        var rel = sel && sel.value;
+        if (!rel) { alert('Pick a file first (Refresh list).'); return; }
+        msg.textContent = 'Loading "' + rel + '"…';
+        cv.hidden = true;
+        cv.innerHTML = '';
+        try {
+            var r = await fetch('/api/admin/private-documentation/md?path=' + encodeURIComponent(rel), { headers: h });
+            var j = await r.json().catch(function () { return {}; });
+            if (!r.ok) { msg.textContent = ''; alert(j.detail ? String(j.detail) : ('HTTP ' + r.status)); return; }
+            msg.textContent = 'Showing: ' + (j.title || rel);
+            cv.innerHTML = '<h3 style="margin-top:0;font-size:1rem;color:#94a3b8;">' + esc(j.title || rel) + '</h3>' + String(j.html_fragment || '');
+            cv.hidden = false;
+        } catch (e) {
+            msg.textContent = '';
+            alert(String(e.message || e));
+        }
     };
 
     var addUserModal = document.getElementById('addUserModal');

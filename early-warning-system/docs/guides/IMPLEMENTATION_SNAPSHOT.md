@@ -1,6 +1,6 @@
 # Implementation snapshot (Living reference)
 
-Concise technical truth for **`early-warning-system/`** backends, env, and public API behaviour. Prefer this over older marketing summaries when wording registrations or integrations.
+Concise technical truth for **`early-warning-system/`** backends, env, and public API behaviour. Prefer this over older marketing summaries when wording registrations or integrations. **Rendered on site:** **`/guides/md/IMPLEMENTATION_SNAPSHOT.md`** (Markdown → HTML).
 
 **Last aligned with codebase:** backend `main.py`, `admin_panel.py`, `cities_config.py`, `notification_auth.py`, `external_integrations.py`, `aq_snapshot_sync.py`, `notifications_api.py`, `twilio_notify.py`, `landing/admin_dashboard.html`, `frontend/index.html` (early 2026).
 
@@ -10,7 +10,7 @@ Concise technical truth for **`early-warning-system/`** backends, env, and publi
 
 | Item | Behaviour |
 |------|-----------|
-| **Diagram** | [`docs/tech/NOTIFICATION_FLOW_DIAGRAM.svg`](tech/NOTIFICATION_FLOW_DIAGRAM.svg) — implementation flow (registration, MongoDB, Twilio, Resend, webhooks). Shown on **`/documentation`** under *Notification & alert flow*. |
+| **Diagram** | [`NOTIFICATION_FLOW_DIAGRAM.svg`](/guides/media/tech/NOTIFICATION_FLOW_DIAGRAM.svg) — implementation flow (registration, MongoDB, Twilio, Resend, webhooks). Shown on **`/guides`** under *Notification & alert flow*. |
 | **MongoDB** | **`MONGODB_URL`** (**`DATABASE_URL`** accepted as fallback). Database **`early_warning`**: collections **`contacts`**, **`notification_logs`**, **`consent_records`**, **`inbound_messages`**, **`alert_broadcasts`**, **`alert_evaluation_cooldown`** (last evaluate-triggered broadcast per city). Operational: **`air_quality_snapshots`** (latest AQ per municipality when sync enabled), **`action_logs`** (facility audit rows). Daily facility rows: **`respiratory_daily_reports`** (separate pipeline; optional spike→broadcast hook). Indexes ensured at startup via **`ensure_notification_indexes()`** and **`ensure_operational_data_indexes()`**. |
 | **Registration** | **`GET /registration`** (static) → **`POST /api/contacts/register`**; **`POST /api/contacts/verify`**. **`city`** should be one of **`CITIES_CONFIG`** keys (validated when sent). One shared verification code for email / SMS / WhatsApp when channels are configured. |
 | **Outbound** | **`POST /api/notifications/send`** (single contact); **`POST /api/alerts/broadcast`**; **`POST /api/alerts/evaluate`** (fetches live AQ for a configured city, applies **`min_level`** + optional cooldown, then schedules same broadcast path). Verified + consented contacts only; **`BackgroundTasks`**. Channels: **Twilio** SMS & WhatsApp (`twilio_notify`, per-channel), **Resend** email (optional **`RESEND_API_KEY`**). |
@@ -121,7 +121,7 @@ Configured sources include: `weatherapi_com`, `waqi`, `rapidapi_weather_air_qual
 
 ## Operator admin (`admin_panel.py`, `GET /admin/dashboard`)
 
-Browser UI: **`GET /admin/dashboard`** serves **`landing/admin_dashboard.html`** (enrollee table, system status including Mongo + integration flags, **24-hour** activity summary, recent **`action_logs`**, optional blockchain widgets). **`GET /documentation`** is surfaced on that page so non-engineering operators can open the diagrams/explanations hub.
+Browser UI: **`GET /admin/dashboard`** serves **`landing/admin_dashboard.html`** (enrollee table, system status including Mongo + integration flags, **24-hour** activity summary, recent **`action_logs`**, optional blockchain widgets). **`GET /guides`** is linked from that page so non-engineering operators can open diagrams and markdown guides (**`/guides/md/…`**). **Partner-restricted** markdown under **`docs-private/`** is listed only inside the admin console (**Private documentation** panel).
 
 **PIN vs API key**
 
@@ -142,17 +142,19 @@ The HTML console stores that API key in **`sessionStorage`** (per browser tab).
 | **`PATCH /api/admin/contacts/{contact_id}/password`** | Set password for enrollee auth where configured. |
 | **`GET /api/admin/blockchain/overview`** | Polygon / on-chain logger readiness summary. |
 | **`PATCH /api/admin/blockchain/runtime-network`** | Temporary network switch until process restart (**set `.env` for durable production**). |
+| **`GET /api/admin/private-documentation/md-files`** | List **`docs-private/**/*.md`** (operator preview only). |
+| **`GET /api/admin/private-documentation/md`** | **`?path=`** — render Markdown → HTML fragment for the admin dashboard. |
 
 ---
 
 ## Frontend dashboard
 
-**`frontend/index.html`**: header links to **`/registration`** and **`/documentation`**; **`GET /api/runtime-config`** for API base; **Regional/National** mode UI; AQ card and compare table use **`/api/air-quality/current`** (with **`provenance`** in status/compare when present); chart note states WeatherAPI-first messaging for headline readings.
+**`frontend/index.html`**: header links to **`/registration`** and **`/guides`**; **`GET /api/runtime-config`** for API base; **Regional/National** mode UI; AQ card and compare table use **`/api/air-quality/current`** (with **`provenance`** in status/compare when present); chart note states WeatherAPI-first messaging for headline readings.
 
-**`landing/admin_dashboard.html`**: operator console (tables, modals, documentation links); uses **`/api/admin/*`** routes above after unlock.
+**`landing/admin_dashboard.html`**: operator console (tables, modals, Guides links + **Private documentation** panel); consumes **`/api/admin/*`** after unlock.
 
 ---
 
-## Private / strategy docs
+## Private / strategy docs (`docs-private/`)
 
-Internal UNICEF workbook and strategy live under **`docs-private/`**. When strategy text conflicts this file, treat **repository behaviour + this snapshot** as enforceable truth for demos and filings unless partners sign off differently.
+Internal UNICEF workbook and strategy live under **`docs-private/`**. **`GET /guides` and `/guides/md/…` never link these files.** Operators open sanitized Markdown previews from **`GET /admin/dashboard`** (API endpoints in the operator admin table). When strategy text conflicts this file, treat **repository behaviour + this snapshot** as enforceable truth for demos and filings unless partners sign off differently.

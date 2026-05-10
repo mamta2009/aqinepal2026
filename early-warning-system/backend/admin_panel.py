@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 import db_state
 import external_integrations
 import registrant_auth
+import guide_documents
 from notification_auth import require_strict_notification_api_key
 from notifications_api import ContactRegistration, persist_contact_registration
 
@@ -497,3 +498,30 @@ async def admin_blockchain_overview(
         out["hint"] = f"Wallet RPC check failed ({type(exc).__name__})."
 
     return out
+
+
+@router.get("/private-documentation/md-files")
+async def admin_private_md_paths(
+    _: None = Depends(require_strict_notification_api_key),
+) -> dict[str, Any]:
+    """Markdown paths under docs-private/, for operator eyes only."""
+    paths = guide_documents.list_private_markdown_basenames()
+    return {"paths": paths, "count": len(paths)}
+
+
+@router.get("/private-documentation/md")
+async def admin_private_md_html(
+    path: str = Query(..., min_length=1, max_length=512, description="Path relative to docs-private/ (*.md only)"),
+    _: None = Depends(require_strict_notification_api_key),
+) -> dict[str, str]:
+    """
+    Return sanitized HTML fragment rendered from Markdown (docs-private/).
+    Intended for embedding in `/admin/dashboard` after `NOTIFICATION_API_KEY` unlock.
+    """
+    full = guide_documents.safe_markdown_under(guide_documents.PRIVATE_MARKDOWN_ROOT, path)
+    if full is None:
+        raise HTTPException(status_code=404, detail="Private markdown path not allowed or not found.")
+    raw = full.read_text(encoding="utf-8")
+    title = guide_documents.derive_title(raw, fallback=full.stem.replace("_", " "))
+    fragment = guide_documents.markdown_to_html_fragment(raw)
+    return {"path": path, "title": title, "html_fragment": fragment}
