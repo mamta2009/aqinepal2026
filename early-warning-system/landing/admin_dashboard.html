@@ -4,9 +4,79 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>Admin — Early Warning</title>
+    <link rel="icon" type="image/png" href="/landing-assets/intelladapt-logo.png">
     <style>
         * { box-sizing: border-box; }
-        body { font-family: system-ui, sans-serif; margin: 0; background: #0f172a; color: #e2e8f0; padding: 24px; line-height: 1.5; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 0;
+            background: #0f172a;
+            color: #e2e8f0;
+            line-height: 1.5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-top: 52px;
+        }
+        .admin-main-wrap { flex: 1; padding: 24px 24px 28px; max-width: 1248px; margin: 0 auto; width: 100%; }
+
+        /* Global nav — always reachable (PIN screen + console) */
+        .admin-global-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10040;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px 16px;
+            padding: 10px 20px;
+            background: rgba(15, 23, 42, 0.98);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(51, 65, 85, 0.9);
+        }
+        .admin-global-nav .admin-nav-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            color: #10b981;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+        .admin-global-nav .admin-nav-brand img { width: 28px; height: auto; display: block; }
+        .admin-global-nav .admin-nav-meta { font-size: 0.8rem; color: #64748b; font-weight: 500; white-space: nowrap; }
+        .admin-nav-links { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; list-style: none; margin: 0; padding: 0; }
+        .admin-nav-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .admin-nav-links a:hover { color: #38bdf8; text-decoration: underline; text-underline-offset: 3px; }
+        .admin-nav-links a[aria-current="page"] { color: #e2e8f0; font-weight: 600; }
+
+        .admin-global-footer {
+            flex-shrink: 0;
+            margin-top: auto;
+            padding: 18px 20px 26px;
+            border-top: 1px solid rgba(51, 65, 85, 0.75);
+            background: rgba(15, 23, 42, 0.6);
+            text-align: center;
+            font-size: 13px;
+            color: #94a3b8;
+            width: 100%;
+        }
+        .admin-global-footer a {
+            color: #7dd3fc;
+            font-weight: 600;
+            text-decoration: none;
+            margin: 0 2px;
+        }
+        .admin-global-footer a:hover { text-decoration: underline; color: #bae6fd; }
         h1 { font-size: 1.35rem; margin: 0 0 8px; }
         h2 { font-size: 1rem; margin: 0 0 12px; color: #94a3b8; font-weight: 600; }
         section { background: #1e293b; border-radius: 12px; padding: 18px; margin-bottom: 16px; max-width: 1200px; }
@@ -57,7 +127,12 @@
         .polygon-help a:hover { color: #e0f2fe; }
         .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
         #pinOverlay {
-            position: fixed; inset: 0; z-index: 9999;
+            position: fixed;
+            top: 52px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10030;
             background: rgba(15, 23, 42, 0.97);
             display: flex; align-items: center; justify-content: center; padding: 24px;
         }
@@ -89,7 +164,7 @@
         }
         .doc-links a:hover { color: #bae6fd; }
         .modal-backdrop {
-            position: fixed; inset: 0; z-index: 8000;
+            position: fixed; inset: 0; z-index: 10060;
             background: rgba(15, 23, 42, 0.94);
             display: none; align-items: flex-start; justify-content: center;
             padding: 20px 16px 32px;
@@ -129,6 +204,28 @@
     </style>
 </head>
 <body>
+
+<header class="admin-global-nav" role="banner">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-height:36px;">
+        <a href="/" class="admin-nav-brand">
+            <img src="/landing-assets/intelladapt-logo.png" alt="Early Warning">
+            Early Warning
+        </a>
+        <span class="admin-nav-meta">Operator console</span>
+    </div>
+    <nav aria-label="Site navigation">
+        <ul class="admin-nav-links">
+            <li><a href="/">← Home</a></li>
+            <li><a href="/frontend/index.html">Dashboard</a></li>
+            <li><a href="/documentation">Documentation</a></li>
+            <li><a href="/registration">Register alerts</a></li>
+            <li><a href="/docs" target="_blank" rel="noopener noreferrer">API docs</a></li>
+            <li><span aria-current="page" style="color:#e2e8f0;font-size:0.9rem;font-weight:600;">Admin</span></li>
+        </ul>
+    </nav>
+</header>
+
+<div class="admin-main-wrap">
 
 <div id="pinOverlay" role="dialog" aria-labelledby="pinTitle" aria-modal="true">
     <div id="pinCard">
@@ -330,7 +427,20 @@
         <button type="button" id="btnLogs">Load last 30 logs</button>
         <pre id="outLogs">—</pre>
     </section>
-</div>
+</div><!-- #adminApp -->
+
+</div><!-- .admin-main-wrap -->
+
+<footer class="admin-global-footer" role="contentinfo">
+    <p>
+        <a href="/">Home</a> ·
+        <a href="/frontend/index.html">Dashboard</a> ·
+        <a href="/documentation">Documentation</a> ·
+        <a href="/registration">Register alerts</a> ·
+        <a href="/docs" target="_blank" rel="noopener noreferrer">API docs (Swagger)</a>
+        <br/><span style="display:inline-block;margin-top:10px;color:#64748b;">Early warning operator console — Nepal / UNICEF demonstration platform</span>
+    </p>
+</footer>
 
 <script>
 (function () {
@@ -607,6 +717,8 @@
     document.getElementById('btnNetAmoy').onclick = function () { patchRuntimeNetwork('amoy'); };
     document.getElementById('btnNetMainnet').onclick = function () { patchRuntimeNetwork('mainnet'); };
     document.getElementById('btnNetFollowEnv').onclick = function () { patchRuntimeNetwork(null); };
+
+    async function reloadUsers(msg) {
         var el = document.getElementById('usersMsg');
         var h = authHeaders();
         if (!h) {
