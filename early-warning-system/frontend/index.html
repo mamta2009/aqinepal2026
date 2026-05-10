@@ -1,0 +1,3256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Early Warning System - Nepal Respiratory Health</title>
+    <link rel="icon" type="image/png" href="/landing-assets/intelladapt-logo.png">
+    <link rel="apple-touch-icon" href="/landing-assets/intelladapt-logo.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Brand colors */
+            --primary: #d32f2f;
+            --primary-light: #ef5350;
+            --primary-dark: #b71c1c;
+            --secondary: #1565c0;
+            --secondary-light: #1976d2;
+            --accent: #ffd600;
+            --success: #2e7d32;
+            --success-light: #43a047;
+            --blockchain: #7c3aed;
+            --ai: #06b6d4;
+            --phase1: #10b981;
+            --phase2: #f59e0b;
+            
+            /* Neutrals */
+            --bg-dark: #0f1419;
+            --bg-surface: #1a1f26;
+            --bg-elevated: #262d35;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b8c1;
+            --text-tertiary: #8a9199;
+            --border: #333842;
+            
+            /* Semantic */
+            --high: #d32f2f;
+            --moderate: #f57c00;
+            --low: #2e7d32;
+
+            /* Buttons (visible default + clear hover) */
+            --btn-bg: #2e3844;
+            --btn-border: #5c6773;
+        }
+
+        html[data-theme="light"] {
+            --bg-dark: #f4f6f8;
+            --bg-surface: #ffffff;
+            --bg-elevated: #eef1f5;
+            --text-primary: #1a2329;
+            --text-secondary: #4a5561;
+            --text-tertiary: #6b7580;
+            --border: #d1d9e0;
+
+            --btn-bg: #dbe4ee;
+            --btn-border: #5c6b7e;
+        }
+
+        html[data-theme="light"] body {
+            background: linear-gradient(135deg, #f4f6f8 0%, #eef1f5 100%);
+        }
+
+        html[data-theme="light"] body::before {
+            opacity: 0.4;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #141920 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .site-nav-global {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px 12px;
+            padding: 12px 4px 18px;
+            margin-bottom: 2px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8125rem;
+        }
+
+        .site-nav-global a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .site-nav-global a:hover {
+            color: var(--accent);
+        }
+
+        .site-nav-global .nav-sep {
+            color: var(--text-tertiary);
+            user-select: none;
+            pointer-events: none;
+        }
+
+        .site-nav-meta {
+            flex: 1 1 160px;
+            min-width: 0;
+            margin-left: auto;
+            text-align: right;
+            color: var(--text-tertiary);
+            font-size: 0.75rem;
+            line-height: 1.35;
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            position: relative;
+            margin-bottom: 40px;
+            padding: 40px 0;
+            border-bottom: 2px solid var(--border);
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .logo-section h1 {
+            font-family: 'Space Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 5px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-section p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .features-badge {
+            display: flex;
+            gap: 12px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .feature-tag {
+            display: inline-block;
+            padding: 6px 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-radius: 20px;
+            border: 1px solid;
+        }
+
+        .feature-tag.open-source {
+            border-color: #4ade80;
+            color: #4ade80;
+            background: rgba(74, 222, 128, 0.1);
+        }
+
+        .feature-tag.blockchain {
+            border-color: var(--blockchain);
+            color: var(--blockchain);
+            background: rgba(124, 58, 237, 0.1);
+        }
+
+        .feature-tag.ai {
+            border-color: var(--ai);
+            color: var(--ai);
+            background: rgba(6, 182, 212, 0.1);
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .header-alert-strip {
+            flex: 1 1 220px;
+            min-width: 0;
+            max-width: min(520px, 100%);
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-elevated);
+            font-size: 0.78rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-alert-label {
+            font-family: 'Space Mono', monospace;
+            color: var(--phase1);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-size: 0.72rem;
+            flex-shrink: 0;
+        }
+
+        .header-alert-text {
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: 2px solid var(--btn-border);
+            background: var(--btn-bg);
+            color: var(--text-primary);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition:
+                background-color 0.2s ease,
+                border-color 0.2s ease,
+                color 0.2s ease,
+                box-shadow 0.2s ease,
+                transform 0.15s ease;
+            position: relative;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        }
+
+        a.btn {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn:hover {
+            border-color: var(--primary);
+            color: #ffffff;
+            background: var(--primary);
+            box-shadow: 0 4px 14px rgba(211, 47, 47, 0.38);
+            transform: translateY(-1px);
+        }
+
+        .btn:focus-visible {
+            outline: 3px solid rgba(21, 101, 192, 0.45);
+            outline-offset: 2px;
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.secondary {
+            border-color: var(--btn-border);
+        }
+
+        .btn.secondary:hover {
+            border-color: #0d47a1;
+            color: #ffffff;
+            background: var(--secondary);
+            box-shadow: 0 4px 14px rgba(21, 101, 192, 0.4);
+        }
+
+        .btn.secondary:focus-visible {
+            outline-color: rgba(21, 101, 192, 0.55);
+        }
+
+        /* ===== GEOGRAPHIC MODE SELECTOR ===== */
+        .geographic-selector {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+            border: 1px solid var(--phase1);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .selector-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .selector-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-primary);
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .mode-btn {
+            padding: 8px 16px;
+            border: 1.5px solid var(--border);
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn.active {
+            border-color: var(--phase1);
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--phase1);
+        }
+
+        .mode-btn.active.phase2 {
+            border-color: var(--phase2);
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--phase2);
+        }
+
+        .selector-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 16px;
+            align-items: center;
+        }
+
+        @media (max-width: 900px) {
+            .selector-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .geographic-selector {
+                padding: 14px;
+            }
+
+            .selector-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .mode-buttons {
+                flex-direction: column;
+                width: 100%;
+                gap: 8px;
+            }
+
+            .mode-btn {
+                width: 100%;
+                justify-content: center;
+                padding: 10px 12px;
+                font-size: 0.75rem;
+            }
+
+            .city-select {
+                width: 100%;
+                font-size: 0.95rem;
+            }
+
+            .header-content .logo-section h1 {
+                font-size: 1.6rem;
+            }
+        }
+
+        .city-selector-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .selector-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .city-select {
+            padding: 10px 12px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 4px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .city-select:hover,
+        .city-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+        }
+
+        .selector-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 0.8rem;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-secondary);
+        }
+
+        .info-label {
+            font-weight: 600;
+        }
+
+        .info-value {
+            color: var(--phase1);
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+        }
+
+        .info-value.phase2 {
+            color: var(--phase2);
+        }
+
+        /* ===== OFFLINE INDICATOR ===== */
+        .offline-banner {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(90deg, var(--accent) 0%, #ffb300 100%);
+            color: #000;
+            padding: 12px 20px;
+            text-align: center;
+            font-weight: 600;
+            z-index: 1000;
+            font-size: 0.9rem;
+        }
+
+        .offline-banner.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        /* ===== STATUS CARDS ===== */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .status-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            padding: 24px;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.6s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .status-card:nth-child(1) { animation-delay: 0.1s; }
+        .status-card:nth-child(2) { animation-delay: 0.2s; }
+        .status-card:nth-child(3) { animation-delay: 0.3s; }
+        .status-card:nth-child(4) { animation-delay: 0.4s; }
+        .status-card:nth-child(5) { animation-delay: 0.5s; }
+
+        #heat-card.heat-hot::before { background: var(--high); }
+        #heat-card.heat-mod::before { background: var(--moderate); }
+
+        .status-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--low);
+            transition: background 0.3s ease;
+        }
+
+        .status-card.high::before { background: var(--high); }
+        .status-card.moderate::before { background: var(--moderate); }
+
+        .status-card:hover {
+            border-color: var(--primary-light);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(211, 47, 47, 0.15);
+        }
+
+        .status-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-tertiary);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .status-value {
+            font-family: 'Space Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .status-unit {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .status-meta {
+            font-size: 0.72rem;
+            color: var(--text-tertiary);
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+
+        /* ===== MAIN GRID ===== */
+        .main-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 28px;
+            position: relative;
+            animation: fadeInUp 0.8s ease-out;
+            overflow: hidden;
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary) 0%, transparent 100%);
+            opacity: 0.3;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-primary);
+        }
+
+        .panel-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--bg-dark);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--secondary);
+        }
+
+        .aq-compare-wrap .panel-header {
+            margin-bottom: 12px;
+        }
+
+        .aq-compare-hint {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin: 0 0 14px;
+            line-height: 1.45;
+        }
+
+        .aq-compare-checks {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 18px;
+            margin-bottom: 16px;
+        }
+
+        .aq-compare-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .aq-compare-label input {
+            accent-color: var(--primary);
+            width: 1.05rem;
+            height: 1.05rem;
+        }
+
+        .aq-compare-table-wrap {
+            overflow-x: auto;
+            margin-top: 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        html[data-theme="light"] .aq-compare-table-wrap {
+            background: rgba(255, 255, 255, 0.55);
+        }
+
+        table.aq-compare-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            font-family: 'Space Mono', monospace;
+        }
+
+        table.aq-compare-table th,
+        table.aq-compare-table td {
+            text-align: left;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        table.aq-compare-table th {
+            color: var(--text-primary);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.55px;
+            font-size: 0.72rem;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        html[data-theme="light"] table.aq-compare-table th {
+            background: rgba(0, 0, 0, 0.04);
+        }
+
+        table.aq-compare-table tbody td {
+            color: #f1f5f9;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: 0.01em;
+        }
+
+        html[data-theme="light"] table.aq-compare-table tbody td {
+            color: #0f172a;
+        }
+
+        table.aq-compare-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        table.aq-compare-table tr.current-city-row td {
+            background: rgba(25, 118, 210, 0.18);
+        }
+
+        table.aq-compare-table tr.current-city-row td:first-child {
+            font-weight: 800;
+            color: #90cdf4;
+        }
+
+        html[data-theme="light"] table.aq-compare-table tr.current-city-row td:first-child {
+            color: #0d47a1;
+        }
+
+        html[data-theme="light"] table.aq-compare-table tr.current-city-row td {
+            background: rgba(25, 118, 210, 0.1);
+            color: #0f172a;
+        }
+
+        table.aq-compare-table tbody tr.aq-row-err td {
+            color: #fecaca !important;
+            font-weight: 600;
+        }
+
+        html[data-theme="light"] table.aq-compare-table tbody tr.aq-row-err td {
+            color: #991b1b !important;
+        }
+
+        table.aq-compare-table tbody tr:nth-child(even):not(.current-city-row) td {
+            background: rgba(255, 255, 255, 0.025);
+        }
+
+        html[data-theme="light"] table.aq-compare-table tbody tr:nth-child(even):not(.current-city-row) td {
+            background: rgba(0, 0, 0, 0.025);
+        }
+
+        table.aq-compare-table .aq-compare-placeholder {
+            color: var(--text-secondary) !important;
+            font-weight: 500 !important;
+            padding: 1.25rem 14px !important;
+        }
+
+        table.aq-compare-table tbody tr:hover td {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        html[data-theme="light"] table.aq-compare-table tbody tr:hover td {
+            background: rgba(0, 0, 0, 0.035);
+        }
+
+        #aqCompareStatus {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        /* Scenario A — illustrative stress sandbox */
+        .scenario-sim-panel .scenario-reset-btn {
+            font-family: inherit;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .scenario-sim-panel .scenario-reset-btn:hover {
+            border-color: var(--primary-light);
+            color: var(--primary-light);
+        }
+
+        .scenario-sim-intro {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+            margin: 0 0 14px;
+        }
+
+        .scenario-slider-row {
+            margin-bottom: 18px;
+        }
+
+        .scenario-slider-row label {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 6px 12px;
+            font-size: 0.82rem;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .scenario-slider-row label strong {
+            font-family: 'Space Mono', monospace;
+            color: var(--ai);
+            font-weight: 700;
+        }
+
+        .scenario-slider-row input[type='range'] {
+            width: 100%;
+            accent-color: var(--primary-light);
+            height: 6px;
+        }
+
+        .scenario-outcomes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .scenario-out-card {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-size: 0.8rem;
+            line-height: 1.45;
+        }
+
+        .scenario-out-card .scenario-kicker {
+            color: var(--text-tertiary);
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 6px;
+        }
+
+        .scenario-out-card .scenario-val {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .scenario-out-card .scenario-sub {
+            color: var(--text-secondary);
+            font-size: 0.74rem;
+            margin-top: 6px;
+        }
+
+        html[data-theme="light"] .scenario-out-card .scenario-val {
+            color: #0f172a;
+        }
+
+        /* ===== CHARTS ===== */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+
+        .chart-container canvas {
+            max-height: 100% !important;
+        }
+
+        /* ===== FORECAST ===== */
+        .forecast-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 12px;
+        }
+
+        .forecast-day {
+            background: var(--bg-dark);
+            padding: 16px;
+            border-radius: 4px;
+            text-align: center;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .forecast-day::before {
+            content: '🤖';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            font-size: 0.8rem;
+        }
+
+        .forecast-day:hover {
+            border-color: var(--ai);
+            transform: translateY(-2px);
+            background: rgba(6, 182, 212, 0.05);
+        }
+
+        .forecast-day-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .forecast-pm25 {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .forecast-unit {
+            font-size: 0.7rem;
+            color: var(--text-tertiary);
+        }
+
+        .forecast-cases {
+            font-size: 0.8rem;
+            color: var(--ai);
+            margin-top: 8px;
+            font-weight: 600;
+        }
+
+        /* ===== BLOCKCHAIN ===== */
+        .blockchain-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: rgba(124, 58, 237, 0.1);
+            border: 1px solid var(--blockchain);
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: var(--blockchain);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .blockchain-badge::before {
+            content: '⛓️';
+        }
+
+        /* ===== ALERTS ===== */
+        .alerts-feed {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .alert-item {
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 3px solid;
+            background: var(--bg-dark);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .alert-item:hover {
+            background: rgba(211, 47, 47, 0.1);
+            transform: translateX(4px);
+        }
+
+        .alert-item.high { border-left-color: var(--high); }
+        .alert-item.moderate { border-left-color: var(--moderate); }
+        .alert-item.low { border-left-color: var(--low); }
+
+        .alert-time {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .alert-message {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .alert-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .alert-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-radius: 3px;
+            background: var(--bg-dark);
+            color: var(--text-secondary);
+        }
+
+        .alert-badge.high { background: rgba(211, 47, 47, 0.2); color: var(--high); }
+        .alert-badge.moderate { background: rgba(245, 124, 0, 0.2); color: var(--moderate); }
+        .alert-badge.low { background: rgba(46, 125, 50, 0.2); color: var(--low); }
+
+        /* ===== ACTION LOG ===== */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .facility-auth-box {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 18px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        html[data-theme="light"] .facility-auth-box {
+            background: rgba(255, 255, 255, 0.45);
+        }
+
+        .facility-auth-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .facility-auth-box input[type='email'],
+        .facility-auth-box input[type='text'] {
+            flex: 1;
+            min-width: 140px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.88rem;
+        }
+
+        .facility-auth-box .mini-btn {
+            font-family: inherit;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .facility-auth-box .mini-btn.primary {
+            border-color: var(--primary-light);
+            color: var(--primary-light);
+        }
+
+        .facility-auth-banner {
+            font-size: 0.76rem;
+            color: var(--text-tertiary);
+            margin-top: 8px;
+        }
+
+        .action-buttons.reporting-locked .action-btn {
+            opacity: 0.42;
+            pointer-events: none;
+        }
+
+        .action-btn {
+            flex: 1;
+            min-width: 140px;
+            padding: 12px 16px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            border-color: var(--success-light);
+            background: rgba(46, 125, 50, 0.1);
+            color: var(--success-light);
+        }
+
+        .action-log-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .action-log-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: var(--bg-dark);
+            border-left: 2px solid var(--success);
+            border-radius: 3px;
+            font-size: 0.9rem;
+            animation: slideInLeft 0.3s ease;
+        }
+
+        .action-log-time {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+        }
+
+        /* ===== SETTINGS ===== */
+        .setting-group {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .setting-label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        input[type="number"],
+        select {
+            padding: 8px 12px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            border-radius: 4px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            width: 100%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.1);
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            border-top: 1px solid var(--border);
+            color: var(--text-tertiary);
+            font-size: 0.85rem;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.offline {
+            background: var(--primary);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-tertiary);
+        }
+
+        /* ===== MOBILE ===== */
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+
+            .logo-section h1 {
+                font-size: 1.8rem;
+            }
+
+            .status-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .header-controls {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .panel {
+                padding: 16px;
+            }
+
+            .selector-content {
+                grid-template-columns: 1fr;
+            }
+
+            .site-nav-meta {
+                flex-basis: 100%;
+                margin-left: 0;
+                text-align: left;
+                margin-top: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-banner" id="offlineBanner">
+        📡 You are offline - displaying cached data
+    </div>
+
+    <div class="container">
+        <nav class="site-nav-global" aria-label="Site pages">
+            <a href="/">Home</a>
+            <span class="nav-sep" aria-hidden="true">·</span>
+            <a href="/frontend/index.html">Dashboard</a>
+            <span class="nav-sep" aria-hidden="true">·</span>
+            <a href="/documentation">Documentation</a>
+            <span class="nav-sep" aria-hidden="true">·</span>
+            <a href="/registration">Register alerts</a>
+            <span class="nav-sep" aria-hidden="true">·</span>
+            <a href="/admin/dashboard">Admin</a>
+            <span class="nav-sep" aria-hidden="true">·</span>
+            <a href="/docs" target="_blank" rel="noopener">API docs</a>
+            <span class="site-nav-meta">Explore without registering — use Home or Documentation anytime.</span>
+        </nav>
+
+        <!-- HEADER -->
+        <header>
+            <div class="header-content">
+                <div class="logo-section">
+                    <h1>⚠️ EARLY WARNING</h1>
+                    <p>Nepal Respiratory Health Alerts</p>
+                    <div class="features-badge">
+                        <div class="feature-tag open-source">📖 Open-Source</div>
+                        <div class="feature-tag blockchain">⛓️ Blockchain</div>
+                        <div class="feature-tag ai">🤖 AI-Powered</div>
+                    </div>
+                </div>
+                <div class="header-controls">
+                    <div class="header-alert-strip" id="headerAlertStrip" title="Latest system broadcast (MongoDB)">
+                        <span class="header-alert-label">Alerts</span>
+                        <span class="header-alert-text" id="headerAlertText">…</span>
+                    </div>
+                    <a href="/registration" class="btn secondary">Register for alerts</a>
+                    <a href="/documentation" class="btn secondary">📚 Documentation</a>
+                    <button class="btn secondary" onclick="refreshAllData()">⟳ REFRESH</button>
+                    <button class="btn" onclick="downloadData()">⬇ EXPORT</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- GEOGRAPHIC MODE SELECTOR -->
+        <div class="geographic-selector">
+            <div class="selector-header">
+                <span class="selector-title">📍 Geographic Mode & City Selection</span>
+                <div class="mode-buttons">
+                    <button class="mode-btn active" id="regionalBtn" onclick="switchMode('regional')">🎯 Regional (8 Cities)</button>
+                    <button class="mode-btn" id="nationalBtn" onclick="switchMode('national')">🇳🇵 National Scale</button>
+                </div>
+            </div>
+
+            <div class="selector-content">
+                <!-- City Selector -->
+                <div class="city-selector-group">
+                    <span class="selector-label">Select City</span>
+                    <select id="citySelector" class="city-select" onchange="switchCity(this.value)">
+                        <option value="Kathmandu">Kathmandu (Capital)</option>
+                        <option value="Lalitpur">Lalitpur</option>
+                        <option value="Bhaktapur">Bhaktapur</option>
+                        <option value="Banepa">Banepa</option>
+                        <option value="Dhulikhel">Dhulikhel</option>
+                        <option value="Hetauda">Hetauda (Lower elevation)</option>
+                        <option value="Bharatpur">Bharatpur</option>
+                        <option value="Narayanghad">Narayanghad (Plains)</option>
+                    </select>
+                </div>
+
+                <!-- City Info -->
+                <div class="selector-info">
+                    <div class="info-item">
+                        <span class="info-label">Elevation:</span>
+                        <span class="info-value" id="cityElevation">1,337m</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Province:</span>
+                        <span class="info-value" id="cityProvince">Bagmati</span>
+                    </div>
+                </div>
+
+                <!-- Population Info -->
+                <div class="selector-info">
+                    <div class="info-item">
+                        <span class="info-label">Population:</span>
+                        <span class="info-value" id="cityPopulation">1.5M</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Hospitals:</span>
+                        <span class="info-value" id="cityHospitals">15</span>
+                    </div>
+                </div>
+
+                <!-- Phase Info -->
+                <div class="selector-info">
+                    <div class="info-item">
+                        <span class="info-label">Phase:</span>
+                        <span class="info-value" id="cityPhase">Phase 1</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Status:</span>
+                        <span class="info-value" id="cityStatus">ACTIVE ✓</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATUS CARDS -->
+        <div class="status-grid">
+            <div class="status-card" id="pm25-card">
+                <div class="status-label">Current PM2.5</div>
+                <div class="status-value" id="current-pm25">--</div>
+                <div class="status-unit">µg/m³</div>
+            </div>
+            <div class="status-card" id="risk-card">
+                <div class="status-label" id="air-index-label">AQI</div>
+                <div class="status-value" id="risk-score">--</div>
+                <div class="status-unit" id="air-index-unit">—</div>
+                <div class="status-meta" id="air-confidence-line" title="">Routing confidence: —</div>
+            </div>
+            <div class="status-card" id="alert-card">
+                <div class="status-label">Alert Level</div>
+                <div class="status-value" id="alert-level">--</div>
+                <div class="status-unit">Current Status</div>
+            </div>
+            <div class="status-card" id="heat-card">
+                <div class="status-label">Heat (effective °C)</div>
+                <div class="status-value" id="heat-effective">—</div>
+                <div class="status-unit" id="heat-level-line">tier —</div>
+                <div class="status-meta" id="heat-confidence-line" title="">Routing confidence: —</div>
+            </div>
+            <div class="status-card" id="forecast-card">
+                <div class="status-label">PM2.5 illustration</div>
+                <div class="status-value" id="forecast-avg">—</div>
+                <div class="status-unit">Rough scalar (current × 0.9), not forecast</div>
+            </div>
+        </div>
+
+        <p id="compound-environment-note" style="font-size:0.8rem;color:var(--text-secondary);margin:0 0 16px;display:none;line-height:1.45;">
+        </p>
+
+        <p style="font-size:0.75rem;color:var(--text-tertiary);margin:0 0 16px;line-height:1.45;">
+            <strong>Air + heat data paths:</strong> PM2.5 / index resolve via <code>/api/air-quality/current</code>; effective °C (+ feels-like tier) uses <code>/api/heat/current</code>.
+            Thresholds mirror <code>POST /api/alerts/evaluate</code> and <code>/api/alerts/evaluate-heat</code> defaults (adjust with env vars).
+        </p>
+
+        <div class="panel aq-compare-wrap">
+            <div class="panel-header">
+                <span class="panel-title">Compare cities · air snapshot</span>
+            </div>
+            <p class="aq-compare-hint">
+                <strong>Select cities below</strong> to load side-by-side air readings (nothing is fetched until at least one box is checked). Checking many cities at once can hit RapidAPI rate limits (HTTP 429); keep selections small, or ensure
+                <code>WEATHERAPI_COM_API_KEY</code> is set so the server prefers paid WeatherAPI before WAQI/Rapid. Compare runs <strong>one city at a time</strong> (~0.65s apart) after you check a city or tap Refresh.
+            </p>
+            <div class="aq-compare-checks" id="aqCompareChecks" aria-label="Cities to include in comparison"></div>
+            <div class="aq-compare-table-wrap">
+                <table class="aq-compare-table" id="aqCompareTable" aria-describedby="aqCompareStatus">
+                    <thead>
+                        <tr>
+                            <th>City</th>
+                            <th>PM2.5</th>
+                            <th>Air index</th>
+                            <th>Source</th>
+                            <th>vs threshold</th>
+                        </tr>
+                    </thead>
+                    <tbody id="aqCompareTbody">
+                        <tr><td colspan="5" class="aq-compare-placeholder">Select one or more cities above to compare.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="aqCompareStatus"></div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-grid">
+            <!-- Air Quality Trend -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Air Quality 24H</span>
+                    <div class="panel-icon">📊</div>
+                </div>
+                <p id="aq-chart-note" style="font-size:0.75rem;color:var(--text-tertiary);margin:0 0 10px 0;line-height:1.4;">
+                    —
+                </p>
+                <div class="chart-container">
+                    <canvas id="aqChart"></canvas>
+                </div>
+            </div>
+
+            <!-- AI Respiratory Forecast -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">🤖 5-Day Forecast</span>
+                    <span class="blockchain-badge">AI Powered</span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">
+                    ✓ Predicted respiratory cases based on air quality forecast
+                </div>
+                <div class="forecast-grid" id="respiratory-forecast">
+                    <div style="padding: 20px; text-align: center; color: var(--text-secondary); grid-column: 1/-1;">
+                        Loading AI forecasts...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Alerts -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Recent Alerts</span>
+                    <div class="panel-icon">🔔</div>
+                </div>
+                <div class="alerts-feed" id="alerts-list">
+                    <div style="padding: 20px; text-align: center; color: var(--text-secondary);">
+                        Loading alerts...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Respiratory Cases Chart -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Cases This Week</span>
+                    <div class="panel-icon">🏥</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="caseChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Scenario A: illustrative compound stress (sliders — not predictive) -->
+            <div class="panel scenario-sim-panel" id="scenarioSimPanel">
+                <div class="panel-header">
+                    <span class="panel-title">Scenario A · Stress sandbox</span>
+                    <button type="button" class="scenario-reset-btn" id="scenarioResetLive" title="Set sliders from latest dashboard readings">
+                        Use live readings
+                    </button>
+                </div>
+                <p class="scenario-sim-intro">
+                    Move the sliders to explore <strong>illustrative</strong> respiratory load if pollution and heat stayed at the values you dial in.
+                    The baseline comes from this week&apos;s <em>synthetic</em> case curve (until DHIS2 is connected).
+                    Numbers are a simple multiplied scenario for discussion — not validated forecasting and not a substitute for local surveillance.
+                </p>
+                <div class="scenario-slider-row">
+                    <label for="simPm25">
+                        Simulated PM2.5 burden (µg/m³)
+                        <strong id="simPm25Display">—</strong>
+                    </label>
+                    <input type="range" id="simPm25" min="5" max="320" step="1" value="72" autocomplete="off" />
+                </div>
+                <div class="scenario-slider-row">
+                    <label for="simHeat">
+                        Simulated heat (effective °C)
+                        <strong id="simHeatDisplay">—</strong>
+                    </label>
+                    <input type="range" id="simHeat" min="22" max="46" step="0.5" value="30" autocomplete="off" />
+                </div>
+                <div class="scenario-outcomes-grid" aria-live="polite">
+                    <div class="scenario-out-card">
+                        <div class="scenario-kicker">Baseline (synthetic avg / day)</div>
+                        <div class="scenario-val" id="simBaselineAvgOut">—</div>
+                        <div class="scenario-sub">From “Cases This Week” API series for selected city.</div>
+                    </div>
+                    <div class="scenario-out-card">
+                        <div class="scenario-kicker">Illustrative load index</div>
+                        <div class="scenario-val" id="simSandboxLoadIx">—</div>
+                        <div class="scenario-sub">0–100 composite of dialled PM2.5 + heat strain (sandbox only).</div>
+                    </div>
+                    <div class="scenario-out-card">
+                        <div class="scenario-kicker">Multipliers applied</div>
+                        <div class="scenario-val" style="font-size:1rem;line-height:1.35;margin-top:2px;">
+                            Pollution <span id="simSandboxAirMul">—</span> · Heat <span id="simSandboxHeatMul">—</span>
+                        </div>
+                        <div class="scenario-sub">Combined × <strong id="simSandboxCombinedMul" style="font-weight:800;color:var(--ai);">—</strong> applied to baseline daily avg.</div>
+                    </div>
+                    <div class="scenario-out-card">
+                        <div class="scenario-kicker">Rough scenario daily / week</div>
+                        <div class="scenario-val" id="simSandboxDaily">—</div>
+                        <div class="scenario-sub">
+                            Week scale ≈ <span id="simSandboxWeek">—</span><br /><span id="simSandboxDelta" style="display:inline-block;margin-top:4px;">—</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Log -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Facility Actions</span>
+                    <div class="panel-icon">✓</div>
+                </div>
+                <div class="facility-auth-box">
+                    <strong>Registrant sign-in:</strong> use the same <strong>email + password</strong> you chose at registration,
+                    or tap <em>Send OTP</em> for a one-time code (SMS / email / WhatsApp).
+                    <div id="facilityAuthLoginBlock">
+                        <div class="facility-auth-row" style="flex-wrap:wrap;gap:8px;">
+                            <input type="email" id="facilityAuthEmail" placeholder="registration email" autocomplete="email" aria-label="Registration email" style="min-width:200px;flex:1;">
+                            <input type="password" id="facilityAuthPassword" placeholder="dashboard password" autocomplete="current-password" aria-label="Dashboard password" style="min-width:160px;flex:1;">
+                            <button type="button" class="mini-btn primary" id="facilityPasswordLoginBtn">Sign in</button>
+                        </div>
+                        <div class="facility-auth-row" style="margin-top:8px;">
+                            <button type="button" class="mini-btn" id="facilitySendCodeBtn">Send OTP instead</button>
+                        </div>
+                        <div class="facility-auth-row" id="facilityAuthExchangeRow" style="margin-top:8px;">
+                            <input type="text" id="facilityAuthCode" placeholder="OTP from SMS / email / WhatsApp" maxlength="16" autocomplete="one-time-code" aria-label="One-time login code">
+                            <button type="button" class="mini-btn primary" id="facilityExchangeBtn">Exchange OTP</button>
+                        </div>
+                    </div>
+                    <div class="facility-auth-row" style="margin-top:8px;">
+                        <button type="button" class="mini-btn" id="facilityLogoutBtn" hidden>Sign out</button>
+                    </div>
+                    <div class="facility-auth-banner" id="facilityAuthBanner">Not signed in — actions stay disabled.</div>
+                </div>
+                <div class="action-buttons reporting-locked" id="facilityActionButtons">
+                    <button class="action-btn action-btn-reporting" type="button" data-action-key="stocked_oxygen">Stocked O₂</button>
+                    <button class="action-btn action-btn-reporting" type="button" data-action-key="staff_called">Staff Called</button>
+                    <button class="action-btn action-btn-reporting" type="button" data-action-key="protocol_reviewed">Protocol OK</button>
+                </div>
+                <div class="action-log-list" id="action-log">
+                    <div style="padding: 20px; text-align: center; color: var(--text-secondary);">
+                        Facility action history loads after sign-in (Mongo-backed audit).
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-title">Settings</span>
+                    <div class="panel-icon">⚙️</div>
+                </div>
+                <div class="setting-group">
+                    <label class="setting-label">
+                        <input type="checkbox" id="darkModeToggle" checked> Dark theme (uncheck for light)
+                    </label>
+                </div>
+                <div class="setting-group">
+                    <label class="setting-label">
+                        <input type="checkbox" id="autoRefresh" checked> Auto-refresh (30min)
+                    </label>
+                </div>
+                <div class="setting-group">
+                    <label class="setting-label">Alert Threshold (PM2.5)</label>
+                    <input type="number" id="alertThreshold" value="150" min="50" max="300" step="10">
+                </div>
+                <div class="setting-group">
+                    <span class="setting-label">System Features</span>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.8;">
+                        ✓ Open-Source (MIT License)<br>
+                        ✓ Blockchain Verified (Polygon)<br>
+                        ✓ AI Forecasting (78% accuracy)<br>
+                        ✓ Offline Mode Enabled<br>
+                        ✓ Geographic Scalability<br>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer>
+            <p>
+                <span class="status-indicator" id="statusIndicator"></span>
+                Last updated: <span id="updated-at">--</span> | 
+                <span id="dataStatus">Connecting...</span>
+                | <span id="chainVerification" title="Blockchain verification metadata from API">Chain: checking…</span>
+            </p>
+            <p style="margin-top: 12px; color: var(--text-tertiary);">
+                Early Warning System v3.0 | Open-Source + Blockchain + AI-Powered | Bagmati Province + National Scale Ready
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // ===== CONFIGURATION (PUBLIC_API_ORIGIN / API_PATH_PREFIX from server env) =====
+        let API_ROOT = '';
+        let API_BASE = '/api';
+        const FACILITY_TOKEN_KEY = 'facility_access_token';
+        const FACILITY_CLAIMS_KEY = 'facility_claims_preview';
+
+        async function initRuntimeConfig() {
+            const fileMode = window.location.protocol === 'file:';
+            const defaultOrigin = fileMode ? 'http://localhost:8000' : `${window.location.protocol}//${window.location.host}`;
+            const configUrl = fileMode ? `${defaultOrigin}/api/runtime-config` : '/api/runtime-config';
+            try {
+                const r = await fetch(configUrl);
+                const j = await r.json();
+                const originCfg = j.public_api_origin && String(j.public_api_origin).trim()
+                    ? String(j.public_api_origin).replace(/\/$/, '')
+                    : defaultOrigin;
+                let prefix = (j.api_path_prefix && String(j.api_path_prefix).trim()) || '/api';
+                if (!prefix.startsWith('/')) prefix = '/' + prefix;
+                API_ROOT = originCfg;
+                API_BASE = `${originCfg}${prefix}`;
+            } catch {
+                API_ROOT = defaultOrigin;
+                API_BASE = `${defaultOrigin}/api`;
+            }
+        }
+
+        function getFacilityBearer() {
+            return sessionStorage.getItem(FACILITY_TOKEN_KEY);
+        }
+
+        function clearFacilityReportingSession() {
+            sessionStorage.removeItem(FACILITY_TOKEN_KEY);
+            sessionStorage.removeItem(FACILITY_CLAIMS_KEY);
+        }
+
+        function syncFacilityReportingChrome() {
+            const tok = getFacilityBearer();
+            const banner = document.getElementById('facilityAuthBanner');
+            const logoutBtn = document.getElementById('facilityLogoutBtn');
+            const buttonsWrap = document.getElementById('facilityActionButtons');
+            const loginBlock = document.getElementById('facilityAuthLoginBlock');
+            if (!banner || !buttonsWrap || !logoutBtn || !loginBlock) return;
+
+            if (tok) {
+                buttonsWrap.classList.remove('reporting-locked');
+                logoutBtn.hidden = false;
+                loginBlock.style.display = 'none';
+                let claimsTxt = '';
+                try {
+                    const raw = sessionStorage.getItem(FACILITY_CLAIMS_KEY);
+                    if (raw) {
+                        const cl = JSON.parse(raw);
+                        if (cl.facility_name || cl.facility_id)
+                            claimsTxt = `Reporting as ${cl.facility_name || 'facility'} (${cl.facility_id || '—'}). `;
+                        if (cl.city) claimsTxt += `${cl.city}. `;
+                    }
+                } catch (_) {
+                    /* ignore */
+                }
+                banner.textContent =
+                    claimsTxt + 'Authenticated — preparedness buttons write to MongoDB.';
+                return;
+            }
+            buttonsWrap.classList.add('reporting-locked');
+            logoutBtn.hidden = true;
+            loginBlock.style.display = 'block';
+            banner.textContent =
+                'Not signed in — use password or OTP, then log preparedness actions.';
+        }
+
+        async function refreshFacilityAuditLog() {
+            const wrap = document.getElementById('action-log');
+            if (!wrap) return;
+            const tok = getFacilityBearer();
+            if (!tok) {
+                wrap.innerHTML =
+                    '<div style="padding: 14px;text-align:center;color:var(--text-secondary)">' +
+                    'Facility action history appears after OTP sign-in (server audit).</div>';
+                return;
+            }
+            try {
+                const r = await fetch(`${API_BASE}/action-log/me`, {
+                    headers: { Authorization: `Bearer ${tok}` },
+                });
+                if (!r.ok) throw new Error(String(r.status));
+                const j = await r.json();
+                const rows = j.entries || [];
+                if (!rows.length) {
+                    wrap.innerHTML =
+                        '<div style="padding:14px;text-align:center;color:var(--text-secondary)">' +
+                        'No actions logged for this signer yet.</div>';
+                    return;
+                }
+                wrap.innerHTML = rows
+                    .slice(0, 40)
+                    .map((row) => {
+                        const ts = row.timestamp ? String(row.timestamp).replace('T', ' ') : '';
+                        const at = escapeAttr(String(row.action_type || '').replace(/</g, ''));
+                        return `<div class="action-log-item">${at}<span class="action-log-time">${ts}</span></div>`;
+                    })
+                    .join('');
+            } catch (err) {
+                wrap.innerHTML =
+                    '<div style="padding:14px;text-align:center;color:#fecaca">Could not load facility audit trail.</div>';
+                console.warn('Facility audit:', err);
+            }
+        }
+
+        async function facilityPasswordLogin(evt) {
+            const emailEl = document.getElementById('facilityAuthEmail');
+            const pwEl = document.getElementById('facilityAuthPassword');
+            const banner = document.getElementById('facilityAuthBanner');
+            if (!emailEl || !pwEl || !banner) return;
+            const email = String(emailEl.value || '').trim();
+            const password = String(pwEl.value || '');
+            if (!email || !password) {
+                banner.textContent = 'Enter registration email and password.';
+                return;
+            }
+            try {
+                const r = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password }),
+                });
+                const j = await r.json().catch(() => ({}));
+                if (!r.ok || !j.access_token) {
+                    const det =
+                        typeof j.detail === 'string'
+                            ? j.detail
+                            : JSON.stringify(j.detail || j).slice(0, 220);
+                    banner.textContent = det || `Sign-in failed (HTTP ${r.status}).`;
+                    return;
+                }
+                sessionStorage.setItem(FACILITY_TOKEN_KEY, j.access_token);
+                sessionStorage.setItem(
+                    FACILITY_CLAIMS_KEY,
+                    JSON.stringify({
+                        facility_id: j.facility_id,
+                        facility_name: j.facility_name,
+                        city: j.city,
+                        scopes: j.scopes || [],
+                    }),
+                );
+                pwEl.value = '';
+                banner.textContent = 'Signed in with password.';
+                syncFacilityReportingChrome();
+                await refreshFacilityAuditLog();
+            } catch (e) {
+                banner.textContent = `Login error: ${e.message || e}`;
+                console.warn(e);
+            }
+        }
+
+        async function facilitySendLoginCode(evt) {
+            const emailEl = document.getElementById('facilityAuthEmail');
+            const banner = document.getElementById('facilityAuthBanner');
+            if (!emailEl || !banner) return;
+            const email = String(emailEl.value || '').trim();
+            if (!email) {
+                banner.textContent = 'Enter your registration email first.';
+                return;
+            }
+            try {
+                const r = await fetch(`${API_BASE}/auth/facility-login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email }),
+                });
+                await r.json().catch(() => ({}));
+                banner.textContent =
+                    'If that email matches an eligible account, channels should receive an OTP shortly (check spam folders). Paste it below.';
+                if (!r.ok && r.status !== 429) banner.textContent += ` (HTTP ${r.status})`;
+            } catch (e) {
+                banner.textContent =
+                    'Failed to contact API for login codes — verify API_BASE routing and MongoDB readiness.';
+                console.warn(e);
+            }
+        }
+
+        async function facilityExchangeLoginCode(evt) {
+            const emailEl = document.getElementById('facilityAuthEmail');
+            const codeEl = document.getElementById('facilityAuthCode');
+            const banner = document.getElementById('facilityAuthBanner');
+            if (!codeEl || !banner) return;
+            const email = String(emailEl ? emailEl.value : '').trim();
+            const code = String(codeEl.value || '').trim();
+            if (!email || !code) {
+                banner.textContent = 'Enter email plus the OTP.';
+                return;
+            }
+            try {
+                const r = await fetch(`${API_BASE}/auth/facility-token`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, code }),
+                });
+                const j = await r.json().catch(() => ({}));
+                if (!r.ok || !j.access_token) {
+                    const det =
+                        typeof j.detail === 'string'
+                            ? j.detail
+                            : JSON.stringify(j.detail || j).slice(0, 200);
+                    banner.textContent = det || `Sign-in rejected (HTTP ${r.status}).`;
+                    return;
+                }
+                sessionStorage.setItem(FACILITY_TOKEN_KEY, j.access_token);
+                sessionStorage.setItem(
+                    FACILITY_CLAIMS_KEY,
+                    JSON.stringify({
+                        facility_id: j.facility_id,
+                        facility_name: j.facility_name,
+                        city: j.city,
+                    }),
+                );
+                codeEl.value = '';
+                banner.textContent = 'Signed in — actions now write to MongoDB.';
+                syncFacilityReportingChrome();
+                await refreshFacilityAuditLog();
+            } catch (e) {
+                banner.textContent = `Token exchange error: ${e.message || e}`;
+                console.warn(e);
+            }
+        }
+
+        async function facilitySignOutReporting() {
+            clearFacilityReportingSession();
+            syncFacilityReportingChrome();
+            await refreshFacilityAuditLog();
+        }
+
+        async function postFacilityOperationalAction(actionKey, evt) {
+            const tok = getFacilityBearer();
+            const banner = document.getElementById('facilityAuthBanner');
+            const actions = {
+                stocked_oxygen: '✓ Stocked O₂ cylinders',
+                staff_called: '✓ Pediatric staff briefed',
+                protocol_reviewed: '✓ Rapid triage protocol reviewed',
+            };
+            if (!tok) {
+                if (banner) banner.textContent = 'Sign in with password or OTP first.';
+                return;
+            }
+            if (!actions[actionKey]) return;
+            try {
+                const r = await fetch(`${API_BASE}/action-log`, {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${tok}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ action_type: actionKey, details: actions[actionKey] }),
+                });
+                const j = await r.json().catch(() => ({}));
+                if (r.status === 401 || r.status === 403) {
+                    clearFacilityReportingSession();
+                    syncFacilityReportingChrome();
+                    await refreshFacilityAuditLog();
+                    if (banner)
+                        banner.textContent =
+                            (typeof j.detail === 'string' ? j.detail : 'Session expired') +
+                            ' — sign in again.';
+                    return;
+                }
+                if (!r.ok) {
+                    const det =
+                        typeof j.detail === 'string'
+                            ? j.detail
+                            : JSON.stringify(j.detail || j).slice(0, 220);
+                    if (banner) banner.textContent = det || `Action failed (${r.status})`;
+                    return;
+                }
+                if (banner) banner.textContent = `${actions[actionKey]} logged to facility audit (${j.facility_id || 'facility'}).`;
+                await refreshFacilityAuditLog();
+                if (evt && evt.target.closest) {
+                    const b = evt.target.closest('button');
+                    if (b) {
+                        b.style.background = 'rgba(46, 125, 50, 0.3)';
+                        b.style.borderColor = '#2e7d32';
+                        setTimeout(() => {
+                            b.style.background = '';
+                            b.style.borderColor = '';
+                        }, 950);
+                    }
+                }
+            } catch (err) {
+                if (banner) banner.textContent = err && err.message ? err.message : 'Action network error.';
+                console.warn(err);
+            }
+        }
+
+        async function loadLatestAlertStrip() {
+            const el = document.getElementById('headerAlertText');
+            if (!el) return;
+            try {
+                const r = await fetch(`${API_BASE}/alerts/latest`);
+                const j = await r.json();
+                if (j.source === 'none' || j.source === 'empty') {
+                    el.textContent = j.message || 'No alerts yet';
+                    return;
+                }
+                if (!j.city && !j.level && !j.aqi_level) {
+                    el.textContent = '—';
+                    return;
+                }
+                const parts = [];
+                if (j.city) parts.push(j.city);
+                const hazRaw = typeof j.hazard_type === 'string' ? j.hazard_type : '';
+                if (hazRaw && hazRaw !== 'air') parts.push(hazRaw);
+                const lvlShown = j.level || j.aqi_level;
+                if (lvlShown) parts.push(String(lvlShown));
+                if (j.total_recipients != null) parts.push(String(j.total_recipients) + ' notified');
+                if (j.timestamp) {
+                    try {
+                        const d = new Date(j.timestamp);
+                        if (!Number.isNaN(d.getTime())) {
+                            parts.push(d.toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' }));
+                        }
+                    } catch (_) { /* ignore */ }
+                }
+                el.textContent = parts.join(' · ');
+            } catch (_) {
+                el.textContent = 'Alerts unavailable';
+            }
+        }
+        
+        // Cities configuration
+        const CITIES_CONFIG = {
+            "Kathmandu": {
+                "lat": 27.7172, "lon": 85.3240, "elevation": 1337,
+                "province": "Bagmati", "population": 1500000, "phase": 1,
+                "hospitals": 15, "status": "ACTIVE"
+            },
+            "Lalitpur": {
+                "lat": 27.6760, "lon": 85.3200, "elevation": 1290,
+                "province": "Bagmati", "population": 500000, "phase": 1,
+                "hospitals": 8, "status": "ACTIVE"
+            },
+            "Bhaktapur": {
+                "lat": 27.6732, "lon": 85.4305, "elevation": 1401,
+                "province": "Bagmati", "population": 300000, "phase": 1,
+                "hospitals": 5, "status": "ACTIVE"
+            },
+            "Banepa": {
+                "lat": 27.6600, "lon": 85.5100, "elevation": 1220,
+                "province": "Bagmati", "population": 80000, "phase": 1,
+                "hospitals": 3, "status": "ACTIVE"
+            },
+            "Dhulikhel": {
+                "lat": 27.6167, "lon": 85.4333, "elevation": 1550,
+                "province": "Bagmati", "population": 50000, "phase": 1,
+                "hospitals": 2, "status": "ACTIVE"
+            },
+            "Hetauda": {
+                "lat": 27.4196, "lon": 85.1333, "elevation": 610,
+                "province": "Bagmati", "population": 150000, "phase": 1,
+                "hospitals": 4, "status": "ACTIVE"
+            },
+            "Bharatpur": {
+                "lat": 27.7021, "lon": 84.4329, "elevation": 234,
+                "province": "Bagmati", "population": 200000, "phase": 1,
+                "hospitals": 6, "status": "ACTIVE"
+            },
+            "Narayanghad": {
+                "lat": 27.3333, "lon": 84.9167, "elevation": 300,
+                "province": "Bagmati", "population": 100000, "phase": 1,
+                "hospitals": 3, "status": "ACTIVE"
+            }
+        };
+
+        // ===== STATE =====
+        let currentMode = 'regional';
+        let currentCity = 'Kathmandu';
+        let aqData = {};
+        let aqChart, caseChart;
+        let scenarioSandboxUserTouched = false;
+
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', () => {
+            (async () => {
+                await initRuntimeConfig();
+                initThemeFromStorage();
+                syncFacilityReportingChrome();
+                initCharts();
+                initAirCompareChecks();
+                updateCityInfo(currentCity);
+                await refreshAllData();
+                setupEventListeners();
+                loadFromLocalStorage();
+                checkOnlineStatus();
+            })();
+        });
+
+        function initThemeFromStorage() {
+            const dark = localStorage.getItem('theme_dark');
+            const useDark = dark === null ? true : dark === '1';
+            if (useDark) {
+                document.documentElement.removeAttribute('data-theme');
+            } else {
+                document.documentElement.dataset.theme = 'light';
+            }
+            const cb = document.getElementById('darkModeToggle');
+            if (cb) cb.checked = useDark;
+        }
+
+        function setDarkTheme(enabled) {
+            if (enabled) {
+                document.documentElement.removeAttribute('data-theme');
+            } else {
+                document.documentElement.dataset.theme = 'light';
+            }
+            localStorage.setItem('theme_dark', enabled ? '1' : '0');
+        }
+
+        // ===== GEOGRAPHIC MODE SWITCHING =====
+        function switchMode(mode) {
+            currentMode = mode;
+            scenarioSandboxUserTouched = false;
+
+            // Update button states
+            document.getElementById('regionalBtn').classList.toggle('active', mode === 'regional');
+            document.getElementById('nationalBtn').classList.toggle('active', mode === 'national');
+            
+            if (mode === 'national') {
+                document.getElementById('nationalBtn').classList.add('active', 'phase2');
+                document.getElementById('regionalBtn').classList.remove('active');
+            } else {
+                document.getElementById('regionalBtn').classList.add('active');
+                document.getElementById('nationalBtn').classList.remove('active', 'phase2');
+            }
+            
+            // Reset to first city in mode
+            currentCity = Object.keys(CITIES_CONFIG)[0];
+            document.getElementById('citySelector').value = currentCity;
+            updateCityInfo(currentCity);
+            refreshAllData();
+        }
+
+        function switchCity(city) {
+            currentCity = city;
+            scenarioSandboxUserTouched = false;
+            updateCityInfo(city);
+            refreshAllData();
+        }
+
+        function updateCityInfo(city) {
+            const cityData = CITIES_CONFIG[city];
+            if (!cityData) return;
+
+            document.getElementById('cityElevation').textContent = `${cityData.elevation.toLocaleString()}m`;
+            document.getElementById('cityProvince').textContent = cityData.province;
+            document.getElementById('cityPopulation').textContent = `${(cityData.population / 1000000).toFixed(1)}M`;
+            document.getElementById('cityHospitals').textContent = cityData.hospitals;
+            document.getElementById('cityPhase').textContent = `Phase ${cityData.phase}`;
+            document.getElementById('cityStatus').textContent = cityData.status + ' ✓';
+        }
+
+        // ===== CHARTS =====
+        function initCharts() {
+            const aqCtx = document.getElementById('aqChart').getContext('2d');
+            aqChart = new Chart(aqCtx, {
+                type: 'line',
+                data: {
+                    labels: generateTimeLabels(24),
+                    datasets: [{
+                        label: currentCity,
+                        data: [],
+                        borderColor: '#1565c0',
+                        backgroundColor: 'rgba(21, 101, 192, 0.05)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#1565c0',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: '#b0b8c1',
+                                font: { family: "'Space Mono', monospace", size: 12 },
+                                usePointStyle: true,
+                                padding: 15
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 400,
+                            ticks: {
+                                color: '#8a9199',
+                                font: { family: "'Space Mono', monospace" }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#8a9199',
+                                font: { family: "'Space Mono', monospace" }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            const caseCtx = document.getElementById('caseChart').getContext('2d');
+            caseChart = new Chart(caseCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Respiratory Cases',
+                        data: [0, 0, 0, 0, 0, 0, 0],
+                        backgroundColor: 'rgba(21, 101, 192, 0.8)',
+                        borderColor: '#1565c0',
+                        borderWidth: 2,
+                        borderRadius: 4,
+                        hoverBackgroundColor: '#1976d2'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#8a9199',
+                                font: { family: "'Space Mono', monospace" }
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#8a9199',
+                                font: { family: "'Space Mono', monospace" }
+                            },
+                            grid: {
+                                drawBorder: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ===== AIR QUALITY (resolver: WeatherAPI.com direct → WAQI → Rapid, via /api/air-quality/current) =====
+        function formatRoutingConfidenceReadable(provenance) {
+            if (!provenance || !provenance.confidence || typeof provenance.confidence !== 'object') {
+                return { line: '', title: '' };
+            }
+            const c = provenance.confidence;
+            const tierRaw = typeof c.tier === 'string' ? c.tier.trim() : '';
+            const tier = tierRaw ? tierRaw.replace(/_/g, ' ') : '';
+            let pct = null;
+            if (typeof c.score === 'number' && c.score === c.score) {
+                pct = Math.round(Math.max(0, Math.min(1, c.score)) * 100);
+            }
+            const basis = typeof c.basis === 'string' ? c.basis.trim() : '';
+            const parts = [];
+            if (tier) parts.push(tier);
+            if (pct !== null) parts.push(`${pct}% score`);
+            return {
+                line: parts.join(' · ') || '—',
+                title: basis,
+            };
+        }
+
+        function updateRoutingConfidenceUI(elId, provenance, fallbackLine, fallbackTitle) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            const { line, title } = formatRoutingConfidenceReadable(provenance);
+            if (line && line !== '—') {
+                el.textContent = 'Routing confidence: ' + line;
+                el.title = title || '';
+            } else {
+                el.textContent = fallbackLine;
+                el.title = fallbackTitle || '';
+            }
+        }
+
+        function updateAirIndexCard(aqSource, aqPayload, pm25, aqProvenance, airEndpointOk) {
+            const labelEl = document.getElementById('air-index-label');
+            const valEl = document.getElementById('risk-score');
+            const unitEl = document.getElementById('air-index-unit');
+
+            const ap = aqPayload && typeof aqPayload === 'object' ? aqPayload : {};
+            const endpointOk = airEndpointOk !== false;
+
+            if (aqSource === 'waqi' && typeof ap.aqi === 'number' && !Number.isNaN(ap.aqi)) {
+                valEl.textContent = String(Math.round(ap.aqi));
+                labelEl.textContent = 'AQI';
+                unitEl.textContent = 'WAQI station index';
+                updateRoutingConfidenceUI(
+                    'air-confidence-line',
+                    aqProvenance,
+                    endpointOk
+                        ? 'Routing confidence: —'
+                        : 'Routing confidence: need successful /api/air-quality/current',
+                    '',
+                );
+                return;
+            }
+            if (
+                (aqSource === 'rapidapi_weather_air_quality' || aqSource === 'weatherapi_com') &&
+                typeof ap.us_epa_index === 'number' &&
+                !Number.isNaN(ap.us_epa_index)
+            ) {
+                valEl.textContent = String(ap.us_epa_index);
+                labelEl.textContent = 'US EPA index';
+                unitEl.textContent =
+                    aqSource === 'weatherapi_com'
+                        ? 'Category (WeatherAPI.com direct)'
+                        : 'Category (WeatherAPI); not WAQI';
+                updateRoutingConfidenceUI(
+                    'air-confidence-line',
+                    aqProvenance,
+                    endpointOk
+                        ? 'Routing confidence: —'
+                        : 'Routing confidence: need successful /api/air-quality/current',
+                    '',
+                );
+                return;
+            }
+            if (typeof pm25 === 'number') {
+                const est = Math.min(100, Math.round((pm25 / 150) * 100));
+                valEl.textContent = String(est);
+                labelEl.textContent = 'PM2.5 score';
+                unitEl.textContent = 'approx. 0–100 vs 150 µg/m³';
+                updateRoutingConfidenceUI(
+                    'air-confidence-line',
+                    aqProvenance,
+                    endpointOk
+                        ? 'Routing confidence: —'
+                        : 'Routing confidence: live air API failed — PM2.5 may be a fallback estimate',
+                    '',
+                );
+                return;
+            }
+            valEl.textContent = '—';
+            labelEl.textContent = 'AQI';
+            unitEl.textContent = 'Unavailable';
+            updateRoutingConfidenceUI(
+                'air-confidence-line',
+                aqProvenance,
+                'Routing confidence: — (no air reading)',
+                '',
+            );
+        }
+
+        function seedUnit01(seedStr, idx) {
+            let h = 2166136261 >>> 0;
+            const s = String(seedStr) + ':' + idx;
+            for (let i = 0; i < s.length; i++) {
+                h ^= s.charCodeAt(i);
+                h = Math.imul(h, 16777619);
+            }
+            const t = ((h >>> 0) % 1000) / 1000 + idx * 0.17;
+            return 0.5 + 0.5 * Math.sin(t * Math.PI * 2);
+        }
+
+        /** Deterministic intra-day variation (not hourly observations — see chart caption). */
+        function generate24hFromReading(pm25, cityLabel) {
+            if (typeof pm25 !== 'number') return [];
+            const dayStamp = new Date().toISOString().slice(0, 10);
+            const seed = `${cityLabel}|${dayStamp}`;
+            return Array.from({ length: 24 }, (_, i) => {
+                const wobble = seedUnit01(seed, i);
+                const band = pm25 * 0.38;
+                const v = pm25 + (wobble - 0.5) * 2 * band;
+                return Math.max(5, Math.round(v));
+            });
+        }
+
+        function updateAqChartNote(pm25, aqSource, stationName, apiErrorDetail) {
+            const noteEl = document.getElementById('aq-chart-note');
+            if (!noteEl) return;
+
+            const errStr =
+                typeof apiErrorDetail === 'string' && apiErrorDetail.trim()
+                    ? apiErrorDetail.trim()
+                    : '';
+            if (errStr) {
+                noteEl.textContent = errStr.slice(0, 720);
+                return;
+            }
+
+            if (typeof pm25 !== 'number') {
+                noteEl.textContent =
+                    'No PM2.5 from air-quality API yet. Set WEATHERAPI_COM_API_KEY in backend .env for paid WeatherAPI first; then WAQI_TOKEN; Rapid needs a working subscription.';
+                return;
+            }
+            const srcLabel =
+                aqSource === 'waqi'
+                    ? 'WAQI'
+                    : aqSource === 'rapidapi_weather_air_quality'
+                      ? 'RapidAPI / WeatherAPI (proxy)'
+                      : aqSource === 'weatherapi_com'
+                        ? 'WeatherAPI.com (direct)'
+                        : 'API';
+            const sta =
+                typeof stationName === 'string' && stationName.trim()
+                    ? ` · ${stationName.trim()}`
+                    : '';
+            noteEl.textContent = `Deterministic intra-day variation around latest reading (${srcLabel}${sta}); not observed hourly AQ.`;
+        }
+
+        function updateDataStatusSnippet(airSnippet) {
+            document.getElementById('dataStatus').textContent = airSnippet;
+        }
+
+        function msSleep(ms) {
+            return new Promise((resolve) => setTimeout(resolve, ms));
+        }
+
+        function initAirCompareChecks() {
+            const host = document.getElementById('aqCompareChecks');
+            if (!host) return;
+            host.innerHTML = '';
+            const onCompareChange = (ev) => {
+                const t = ev.target;
+                if (t && t.classList && t.classList.contains('aq-compare-cb')) {
+                    refreshAirCompare().catch((e) => console.warn(e));
+                }
+            };
+            host.addEventListener('change', onCompareChange);
+
+            Object.keys(CITIES_CONFIG).forEach((city) => {
+                const lab = document.createElement('label');
+                lab.className = 'aq-compare-label';
+                const cb = document.createElement('input');
+                cb.type = 'checkbox';
+                cb.className = 'aq-compare-cb';
+                cb.value = city;
+                cb.checked = false;
+                lab.appendChild(cb);
+                lab.appendChild(document.createTextNode(city));
+                host.appendChild(lab);
+            });
+        }
+
+        function escapeAttr(s) {
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/\n/g, ' ');
+        }
+
+        function formatCompareIndex(source, aq) {
+            const ap = aq && typeof aq === 'object' ? aq : {};
+            if (source === 'waqi' && typeof ap.aqi === 'number' && !Number.isNaN(ap.aqi)) {
+                return String(Math.round(ap.aqi));
+            }
+            if (
+                (source === 'rapidapi_weather_air_quality' || source === 'weatherapi_com') &&
+                typeof ap.us_epa_index === 'number' &&
+                !Number.isNaN(ap.us_epa_index)
+            ) {
+                return `EPA ${ap.us_epa_index}`;
+            }
+            return '—';
+        }
+
+        function formatCompareThreshold(pm25, thr) {
+            if (typeof pm25 !== 'number' || Number.isNaN(pm25)) return 'No PM2.5';
+            if (pm25 > thr + 35) return `High (${pm25} vs ${thr})`;
+            if (pm25 > thr) return `Alert (${pm25} vs ${thr})`;
+            return `Below (${pm25} vs ${thr})`;
+        }
+
+        async function refreshAirCompare() {
+            const tbody = document.getElementById('aqCompareTbody');
+            const statusEl = document.getElementById('aqCompareStatus');
+            if (!tbody || !statusEl) return;
+
+            const selected = Array.from(document.querySelectorAll('.aq-compare-cb:checked')).map(
+                (cb) => cb.value,
+            );
+            if (selected.length === 0) {
+                tbody.innerHTML =
+                    '<tr><td colspan="5" class="aq-compare-placeholder">Select at least one city above to compare air readings.</td></tr>';
+                statusEl.textContent = '';
+                return;
+            }
+
+            const thr = readPm25Threshold();
+            statusEl.textContent = `Fetching ${selected.length} city snapshot sequentially…`;
+
+            const settled = [];
+            let seq = 0;
+            for (const city of selected) {
+                if (seq++ > 0) await msSleep(650);
+                try {
+                    const r = await fetch(
+                        `${API_BASE}/air-quality/current?city=${encodeURIComponent(city)}`,
+                    );
+                    const txt = await r.text();
+                    let j = null;
+                    let detail = '';
+                    try {
+                        const parsed = JSON.parse(txt);
+                        if (r.ok) j = parsed;
+                        else if (typeof parsed.detail === 'string') detail = parsed.detail;
+                        else if (parsed.detail != null) detail = JSON.stringify(parsed.detail);
+                    } catch {
+                        if (!r.ok) detail = txt.slice(0, 320);
+                    }
+
+                    settled.push({
+                        city,
+                        ok: r.ok,
+                        http: r.status,
+                        source: j ? j.source : null,
+                        provenance: j ? j.provenance : null,
+                        aq: j ? j.air_quality : null,
+                        errDetail: !r.ok
+                            ? (detail ||
+                                  (txt && txt.trim() ? txt.slice(0, 280) : `HTTP ${r.status}`)).slice(
+                                  0,
+                                  560,
+                              )
+                            : '',
+                    });
+                } catch (e) {
+                    settled.push({
+                        city,
+                        ok: false,
+                        http: 0,
+                        source: null,
+                        aq: null,
+                        err: String(e.message || e),
+                        errDetail: '',
+                    });
+                }
+            }
+
+            settled.sort((a, b) => a.city.localeCompare(b.city));
+
+            tbody.innerHTML = settled
+                .map((row) => {
+                    const isCur = row.city === currentCity;
+                    const trClass = [!row.ok ? 'aq-row-err' : '', isCur ? 'current-city-row' : '']
+                        .filter(Boolean)
+                        .join(' ');
+                    const trOpen = trClass ? `<tr class="${trClass}">` : '<tr>';
+                    if (!row.ok) {
+                        const whyRaw =
+                            (row.errDetail && row.errDetail.trim()) ||
+                            row.err ||
+                            (row.http === 503
+                                ? 'Unavailable — see API detail string from server.'
+                                : `HTTP ${row.http || 'error'}`);
+                        const why = escapeAttr(String(whyRaw).slice(0, 560));
+                        return `${trOpen}<td>${row.city}</td><td colspan="4">${why}</td></tr>`;
+                    }
+                    const aq = row.aq || {};
+                    const pm25 =
+                        typeof aq.pm25_ug_m3 === 'number' && !Number.isNaN(aq.pm25_ug_m3)
+                            ? Math.round(aq.pm25_ug_m3)
+                            : null;
+                    const pmCell = pm25 !== null ? String(pm25) : '—';
+                    const idxRaw = formatCompareIndex(row.source, aq);
+                    const idxCell =
+                        row.source === 'waqi' ? `WAQI ${idxRaw}` : idxRaw === '—' ? '—' : idxRaw;
+                    const tier =
+                        row.provenance &&
+                        row.provenance.confidence &&
+                        typeof row.provenance.confidence.tier === 'string'
+                            ? row.provenance.confidence.tier
+                            : '';
+                    const srcCell =
+                        row.source && tier
+                            ? `${row.source} (${tier})`
+                            : row.source || '—';
+                    const thCell = formatCompareThreshold(pm25, thr);
+                    const stAttr =
+                        aq.station_name && String(aq.station_name).trim()
+                            ? ` title="${escapeAttr(aq.station_name)}"`
+                            : '';
+                    return `${trOpen}<td${stAttr}>${row.city}</td><td>${pmCell}</td><td>${idxCell}</td><td>${srcCell}</td><td>${thCell}</td></tr>`;
+                })
+                .join('');
+
+            statusEl.textContent = `Compared ${settled.length} cit${settled.length === 1 ? 'y' : 'ies'} · threshold ${thr} µg/m³`;
+        }
+
+        // ===== DATA FETCHING =====
+        async function refreshAllData() {
+            try {
+                const caseUrl = `${API_BASE}/cases/week/${encodeURIComponent(currentCity)}`;
+                const aqUrl = `${API_BASE}/air-quality/current?city=${encodeURIComponent(currentCity)}`;
+                const heatUrl = `${API_BASE}/heat/current?city=${encodeURIComponent(currentCity)}`;
+                const [caseRes, aqRes, heatRes] = await Promise.all([
+                    fetch(caseUrl),
+                    fetch(aqUrl),
+                    fetch(heatUrl),
+                ]);
+
+                if (!caseRes.ok) throw new Error(`Cases API ${caseRes.status}`);
+                const casesJson = await caseRes.json();
+
+                let aqSource = null;
+                let aqPayload = null;
+                let aqProvenance = null;
+                let aqEndpointErr = '';
+                try {
+                    const aqParsed = await aqRes.json();
+                    if (aqRes.ok && aqParsed) {
+                        aqSource = aqParsed.source || null;
+                        aqPayload = aqParsed.air_quality || null;
+                        aqProvenance = aqParsed.provenance || null;
+                    } else {
+                        const det = aqParsed && aqParsed.detail;
+                        aqEndpointErr =
+                            typeof det === 'string'
+                                ? det
+                                : det != null
+                                  ? JSON.stringify(det).slice(0, 600)
+                                  : `HTTP ${aqRes.status}`;
+                    }
+                } catch (jq) {
+                    if (!aqRes.ok) {
+                        aqEndpointErr =
+                            aqRes.status === 503
+                                ? '503 from air-quality endpoint (could not parse body)'
+                                : `HTTP ${aqRes.status}`;
+                    }
+                    console.warn('Air-quality JSON parse:', jq);
+                }
+
+                let heatBody = {};
+                try {
+                    const ctype = heatRes.headers.get('content-type') || '';
+                    if (ctype.toLowerCase().includes('application/json')) {
+                        heatBody = await heatRes.json();
+                    }
+                } catch (_) {
+                    heatBody = {};
+                }
+
+                window.__aqEndpointErr = aqEndpointErr;
+
+                let pm25 = null;
+                if (
+                    aqPayload &&
+                    typeof aqPayload.pm25_ug_m3 === 'number' &&
+                    !Number.isNaN(aqPayload.pm25_ug_m3)
+                ) {
+                    pm25 = Math.round(aqPayload.pm25_ug_m3);
+                }
+                if (
+                    pm25 == null &&
+                    typeof casesJson.pm25_estimate === 'number' &&
+                    !Number.isNaN(casesJson.pm25_estimate)
+                ) {
+                    pm25 = Math.round(casesJson.pm25_estimate);
+                }
+
+                window.__lastAirSource = aqSource;
+                window.__lastPm25 = pm25;
+                window.__lastAirProvenance = aqProvenance;
+
+                document.getElementById('current-pm25').textContent =
+                    typeof pm25 === 'number' ? String(pm25) : '—';
+
+                updateAirIndexCard(aqSource, aqPayload, pm25, aqProvenance, aqRes.ok);
+
+                let alertLevel = 'LOW';
+                const alertCard = document.getElementById('alert-card');
+                const thrRaw = document.getElementById('alertThreshold')
+                    ? document.getElementById('alertThreshold').value
+                    : '150';
+                let thr = parseInt(String(thrRaw), 10);
+                if (Number.isNaN(thr) || thr < 1) thr = 150;
+
+                alertCard.classList.remove('high', 'moderate', 'low');
+                if (typeof pm25 !== 'number') {
+                    alertLevel = 'NO DATA';
+                    alertCard.classList.add('low');
+                } else if (pm25 > thr + 35) {
+                    alertLevel = 'HIGH';
+                    alertCard.classList.add('high');
+                } else if (pm25 > thr) {
+                    alertLevel = 'MODERATE';
+                    alertCard.classList.add('moderate');
+                } else {
+                    alertLevel = 'LOW';
+                    alertCard.classList.add('low');
+                }
+
+                document.getElementById('alert-level').textContent = alertLevel;
+
+                document.getElementById('forecast-avg').textContent =
+                    typeof pm25 === 'number' ? String(Math.round(pm25 * 0.9)) : '—';
+
+                let heatLevelStr = '--';
+                let heatEffDisp = null;
+                if (heatRes.ok && heatBody) {
+                    heatLevelStr = typeof heatBody.heat_level === 'string' ? heatBody.heat_level : '--';
+                    if (typeof heatBody.heat_temperature_display === 'number') {
+                        heatEffDisp = heatBody.heat_temperature_display;
+                    }
+                }
+
+                document.getElementById('heat-effective').textContent =
+                    typeof heatEffDisp === 'number' && !Number.isNaN(heatEffDisp)
+                        ? String(Math.round(heatEffDisp))
+                        : '—';
+
+                document.getElementById('heat-level-line').textContent =
+                    heatRes.ok && heatLevelStr !== '--'
+                        ? 'Tier · ' + heatLevelStr + ' · current snapshot'
+                        : heatRes.ok
+                          ? '—'
+                          : (typeof heatBody.detail === 'string'
+                              ? 'Heat unavailable — ' + heatBody.detail.slice(0, 90)
+                              : 'Heat unavailable — HTTP ' + heatRes.status);
+
+                if (heatRes.ok) {
+                    updateRoutingConfidenceUI(
+                        'heat-confidence-line',
+                        heatBody && heatBody.provenance,
+                        'Routing confidence: —',
+                        '',
+                    );
+                } else {
+                    updateRoutingConfidenceUI(
+                        'heat-confidence-line',
+                        null,
+                        'Routing confidence: — (heat endpoint unavailable)',
+                        '',
+                    );
+                }
+
+                const heatCard = document.getElementById('heat-card');
+                if (heatCard) {
+                    heatCard.classList.remove('heat-hot', 'heat-mod');
+                    if (heatLevelStr === 'HIGH' || heatLevelStr === 'SEVERE') {
+                        heatCard.classList.add('heat-hot');
+                    } else if (heatLevelStr === 'MODERATE') {
+                        heatCard.classList.add('heat-mod');
+                    }
+                }
+
+                const compoundEl = document.getElementById('compound-environment-note');
+                if (compoundEl) {
+                    const airBadEnough =
+                        alertLevel === 'HIGH' ||
+                        alertLevel === 'MODERATE' ||
+                        alertLevel === 'SEVERE';
+                    const nastyHeat =
+                        heatLevelStr === 'HIGH' ||
+                        heatLevelStr === 'MODERATE' ||
+                        heatLevelStr === 'SEVERE';
+                    if (airBadEnough && nastyHeat && heatRes.ok && heatLevelStr !== '--') {
+                        compoundEl.style.display = 'block';
+                        compoundEl.innerHTML =
+                            '<strong>Heat + degraded air simultaneously.</strong> Prioritize shaded rest, hydration, and shorter strenuous outdoor time—especially with children or respiratory sensitivities.';
+                    } else {
+                        compoundEl.style.display = 'none';
+                        compoundEl.textContent = '';
+                    }
+                }
+
+                window.__lastVerification = casesJson.verification || null;
+
+                updateCharts(
+                    pm25,
+                    casesJson.days || casesJson.data?.map((d) => d.cases),
+                    aqSource,
+                    aqPayload,
+                    aqEndpointErr,
+                );
+
+                await loadAIForecasts(pm25);
+
+                updateTimestamp(casesJson.generated_at || null);
+
+                const stationName = aqPayload && aqPayload.station_name ? aqPayload.station_name : '';
+                const aqTier =
+                    aqProvenance &&
+                    aqProvenance.confidence &&
+                    typeof aqProvenance.confidence.tier === 'string'
+                        ? aqProvenance.confidence.tier
+                        : '';
+                let airPhrase;
+                if (aqRes.ok && aqSource) {
+                    const tierFrag = aqTier ? ` · ${aqTier}` : '';
+                    airPhrase =
+                        `Air: ${aqSource}${tierFrag}` + (stationName ? ` (${stationName})` : '');
+                } else if (aqEndpointErr) {
+                    airPhrase = `Air failed — ${aqEndpointErr.slice(0, 120)}`;
+                } else {
+                    airPhrase = 'Air: unavailable';
+                }
+                let heatSnippet = '';
+                if (heatRes.ok && heatLevelStr !== '--') {
+                    const r =
+                        typeof heatEffDisp === 'number' && !Number.isNaN(heatEffDisp)
+                            ? `${Math.round(heatEffDisp)} °C · `
+                            : '';
+                    heatSnippet = `${r}tier ${heatLevelStr}`;
+                } else if (heatRes.ok) {
+                    heatSnippet = 'no tier parsed';
+                } else {
+                    const det =
+                        heatBody && typeof heatBody.detail === 'string'
+                            ? heatBody.detail.slice(0, 100)
+                            : '';
+                    heatSnippet = det ? `error — ${det}` : `HTTP ${heatRes.status}`;
+                }
+                updateDataStatusSnippet(`Cases: synthetic · ${airPhrase} · Heat: ${heatSnippet}`);
+
+                setTimeout(() => {
+                    const selected = document.querySelectorAll('.aq-compare-cb:checked');
+                    if (selected.length > 0) {
+                        refreshAirCompare().catch((e) => console.warn(e));
+                    }
+                }, 550);
+
+                displayAlerts(pm25);
+                refreshBlockchainRibbon();
+                saveToLocalStorage();
+                await loadLatestAlertStrip();
+
+                syncScenarioBaselineFromCases(casesJson);
+                window.__lastHeatEff =
+                    typeof heatEffDisp === 'number' && !Number.isNaN(heatEffDisp) ? heatEffDisp : null;
+                if (!scenarioSandboxUserTouched) {
+                    syncScenarioSlidersFromLive();
+                }
+                updateScenarioSandbox();
+                syncFacilityReportingChrome();
+                refreshFacilityAuditLog().catch((w) => console.warn(w));
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                updateDataStatusSnippet(`Cases/API error (${error.message || error})`);
+                displayAlerts(null);
+            }
+        }
+
+        function updateCharts(pm25ForAqChart, caseSevenDay, aqSource, aqPayload, aqEndpointErr) {
+            if (aqChart && caseChart) {
+                aqChart.data.datasets[0].label = currentCity;
+                const stationName =
+                    aqPayload && aqPayload.station_name ? aqPayload.station_name : '';
+                updateAqChartNote(
+                    pm25ForAqChart,
+                    aqSource,
+                    stationName,
+                    typeof aqEndpointErr === 'string' ? aqEndpointErr : '',
+                );
+
+                if (typeof pm25ForAqChart !== 'number') {
+                    aqChart.data.datasets[0].data = new Array(24).fill(null);
+                } else {
+                    aqChart.data.datasets[0].data = generate24hFromReading(
+                        pm25ForAqChart,
+                        currentCity,
+                    );
+                }
+                aqChart.update('none');
+
+                let bar = Array.isArray(caseSevenDay)
+                    ? caseSevenDay.slice(0, 7)
+                    : null;
+                if (!bar || bar.length < 7) {
+                    bar = generateMockData(7, 5, 20);
+                }
+                caseChart.data.datasets[0].data = bar;
+                caseChart.update('none');
+            }
+        }
+
+        async function refreshBlockchainRibbon() {
+            const el = document.getElementById('chainVerification');
+            if (!el) return;
+            try {
+                const r = await fetch(`${API_BASE}/blockchain/status`);
+                if (!r.ok) throw new Error(String(r.status));
+                const j = await r.json();
+                const rpc = j.polygon_rpc_connected ? `RPC ✓ blk ${j.latest_block_number ?? '?'}` : 'RPC offline';
+                const sign = j.signing_key_configured ? ' signer ✓' : ' hash-only';
+                const v = window.__lastVerification;
+                const h = v && v.content_hash ? String(v.content_hash).slice(0, 14) + '…' : '—';
+                el.textContent = `${rpc}${sign} | anchor ${h}`;
+                el.title = v ? JSON.stringify(v, null, 2) : (j.rpc_error || 'verification');
+            } catch (err) {
+                el.textContent = 'Chain status unavailable';
+                el.title = err && err.message ? err.message : String(err);
+            }
+        }
+
+        async function loadAIForecasts(pm25Baseline) {
+            const container = document.getElementById('respiratory-forecast');
+            try {
+                const r = await fetch(`${API_BASE}/models/predict/week/${encodeURIComponent(currentCity)}`);
+                if (!r.ok) throw new Error(String(r.status));
+                const j = await r.json();
+                const fc = j.forecast || {};
+                const next = typeof fc.next_day_estimate === 'number' ? fc.next_day_estimate : 12;
+                const modelLabel = fc.model ? ` • ${fc.model}` : '';
+                const forecast = [];
+                for (let day = 1; day <= 5; day++) {
+                    const est = Math.max(0, Math.round(next * (1 + (day - 1) * 0.04)));
+                    let pm25Day;
+                    if (typeof pm25Baseline === 'number' && !Number.isNaN(pm25Baseline)) {
+                        pm25Day = Math.min(
+                            280,
+                            Math.round(pm25Baseline * (1 + (day - 1) * 0.035) + (day - 1) * 2),
+                        );
+                    } else {
+                        pm25Day = Math.min(280, Math.round(est * 12 + day * 3));
+                    }
+                    forecast.push({
+                        day,
+                        pm25: pm25Day,
+                        cases: est,
+                    });
+                }
+                container.innerHTML = `<div style="font-size:0.7rem;color:var(--text-tertiary);margin-bottom:10px">${currentCity}${modelLabel}</div>` +
+                    forecast.map(day => `
+                <div class="forecast-day">
+                    <div class="forecast-day-label">Day ${day.day}</div>
+                    <div class="forecast-pm25">${day.pm25}</div>
+                    <div class="forecast-unit">µg/m³</div>
+                    <div class="forecast-cases">${day.cases} cases</div>
+                </div>
+            `).join('');
+            } catch (e) {
+                container.innerHTML = '<div style="padding:12px;color:var(--text-secondary)">Forecast unavailable</div>';
+            }
+        }
+
+        // ===== ALERTS =====
+        function readPm25Threshold() {
+            const el = document.getElementById('alertThreshold');
+            if (!el) return 150;
+            const n = parseInt(String(el.value), 10);
+            return Number.isNaN(n) || n < 1 ? 150 : n;
+        }
+
+        function displayAlerts(pm25) {
+            const container = document.getElementById('alerts-list');
+            const thr = readPm25Threshold();
+            /** @type {{ level: string, time: string, message: string, cls: string }[]} */
+            const rows = [];
+
+            if (typeof pm25 !== 'number' || Number.isNaN(pm25)) {
+                const apiHint =
+                    typeof window.__aqEndpointErr === 'string' && window.__aqEndpointErr.trim()
+                        ? window.__aqEndpointErr.trim().slice(0, 260)
+                        : 'Replace WAQI placeholder in backend .env; WeatherAPI fallback now requests aqi=yes by default.';
+                rows.push({
+                    level: 'INFO',
+                    time: 'Just now',
+                    message: `${currentCity}: no PM2.5 from API. ${apiHint}`,
+                    cls: 'low',
+                });
+            } else if (pm25 > thr + 35) {
+                rows.push({
+                    level: 'HIGH',
+                    time: 'Just now',
+                    message: `${currentCity}: PM2.5 ${pm25} µg/m³ (threshold ${thr}). Elevated respiratory load possible.`,
+                    cls: 'high',
+                });
+            } else if (pm25 > thr) {
+                rows.push({
+                    level: 'MODERATE',
+                    time: 'Just now',
+                    message: `${currentCity}: PM2.5 ${pm25} µg/m³ exceeds alert threshold (${thr}). Monitor.`,
+                    cls: 'moderate',
+                });
+            } else {
+                rows.push({
+                    level: 'LOW',
+                    time: 'Just now',
+                    message: `${currentCity}: PM2.5 ${pm25} µg/m³ below threshold (${thr}).`,
+                    cls: 'low',
+                });
+            }
+
+            rows.push(
+                {
+                    level: 'INFO',
+                    time: 'Facility',
+                    message: `${currentCity}: facility buttons post to Mongo only after OTP login (registration email → JWT). Pending partner approval blocks access.`,
+                    cls: 'low',
+                },
+                {
+                    level: 'INFO',
+                    time: 'Reference',
+                    message: `Default PM2.5 alert threshold: ${thr} µg/m³ (change under Settings).`,
+                    cls: 'low',
+                },
+            );
+
+            container.innerHTML = rows
+                .map(
+                    (alert) => `
+                <div class="alert-item ${alert.cls}">
+                    <div class="alert-time">${alert.time}</div>
+                    <div class="alert-message">${alert.message}</div>
+                    <div class="alert-badges">
+                        <span class="alert-badge ${alert.cls}">${alert.level}</span>
+                    </div>
+                </div>
+            `,
+                )
+                .join('');
+        }
+
+        /* ----- Scenario A: illustrative sliders (compound PM2.5 × heat strain) ----- */
+        function clampScenario(x, lo, hi) {
+            return Math.min(hi, Math.max(lo, x));
+        }
+
+        /** Pollution amplification vs low reference (~WHO interim target scale). Sandbox only. */
+        function scenarioSandboxAirFactor(pm25Ug) {
+            const p = Math.max(5, Number(pm25Ug) || 5);
+            const stress = clampScenario((p - 12) / 125, 0, 1) * 1.4;
+            return 1 + 0.5 * stress;
+        }
+
+        /** Heat amplification vs mild reference (°C). Sandbox only. */
+        function scenarioSandboxHeatFactor(effC) {
+            const c = Number(effC);
+            if (!(c >= c)) return 1;
+            const stress = clampScenario((c - 26) / 14, 0, 1) * 1.25;
+            return 1 + 0.55 * stress;
+        }
+
+        function syncScenarioBaselineFromCases(casesJson) {
+            if (!casesJson || typeof casesJson !== 'object') {
+                window.__simBaselineAvgDaily = null;
+                window.__simBaselineWeekTotal = null;
+                return;
+            }
+            const days = Array.isArray(casesJson.days) ? casesJson.days : [];
+            let avg = null;
+            if (days.length > 0) {
+                let sum = 0;
+                for (let i = 0; i < days.length; i++) {
+                    const d = days[i];
+                    sum += typeof d === 'number' && !Number.isNaN(d) ? d : 0;
+                }
+                avg = sum / days.length;
+            } else if (typeof casesJson.total === 'number' && !Number.isNaN(casesJson.total)) {
+                avg = casesJson.total / 7;
+            }
+            window.__simBaselineAvgDaily = avg;
+            window.__simBaselineWeekTotal =
+                typeof casesJson.total === 'number' && !Number.isNaN(casesJson.total)
+                    ? Math.round(casesJson.total)
+                    : avg != null
+                      ? Math.round(avg * 7)
+                      : null;
+        }
+
+        function syncScenarioSlidersFromLive() {
+            const pmEl = document.getElementById('simPm25');
+            const heatEl = document.getElementById('simHeat');
+            if (!pmEl || !heatEl) return;
+            const pmRaw =
+                typeof window.__lastPm25 === 'number' && !Number.isNaN(window.__lastPm25)
+                    ? window.__lastPm25
+                    : 72;
+            const pmRounded = Math.min(320, Math.max(5, Math.round(pmRaw)));
+            const htRaw =
+                typeof window.__lastHeatEff === 'number' && !Number.isNaN(window.__lastHeatEff)
+                    ? window.__lastHeatEff
+                    : 30;
+            const htRounded = clampScenario(htRaw, 22, 46);
+            pmEl.value = String(pmRounded);
+            heatEl.value = String(Math.round(htRounded * 2) / 2);
+        }
+
+        function updateScenarioSandbox() {
+            const pmEl = document.getElementById('simPm25');
+            const heatEl = document.getElementById('simHeat');
+            if (!pmEl || !heatEl) return;
+
+            const setText = (id, t) => {
+                const n = document.getElementById(id);
+                if (n) n.textContent = String(t);
+            };
+
+            const pm = parseFloat(pmEl.value);
+            const ht = parseFloat(heatEl.value);
+            setText('simPm25Display', String(Math.round(pm)));
+            setText('simHeatDisplay', String(ht));
+
+            const baseRaw = window.__simBaselineAvgDaily;
+            const base =
+                typeof baseRaw === 'number' && baseRaw >= 0 && !Number.isNaN(baseRaw) ? baseRaw : null;
+
+            if (base != null) {
+                setText('simBaselineAvgOut', String(Math.round(base)));
+            } else {
+                setText('simBaselineAvgOut', '—');
+            }
+
+            const airF = scenarioSandboxAirFactor(pm);
+            const heatF = scenarioSandboxHeatFactor(ht);
+            const combined = airF * heatF;
+            const airStressDisp = clampScenario((pm - 12) / 125, 0, 1);
+            const heatStressDisp = clampScenario((ht - 26) / 14, 0, 1);
+            const loadIx = Math.min(100, Math.round(52 * airStressDisp + 48 * heatStressDisp));
+
+            setText('simSandboxAirMul', `${airF.toFixed(2)}×`);
+            setText('simSandboxHeatMul', `${heatF.toFixed(2)}×`);
+            setText('simSandboxCombinedMul', `${combined.toFixed(2)}×`);
+            setText('simSandboxLoadIx', `${loadIx} / 100`);
+
+            if (base == null) {
+                setText('simSandboxDaily', '—');
+                setText('simSandboxWeek', '—');
+                setText('simSandboxDelta', 'Load city cases first.');
+                return;
+            }
+
+            const simDaily = Math.max(0, Math.round(base * combined));
+            const simWeek = Math.max(0, Math.round(simDaily * 7));
+            const baseWeek = window.__simBaselineWeekTotal;
+            setText('simSandboxDaily', `${simDaily} cases / day (illustrative)`);
+            setText('simSandboxWeek', `${simWeek} if constant 7 days`);
+            if (typeof baseWeek === 'number' && !Number.isNaN(baseWeek)) {
+                const delta = simWeek - baseWeek;
+                setText('simSandboxDelta', `${delta >= 0 ? '+' : ''}${delta} vs synth week total (${baseWeek})`);
+            } else {
+                setText(
+                    'simSandboxDelta',
+                    `${simDaily * 7} linear week (baseline week total unavailable)`,
+                );
+            }
+        }
+
+        function setupScenarioSandbox() {
+            const pmEl = document.getElementById('simPm25');
+            const heatEl = document.getElementById('simHeat');
+            const resetBtn = document.getElementById('scenarioResetLive');
+            if (!pmEl || !heatEl) return;
+            const onMove = () => {
+                scenarioSandboxUserTouched = true;
+                updateScenarioSandbox();
+            };
+            pmEl.addEventListener('input', onMove);
+            pmEl.addEventListener('change', updateScenarioSandbox);
+            heatEl.addEventListener('input', onMove);
+            heatEl.addEventListener('change', updateScenarioSandbox);
+            if (resetBtn) {
+                resetBtn.addEventListener('click', () => {
+                    scenarioSandboxUserTouched = false;
+                    syncScenarioSlidersFromLive();
+                    updateScenarioSandbox();
+                });
+            }
+            updateScenarioSandbox();
+        }
+
+        // ===== UTILITY =====
+        function generateTimeLabels(count) {
+            const labels = [];
+            for (let i = count - 1; i >= 0; i--) {
+                labels.push(`${i}h ago`);
+            }
+            return labels;
+        }
+
+        function generateMockData(count, min, max) {
+            return Array.from({length: count}, () => 
+                Math.floor(Math.random() * (max - min + 1)) + min
+            );
+        }
+
+        function updateTimestamp(isoFallback) {
+            const d = isoFallback ? new Date(isoFallback) : new Date();
+            document.getElementById('updated-at').textContent = d.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function downloadData() {
+            const csv = `City,Date,PM2.5,Risk Score,Alert Level\n${currentCity},${new Date().toISOString()},--,--,--`;
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `early-warning-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+
+        function checkOnlineStatus() {
+            const isOnline = navigator.onLine;
+            document.getElementById('offlineBanner').classList.toggle('show', !isOnline);
+            document.getElementById('statusIndicator').classList.toggle('offline', !isOnline);
+        }
+
+        function setupEventListeners() {
+            const darkCb = document.getElementById('darkModeToggle');
+            if (darkCb) {
+                darkCb.addEventListener('change', (e) => {
+                    setDarkTheme(e.target.checked);
+                });
+            }
+            document.getElementById('autoRefresh').addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    setInterval(refreshAllData, 30 * 60 * 1000);
+                }
+            });
+            setupScenarioSandbox();
+            const fcPw = document.getElementById('facilityPasswordLoginBtn');
+            if (fcPw) fcPw.addEventListener('click', (ev) => facilityPasswordLogin(ev));
+            const fcSend = document.getElementById('facilitySendCodeBtn');
+            if (fcSend) fcSend.addEventListener('click', (ev) => facilitySendLoginCode(ev));
+            const fcEx = document.getElementById('facilityExchangeBtn');
+            if (fcEx) fcEx.addEventListener('click', (ev) => facilityExchangeLoginCode(ev));
+            const fcOut = document.getElementById('facilityLogoutBtn');
+            if (fcOut) fcOut.addEventListener('click', () => facilitySignOutReporting());
+            const facWrap = document.getElementById('facilityActionButtons');
+            if (facWrap) {
+                facWrap.addEventListener('click', (evt) => {
+                    const tgt = evt.target && evt.target.closest
+                        ? evt.target.closest('[data-action-key]')
+                        : null;
+                    if (!tgt) return;
+                    const key = tgt.getAttribute('data-action-key');
+                    if (!key) return;
+                    evt.preventDefault();
+                    postFacilityOperationalAction(key, evt);
+                });
+            }
+        }
+
+        // ===== LOCAL STORAGE =====
+        function saveToLocalStorage() {
+            localStorage.setItem('currentCity', currentCity);
+            localStorage.setItem('currentMode', currentMode);
+        }
+
+        function loadFromLocalStorage() {
+            localStorage.removeItem('actionLog');
+        }
+
+        window.addEventListener('offline', checkOnlineStatus);
+        window.addEventListener('offline', checkOnlineStatus);
+    </script>
+</body>
+</html>

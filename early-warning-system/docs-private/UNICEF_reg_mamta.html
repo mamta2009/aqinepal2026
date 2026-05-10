@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>UNICEF registration workbook — Mamta (internal)</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      white-space: pre-wrap;
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">UNICEF registration workbook — Mamta (internal)</h1>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#unicef-registration-workbook-mamta-sonwalkar-track"
+id="toc-unicef-registration-workbook-mamta-sonwalkar-track">UNICEF
+registration workbook — Mamta Sonwalkar track</a>
+<ul>
+<li><a href="#identity-coordination" id="toc-identity-coordination">1.
+Identity &amp; coordination</a></li>
+<li><a href="#programme-vehicle" id="toc-programme-vehicle">2. Programme
+/ vehicle</a></li>
+<li><a href="#problem-geography-truthful-baseline"
+id="toc-problem-geography-truthful-baseline">3. Problem &amp; geography
+(truthful baseline)</a></li>
+<li><a href="#solution-summary-architecture-in-words-no-code"
+id="toc-solution-summary-architecture-in-words-no-code">4. Solution
+summary (architecture in words — no code)</a></li>
+<li><a href="#open-source-blockchain-ai-claims-you-can-evidence"
+id="toc-open-source-blockchain-ai-claims-you-can-evidence">5. Open
+source, blockchain, AI — claims you can evidence</a></li>
+<li><a href="#data-privacy-child-rights"
+id="toc-data-privacy-child-rights">6. Data, privacy &amp; child
+rights</a></li>
+<li><a href="#deployment-sustainability"
+id="toc-deployment-sustainability">7. Deployment &amp;
+sustainability</a></li>
+<li><a href="#budget-milestones-high-level"
+id="toc-budget-milestones-high-level">8. Budget &amp; milestones (high
+level)</a></li>
+<li><a href="#mandatory-attachments-checklist"
+id="toc-mandatory-attachments-checklist">9. Mandatory attachments
+checklist</a></li>
+<li><a href="#technical-repository-baseline-for-accurate-filings"
+id="toc-technical-repository-baseline-for-accurate-filings">10.
+Technical repository baseline (for accurate filings)</a></li>
+<li><a href="#version-log" id="toc-version-log">11. Version log</a></li>
+<li><a href="#cross-reference" id="toc-cross-reference">12.
+Cross-reference</a></li>
+</ul></li>
+</ul>
+</nav>
+<h1 id="unicef-registration-workbook-mamta-sonwalkar-track">UNICEF
+registration workbook — Mamta Sonwalkar track</h1>
+<p><strong>Status:</strong> Draft — internal only (not served on the
+public demo site).</p>
+<p><strong>Purpose:</strong> Single place to collect answers,
+narratives, and evidence for UNICEF-related registration or programme
+submissions <strong>without tying them to runnable product
+code.</strong> Update dates and facts as commitments become real.</p>
+<hr />
+<h2 id="identity-coordination">1. Identity &amp; coordination</h2>
+<table>
+<colgroup>
+<col style="width: 57%" />
+<col style="width: 42%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Primary contact</td>
+<td>Mamta Sonwalkar</td>
+</tr>
+<tr>
+<td>Role / title</td>
+<td><em>(e.g. product lead, technical lead)</em></td>
+</tr>
+<tr>
+<td>Email</td>
+<td></td>
+</tr>
+<tr>
+<td>Phone / Signal / etc.</td>
+<td></td>
+</tr>
+<tr>
+<td>Organisation</td>
+<td><em>(legal entity submitting or backing the work — e.g. intellADAPT
+/ Edwise Tech as applicable)</em></td>
+</tr>
+<tr>
+<td>Co-applicants / partners</td>
+<td><em>(ministry adjacency, UNICEF CO, NGOs — list)</em></td>
+</tr>
+<tr>
+<td>Time zone</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="programme-vehicle">2. Programme / vehicle</h2>
+<p><strong>Which UNICEF mechanism is this aimed at?</strong> <em>(tick
+one primary; duplicate section if parallel tracks)</em></p>
+<ul class="task-list">
+<li><label><input type="checkbox" />UNICEF Venture Fund (or successor
+innovation window)</label></li>
+<li><label><input type="checkbox" />Country office innovation /
+partnership pathway</label></li>
+<li><label><input type="checkbox" />Other:
+_________________________________</label></li>
+</ul>
+<p><strong>Target round / intake / deadline:</strong></p>
+<ul>
+<li>Reference link (official):</li>
+<li>Hard deadline date:</li>
+</ul>
+<p><strong>Internal owner for submission:</strong> Mamta Sonwalkar (+
+named backup):</p>
+<hr />
+<h2 id="problem-geography-truthful-baseline">3. Problem &amp; geography
+(truthful baseline)</h2>
+<p>Describe the <strong>public-health / climate–health
+coordination</strong> problem in <strong>Nepal Bagmati</strong> (or
+revised geography) <strong>as you would defend it to an
+evaluator</strong> — aspirations vs what is validated today:</p>
+<ul>
+<li>Population / geography in scope:</li>
+<li>Existing data pipelines (DHIS2, AQ, meteorology — what is actually
+connected vs planned):</li>
+<li>What the <strong>current demo proves</strong> vs what requires a
+<strong>governed rollout with partners</strong></li>
+</ul>
+<hr />
+<h2 id="solution-summary-architecture-in-words-no-code">4. Solution
+summary (architecture in words — no code)</h2>
+<p><strong>One paragraph</strong> describing the prototype: APIs,
+synthetic vs real data, optional verification hooks, optional blockchain
+anchoring philosophy, dashboards.</p>
+<p>Attach or cross-reference diagrams from the repo <strong>as
+figures</strong> only (do not imply code = validation):</p>
+<ul>
+<li><code>docs/tech/early_warning_platform_architecture.svg</code></li>
+<li><code>docs/tech/fastapi_mongodb_render_architecture.svg</code></li>
+<li><code>docs/tech/simple_frontend_architecture.svg</code></li>
+</ul>
+<hr />
+<h2 id="open-source-blockchain-ai-claims-you-can-evidence">5. Open
+source, blockchain, AI — claims you can evidence</h2>
+<p>Use <strong>only</strong> statements you can back with repository,
+deployment, or written methodology.</p>
+<table>
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 38%" />
+<col style="width: 47%" />
+</colgroup>
+<thead>
+<tr>
+<th>Pillar</th>
+<th>Honest current state</th>
+<th>Evidence to attach / link</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Open source</td>
+<td>MIT / GitHub URL / license file</td>
+<td></td>
+</tr>
+<tr>
+<td>Blockchain</td>
+<td>Cryptographic verification vs optional on-chain txs; testnet vs
+mainnet</td>
+<td></td>
+</tr>
+<tr>
+<td>AI</td>
+<td>Which models run in production; validation status (or “not yet
+validated on partner data”)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Red lines:</strong> Do not copy aspirational numbers from
+internal strategy packs into official forms unless approved and
+measured.</p>
+<hr />
+<h2 id="data-privacy-child-rights">6. Data, privacy &amp; child
+rights</h2>
+<ul>
+<li>Personal data handled today: <em>(yes / no — what classes)</em></li>
+<li>Data residency / UNICEF DPIA alignment: <em>(status)</em></li>
+<li>UNICEF GIS / safeguarding expectations: <em>(checklist)</em></li>
+<li>linkage to external <strong>Privacy</strong> /
+<strong>Terms</strong> stubs if appropriate for web demo only</li>
+</ul>
+<hr />
+<h2 id="deployment-sustainability">7. Deployment &amp;
+sustainability</h2>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Current hosting sketch (e.g. Render + Mongo Atlas)</td>
+<td></td>
+</tr>
+<tr>
+<td>Estimated run cost band</td>
+<td></td>
+</tr>
+<tr>
+<td>Hand-off / open-source stewardship after funding</td>
+<td></td>
+</tr>
+<tr>
+<td>Local capacity (Nepal) for operations</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="budget-milestones-high-level">8. Budget &amp; milestones (high
+level)</h2>
+<ul>
+<li>Phase 1 (months): outcomes + budget band:</li>
+<li>Phase 2:<br />
+</li>
+<li>Key risks &amp; mitigations:</li>
+</ul>
+<hr />
+<h2 id="mandatory-attachments-checklist">9. Mandatory attachments
+checklist</h2>
+<p>Use the <strong>official UNICEF checklist</strong> for your vehicle;
+map files here:</p>
+<ul class="task-list">
+<li><label><input type="checkbox" />Executive summary<br />
+</label></li>
+<li><label><input type="checkbox" />Technical annex (diagrams OK, no
+inflated metrics)<br />
+</label></li>
+<li><label><input type="checkbox" />Letters of intent / partnership (if
+required)<br />
+</label></li>
+<li><label><input type="checkbox" />Ethics / data use (template or CO
+sign-off if required)<br />
+</label></li>
+<li><label><input type="checkbox" />Team CVs<br />
+</label></li>
+<li><label><input type="checkbox" />Pitch / video (spec from
+call)</label></li>
+</ul>
+<p><strong>File naming convention:</strong> keep
+<code>UNICEF_reg_mamta</code> materials in <code>docs-private/</code> or
+a sibling folder that is <strong>not</strong> web-mounted.</p>
+<hr />
+<h2 id="technical-repository-baseline-for-accurate-filings">10.
+Technical repository baseline (for accurate filings)</h2>
+<p>Use this checklist when describing the <strong>live demo</strong>
+versus <strong>aspirations</strong>:</p>
+<ul>
+<li><strong>Canonical spec:</strong>
+<code>early-warning-system/docs/IMPLEMENTATION_SNAPSHOT.md</code>
+(resolver: WeatherAPI direct → WAQI → Rapid for
+<code>/api/air-quality/current</code>; provenance field
+<strong><code>deployment_role</code></strong>; OpenWeather routes are
+supplementary; <strong><code>DEPLOYMENT_MODE</code></strong> default
+<strong>REGIONAL</strong>).</li>
+<li><strong>Synthetic health data:</strong> Weekly case generator is not
+DHIS2-derived until you wire ETL (see <code>DHIS2_*</code> +
+<code>/api/dhis2/system-check</code>).</li>
+<li><strong>AI forecast strip:</strong>
+<code>GET /api/models/predict/week/{city}</code> uses
+<code>ai_models</code> on synthetic weekly input — clarify validation
+status.</li>
+</ul>
+<p>Do not cite this workbook as implying ministry-validated denominators
+unless you have separate evidence.</p>
+<hr />
+<h2 id="version-log">11. Version log</h2>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Date</th>
+<th>Author</th>
+<th>Changes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.1</td>
+<td><em>(fill)</em></td>
+<td>Mamta Sonwalkar</td>
+<td>Initial workbook</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="cross-reference">12. Cross-reference</h2>
+<ul>
+<li>Detailed strategy checklist (internal):
+<code>UNICEF_REQUIREMENTS_STRATEGY.md</code> in this folder — <strong>do
+not</strong> paste unreviewed wording into registrations without
+aligning to evidence.</li>
+</ul>
+</body>
+</html>

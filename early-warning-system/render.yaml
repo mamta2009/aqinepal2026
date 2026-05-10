@@ -1,0 +1,21 @@
+# Render blueprint: deploy the FastAPI app from backend/ only.
+# Set env in the Render dashboard: MONGODB_URL (or DATABASE_URL), WAQI_TOKEN, RapidAPI keys, etc.
+#
+# Repo layout: clone this repo, then Render uses ``rootDir: early-warning-system/backend``.
+services:
+  - type: web
+    name: early-warning-nepal-api
+    runtime: python
+    rootDir: early-warning-system/backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.3"
+      - key: ENVIRONMENT
+        value: production
+      # Copy from dashboard secret store — do not commit real values.
+      # - key: MONGODB_URL
+      #   sync: false
+      # - key: WAQI_TOKEN
+      #   sync: false

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 780" role="img" aria-labelledby="title desc">
+  <title id="title">Notification and alert delivery flow (implementation)</title>
+  <desc id="desc">Diagram of FastAPI notifications module: triggers, MongoDB collections, Twilio and Resend, webhooks. Matches backend code paths in main.py, notifications_api.py, twilio_notify.py.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font: 700 22px system-ui, sans-serif; fill: #1e3a5f; }
+      .sub { font: 13px system-ui, sans-serif; fill: #64748b; }
+      .box { fill: #fff; stroke-width: 2; rx: 10; }
+      .b-api { stroke: #667eea; }
+      .b-mongo { stroke: #16a34a; }
+      .b-tri { stroke: #f59e0b; }
+      .b-out { stroke: #0ea5e9; }
+      .b-hook { stroke: #a855f7; }
+      .hd { font: 600 13px system-ui, sans-serif; fill: #0f172a; }
+      .txt { font: 11px system-ui, sans-serif; fill: #475569; }
+      .txt-mono { font: 11px ui-monospace, monospace; fill: #334155; }
+      .arr { fill: none; stroke: #64748b; stroke-width: 2; marker-end: url(#m); }
+      .arr-main { stroke: #667eea; stroke-width: 2.5; }
+      .dashed { stroke-dasharray: 6 4; stroke: #94a3b8; }
+    </style>
+    <marker id="m" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <polygon points="0 0, 8 4, 0 8" fill="#64748b"/>
+    </marker>
+    <marker id="m2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <polygon points="0 0, 8 4, 0 8" fill="#667eea"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="1280" height="780"/>
+  <text x="640" y="42" text-anchor="middle" class="title">Notification &amp; alert flow (implementation)</text>
+  <text x="640" y="64" text-anchor="middle" class="sub">Aligned with: main.py · notifications_api.py · twilio_notify.py · db_state.py · MongoDB database early_warning</text>
+
+  <!-- Triggers -->
+  <rect x="48" y="100" width="220" height="200" class="box b-tri"/>
+  <text x="158" y="128" text-anchor="middle" class="hd">Triggers (clients)</text>
+  <text x="62" y="152" class="txt-mono">GET /registration</text>
+  <text x="62" y="170" class="txt">→ POST /api/contacts/register</text>
+  <text x="62" y="192" class="txt-mono">POST /api/contacts/verify</text>
+  <text x="62" y="218" class="txt-mono">POST /api/notifications/send</text>
+  <text x="62" y="244" class="txt-mono">POST /api/alerts/broadcast</text>
+  <text x="62" y="268" class="txt">Automated AQI→alert is a separate job:</text>
+  <text x="62" y="284" class="txt">your scheduler calls POST /api/alerts/broadcast.</text>
+
+  <!-- API -->
+  <rect x="340" y="95" width="420" height="210" class="box b-api"/>
+  <text x="550" y="125" text-anchor="middle" class="hd">FastAPI (lifespan + router)</text>
+  <text x="358" y="148" class="txt-mono">main.py</text>
+  <text x="430" y="148" class="txt">— Mongo connect, ensure_notification_indexes(),</text>
+  <text x="358" y="166" class="txt">  db_state.set_mongo_database(), include notifications router</text>
+  <text x="358" y="190" class="txt-mono">notifications_api.py</text>
+  <text x="488" y="190" class="txt">— register, verify, send, broadcast,</text>
+  <text x="358" y="208" class="txt">  analytics, Twilio webhooks (BackgroundTasks for broadcast)</text>
+  <text x="358" y="232" class="txt-mono">twilio_notify.py</text>
+  <text x="470" y="232" class="txt">— send SMS / WhatsApp (per-channel override)</text>
+  <text x="358" y="256" class="txt-mono">Resend</text>
+  <text x="420" y="256" class="txt">— verification &amp; email alerts (optional RESEND_API_KEY)</text>
+  <text x="358" y="284" class="txt">Broadcast filters: consent + verified; optional filter_city</text>
+
+  <!-- MongoDB -->
+  <rect x="820" y="100" width="400" height="200" class="box b-mongo"/>
+  <text x="1020" y="128" text-anchor="middle" class="hd">MongoDB · database early_warning</text>
+  <text x="838" y="152" class="txt-mono">contacts</text>
+  <text x="838" y="170" class="txt-mono">notification_logs</text>
+  <text x="838" y="188" class="txt-mono">consent_records</text>
+  <text x="838" y="206" class="txt-mono">inbound_messages</text>
+  <text x="838" y="224" class="txt-mono">alert_broadcasts</text>
+  <text x="838" y="248" class="txt">Related: respiratory_daily_reports</text>
+  <text x="838" y="264" class="txt">(daily case POST — separate collection)</text>
+
+  <!-- Arrows triggers to API -->
+  <path d="M 268 200 L 332 200" fill="none" stroke="#667eea" stroke-width="2.5" marker-end="url(#m2)"/>
+  <!-- API to Mongo -->
+  <path d="M 760 200 L 812 200" fill="none" stroke="#667eea" stroke-width="2.5" marker-end="url(#m2)"/>
+
+  <!-- Outbound row -->
+  <text x="640" y="360" text-anchor="middle" class="hd">Outbound delivery</text>
+  <rect x="180" y="380" width="240" height="88" class="box b-out"/>
+  <text x="300" y="408" text-anchor="middle" class="hd">Twilio · SMS</text>
+  <text x="192" y="430" class="txt-mono">messages.create (sms)</text>
+  <text x="192" y="448" class="txt">From TWILIO_PHONE_NUMBER</text>
+
+  <rect x="520" y="380" width="240" height="88" class="box b-out"/>
+  <text x="640" y="408" text-anchor="middle" class="hd">Twilio · WhatsApp</text>
+  <text x="532" y="430" class="txt-mono">whatsapp:+… From/To</text>
+  <text x="532" y="448" class="txt">Sandbox or approved sender</text>
+
+  <rect x="860" y="380" width="240" height="88" class="box b-out"/>
+  <text x="980" y="408" text-anchor="middle" class="hd">Resend · Email</text>
+  <text x="872" y="430" class="txt-mono">api.resend.com/emails</text>
+  <text x="872" y="448" class="txt">RESEND_FROM_EMAIL</text>
+
+  <!-- API to outbound (fork) -->
+  <path d="M 550 305 L 550 340 L 300 340 L 300 378" class="arr-main" fill="none" stroke="#667eea" stroke-width="2.5" marker-end="url(#m2)"/>
+  <path d="M 550 305 L 550 340 L 640 340 L 640 378" class="arr-main" fill="none" stroke="#667eea" stroke-width="2.5" marker-end="url(#m2)"/>
+  <path d="M 550 305 L 550 340 L 980 340 L 980 378" class="arr-main" fill="none" stroke="#667eea" stroke-width="2.5" marker-end="url(#m2)"/>
+
+  <text x="640" y="500" text-anchor="middle" class="sub">Recipients · devices (E.164 / email per contact.preferred_channels)</text>
+
+  <!-- Webhooks return path -->
+  <rect x="48" y="540" width="340" height="120" class="box b-hook"/>
+  <text x="218" y="568" text-anchor="middle" class="hd">Inbound &amp; status (Twilio → API)</text>
+  <text x="62" y="592" class="txt-mono">POST /api/webhooks/sms</text>
+  <text x="62" y="610" class="txt-mono">POST /api/webhooks/whatsapp</text>
+  <text x="62" y="628" class="txt-mono">POST /api/webhooks/message-status</text>
+  <text x="62" y="652" class="txt">→ inbound_messages, update notification_logs.delivery_status</text>
+
+  <path d="M 300 468 L 300 535 L 218 535" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#m)"/>
+  <text x="325" y="510" class="txt">optional auto-reply (Twilio configured)</text>
+
+  <path d="M 640 468 L 640 350 L 218 350 L 218 540" fill="none" stroke="#a855f7" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#m)"/>
+  <text x="360" y="338" class="txt">Twilio → HTTP callbacks</text>
+
+  <!-- Footnote -->
+  <text x="640" y="738" text-anchor="middle" class="sub">GET /api/health → notification_registry when MongoDB is connected · GET /api/notifications/whatsapp/sandbox-info · POST /api/notifications/twilio/test</text>
+</svg>
