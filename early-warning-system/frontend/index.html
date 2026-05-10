@@ -1098,6 +1098,38 @@
             margin-top: 8px;
         }
 
+        .user-profile-body {
+            margin-bottom: 12px;
+        }
+
+        .user-profile-body dl {
+            margin: 0;
+            display: grid;
+            grid-template-columns: minmax(120px, 34%) 1fr;
+            gap: 8px 14px;
+            font-size: 0.88rem;
+            align-items: start;
+        }
+
+        .user-profile-body dt {
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .user-profile-body dd {
+            margin: 0;
+            word-break: break-word;
+            color: var(--text-primary);
+        }
+
+        .user-profile-empty {
+            padding: 12px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
         .action-buttons.reporting-locked .action-btn {
             opacity: 0.42;
             pointer-events: none;
@@ -1599,6 +1631,22 @@
                 <div class="facility-auth-box">
                     <strong>Registrant sign-in:</strong> use the same <strong>email + password</strong> you chose at registration,
                     or tap <em>Send OTP</em> for a one-time code (SMS / email / WhatsApp).
+                    <p style="margin:10px 0 0;font-size:0.78rem;line-height:1.45;color:var(--text-secondary);">
+                        <strong>Preparedness buttons (O₂, Staff, …):</strong> require a <em>verified</em> account that is <strong>operator-approved</strong> with a <strong>facility / site</strong> linked (admin console). Password sign-in can succeed sooner — the banner below explains when actions stay disabled. <strong>OTP</strong> is only sent when those reporting requirements are met.
+                    </p>
+                    <p style="margin:10px 0 0;font-size:0.78rem;line-height:1.45;color:var(--text-secondary);">
+                        <strong>First time:</strong> after registering you receive a <em>verification</em> code (email/SMS).
+                        Enter it in the box below <em>or</em> on the <a href="/registration" style="color:var(--accent);">registration page</a> before password sign-in will succeed.
+                    </p>
+                    <div id="firstTimeVerifyPanel" style="display:none;margin-top:12px;padding:12px;border:1px dashed var(--border);border-radius:10px;background:rgba(24,95,165,0.12);">
+                        <strong style="font-size:0.78rem;display:block;margin-bottom:6px;">Finish signup — enter the verification code</strong>
+                        <p style="font-size:0.74rem;color:var(--text-secondary);margin:0 0 8px;line-height:1.45;">Use the code from registration (not the facility OTP field below). Same email as above.</p>
+                        <div class="facility-auth-row" style="flex-wrap:wrap;">
+                            <input type="text" id="regSignupCodeInput" placeholder="Verification code from email / SMS" maxlength="16" autocomplete="one-time-code" aria-label="Registration verification code" style="min-width:180px;flex:1;" />
+                            <button type="button" class="mini-btn primary" id="regSignupVerifyBtn">Submit code</button>
+                        </div>
+                        <p id="regSignupVerifyMsg" style="font-size:0.72rem;margin-top:8px;min-height:1.2em;"></p>
+                    </div>
                     <div id="facilityAuthLoginBlock">
                         <div class="facility-auth-row" style="flex-wrap:wrap;gap:8px;">
                             <input type="email" id="facilityAuthEmail" placeholder="registration email" autocomplete="email" aria-label="Registration email" style="min-width:200px;flex:1;">
@@ -1630,28 +1678,34 @@
                 </div>
             </div>
 
-            <!-- Settings -->
+            <!-- My registration (enrollee profile) -->
+            <div class="panel" id="userProfilePanel">
+                <div class="panel-header">
+                    <span class="panel-title">My registration</span>
+                    <div class="panel-icon">👤</div>
+                </div>
+                <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; margin: 0 0 12px;">
+                    After you sign in under <strong>Facility Actions</strong> (password or one-time code), your saved enrolment
+                    details load here — cities, channels, verification, and facility linkage. Update preferences through your administrator if something is wrong.
+                </p>
+                <div id="userProfileBody" class="user-profile-body">
+                    <div class="user-profile-empty">Not signed in — authenticate above to view your record.</div>
+                </div>
+                <button type="button" class="mini-btn" id="userProfileRefreshBtn">Refresh my details</button>
+            </div>
+
+            <!-- System info (prefs: Admin → Settings) -->
             <div class="panel">
                 <div class="panel-header">
-                    <span class="panel-title">Settings</span>
-                    <div class="panel-icon">⚙️</div>
+                    <span class="panel-title">System</span>
+                    <div class="panel-icon">ℹ️</div>
                 </div>
+                <p style="font-size:0.78rem;color:var(--text-secondary);line-height:1.5;margin:0 0 10px;">
+                    <strong>Theme, PM2.5 alert threshold, and auto-refresh</strong> are set in the
+                    <a href="/admin/dashboard" style="color:var(--accent);">Admin → Settings</a> panel (this browser).
+                </p>
                 <div class="setting-group">
-                    <label class="setting-label">
-                        <input type="checkbox" id="darkModeToggle" checked> Dark theme (uncheck for light)
-                    </label>
-                </div>
-                <div class="setting-group">
-                    <label class="setting-label">
-                        <input type="checkbox" id="autoRefresh" checked> Auto-refresh (30min)
-                    </label>
-                </div>
-                <div class="setting-group">
-                    <label class="setting-label">Alert Threshold (PM2.5)</label>
-                    <input type="number" id="alertThreshold" value="150" min="50" max="300" step="10">
-                </div>
-                <div class="setting-group">
-                    <span class="setting-label">System Features</span>
+                    <span class="setting-label">Features</span>
                     <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.8;">
                         ✓ Open-Source (MIT License)<br>
                         ✓ Blockchain Verified (Polygon)<br>
@@ -1683,6 +1737,8 @@
         let API_BASE = '/api';
         const FACILITY_TOKEN_KEY = 'facility_access_token';
         const FACILITY_CLAIMS_KEY = 'facility_claims_preview';
+        /** Mirrors ``facility_reporting_ready`` from ``GET /api/auth/profile``. */
+        const FACILITY_REPORTING_READY_KEY = 'ew_facility_reporting_ready';
 
         async function initRuntimeConfig() {
             const fileMode = window.location.protocol === 'file:';
@@ -1711,6 +1767,101 @@
         function clearFacilityReportingSession() {
             sessionStorage.removeItem(FACILITY_TOKEN_KEY);
             sessionStorage.removeItem(FACILITY_CLAIMS_KEY);
+            sessionStorage.removeItem(FACILITY_REPORTING_READY_KEY);
+        }
+
+        function facilityReportingReadyStored() {
+            return sessionStorage.getItem(FACILITY_REPORTING_READY_KEY) === '1';
+        }
+
+        function _escapeProfileHtml(s) {
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function _formatEnvTopics(tp) {
+            if (Array.isArray(tp)) return tp.length ? tp.join(', ') : '—';
+            if (tp == null || tp === '') return 'Air & heat (default)';
+            return String(tp);
+        }
+
+        function _renderUserProfileHtml(j) {
+            const cov = Array.isArray(j.cities) && j.cities.length
+                ? j.cities.join(', ')
+                : j.city || '—';
+            const chans = Array.isArray(j.preferred_channels) ? j.preferred_channels.join(', ') : '—';
+            const facOk = j.facility_reporting_ready ? 'Yes — you can log facility actions' : 'Not yet (needs approval + facility on file)';
+            const rows = [
+                ['Name', j.name || '—'],
+                ['Email', j.email || '—'],
+                ['Phone', j.phone_number || '—'],
+                ['WhatsApp', j.whatsapp_number || '—'],
+                ['Role', j.contact_type || '—'],
+                ['Coverage areas', cov],
+                ['Alert channels', chans],
+                ['Environmental topics', _formatEnvTopics(j.environmental_topics)],
+                ['Language', j.language || '—'],
+                ['Verification', j.verification_status || '—'],
+                ['Partner approval', j.approval_status != null ? String(j.approval_status) : '—'],
+                ['Account active', j.active === false ? 'Archived — contact support' : 'Active'],
+                ['Facility reporting', facOk],
+                ['Facility', (j.facility_name && String(j.facility_name)) || j.facility_id || '—'],
+                ['Contact reference ID', j._id || '—'],
+            ];
+            const parts = rows.map(
+                ([k, v]) =>
+                    `<dt>${_escapeProfileHtml(k)}</dt><dd>${_escapeProfileHtml(String(v))}</dd>`,
+            );
+            return `<dl>${parts.join('')}</dl>`;
+        }
+
+        async function refreshUserRegistrationProfile() {
+            const wrap = document.getElementById('userProfileBody');
+            if (!wrap) return;
+            const tok = getFacilityBearer();
+            if (!tok) {
+                sessionStorage.removeItem(FACILITY_REPORTING_READY_KEY);
+                wrap.innerHTML =
+                    '<div class="user-profile-empty">Not signed in — use <strong>Facility Actions</strong> (password or OTP) to view your enrolment.</div>';
+                syncFacilityReportingChrome();
+                return;
+            }
+            wrap.innerHTML =
+                '<div class="user-profile-empty">Loading your registration…</div>';
+            try {
+                const r = await fetch(`${API_BASE}/auth/profile`, {
+                    headers: { Authorization: `Bearer ${tok}` },
+                });
+                const j = await r.json().catch(() => ({}));
+                if (r.status === 401 || r.status === 403) {
+                    sessionStorage.removeItem(FACILITY_REPORTING_READY_KEY);
+                    wrap.innerHTML = `<div class="user-profile-empty">${_escapeProfileHtml(
+                        typeof j.detail === 'string' ? j.detail : 'Could not load profile — sign in again.',
+                    )}</div>`;
+                    syncFacilityReportingChrome();
+                    return;
+                }
+                if (!r.ok) {
+                    wrap.innerHTML =
+                        '<div class="user-profile-empty">Could not load profile. Try Refresh or sign in again.</div>';
+                    syncFacilityReportingChrome();
+                    return;
+                }
+                sessionStorage.setItem(
+                    FACILITY_REPORTING_READY_KEY,
+                    j.facility_reporting_ready === true ? '1' : '0',
+                );
+                wrap.innerHTML = _renderUserProfileHtml(j);
+                syncFacilityReportingChrome();
+            } catch (e) {
+                wrap.innerHTML =
+                    '<div class="user-profile-empty">Network error loading profile. Check that the API is running.</div>';
+                console.warn('profile:', e);
+                syncFacilityReportingChrome();
+            }
         }
 
         function syncFacilityReportingChrome() {
@@ -1722,23 +1873,41 @@
             if (!banner || !buttonsWrap || !logoutBtn || !loginBlock) return;
 
             if (tok) {
-                buttonsWrap.classList.remove('reporting-locked');
                 logoutBtn.hidden = false;
-                loginBlock.style.display = 'none';
-                let claimsTxt = '';
-                try {
-                    const raw = sessionStorage.getItem(FACILITY_CLAIMS_KEY);
-                    if (raw) {
-                        const cl = JSON.parse(raw);
-                        if (cl.facility_name || cl.facility_id)
-                            claimsTxt = `Reporting as ${cl.facility_name || 'facility'} (${cl.facility_id || '—'}). `;
-                        if (cl.city) claimsTxt += `${cl.city}. `;
+                const ready = facilityReportingReadyStored();
+                const rk = sessionStorage.getItem(FACILITY_REPORTING_READY_KEY);
+                const checking = rk === null;
+
+                if (ready) {
+                    buttonsWrap.classList.remove('reporting-locked');
+                    loginBlock.style.display = 'none';
+                    let claimsTxt = '';
+                    try {
+                        const raw = sessionStorage.getItem(FACILITY_CLAIMS_KEY);
+                        if (raw) {
+                            const cl = JSON.parse(raw);
+                            if (cl.facility_name || cl.facility_id)
+                                claimsTxt = `Reporting as ${cl.facility_name || 'facility'} (${cl.facility_id || '—'}). `;
+                            if (cl.city) claimsTxt += `${cl.city}. `;
+                        }
+                    } catch (_) {
+                        /* ignore */
                     }
-                } catch (_) {
-                    /* ignore */
+                    banner.textContent =
+                        claimsTxt + 'Authenticated — preparedness buttons write to MongoDB.';
+                } else {
+                    buttonsWrap.classList.add('reporting-locked');
+                    loginBlock.style.display = 'block';
+                    if (checking) {
+                        banner.textContent =
+                            'Signed in — confirming whether your account can post facility actions… (My registration loads below).';
+                    } else {
+                        banner.textContent =
+                            'Signed in — your enrolment profile is loading, but facility reporting stays locked until ' +
+                            'an operator marks you approved and attaches a facility/site (or completes those fields in Admin). ' +
+                            'OTP will not arrive until reporting is configured. Check “My registration” below or talk to support.';
+                    }
                 }
-                banner.textContent =
-                    claimsTxt + 'Authenticated — preparedness buttons write to MongoDB.';
                 return;
             }
             buttonsWrap.classList.add('reporting-locked');
@@ -1810,9 +1979,29 @@
                             ? j.detail
                             : JSON.stringify(j.detail || j).slice(0, 220);
                     banner.textContent = det || `Sign-in failed (HTTP ${r.status}).`;
+                    const verifyHint =
+                        r.status === 403 &&
+                        typeof j.detail === 'string' &&
+                        j.detail.toLowerCase().includes('verify');
+                    const pnl = document.getElementById('firstTimeVerifyPanel');
+                    if (pnl) pnl.style.display = verifyHint ? 'block' : 'none';
+                    if (verifyHint) {
+                        banner.textContent +=
+                            ' — Or type the signup verification code below, then try Sign in again.';
+                    }
                     return;
                 }
+                {
+                    const pnl = document.getElementById('firstTimeVerifyPanel');
+                    if (pnl) pnl.style.display = 'none';
+                    const rv = document.getElementById('regSignupVerifyMsg');
+                    if (rv) rv.textContent = '';
+                }
                 sessionStorage.setItem(FACILITY_TOKEN_KEY, j.access_token);
+                sessionStorage.setItem(
+                    FACILITY_REPORTING_READY_KEY,
+                    j.facility_reporting_ready === true ? '1' : '0',
+                );
                 sessionStorage.setItem(
                     FACILITY_CLAIMS_KEY,
                     JSON.stringify({
@@ -1825,10 +2014,64 @@
                 pwEl.value = '';
                 banner.textContent = 'Signed in with password.';
                 syncFacilityReportingChrome();
+                await refreshUserRegistrationProfile();
                 await refreshFacilityAuditLog();
             } catch (e) {
                 banner.textContent = `Login error: ${e.message || e}`;
                 console.warn(e);
+            }
+        }
+
+        async function facilitySubmitRegistrationVerifyCode() {
+            const emailEl = document.getElementById('facilityAuthEmail');
+            const codeEl = document.getElementById('regSignupCodeInput');
+            const msg = document.getElementById('regSignupVerifyMsg');
+            const banner = document.getElementById('facilityAuthBanner');
+            const email = String(emailEl?.value || '').trim();
+            const code = String(codeEl?.value || '').trim();
+            if (!email || !code) {
+                if (msg) {
+                    msg.style.color = '#fecaca';
+                    msg.textContent = 'Enter your registration email above and the verification code.';
+                }
+                return;
+            }
+            if (msg) {
+                msg.style.color = 'var(--text-secondary)';
+                msg.textContent = 'Checking…';
+            }
+            try {
+                const r = await fetch(`${API_BASE}/contacts/verify-with-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, verification_code: code }),
+                });
+                const j = await r.json().catch(() => ({}));
+                if (!r.ok) {
+                    const d =
+                        typeof j.detail === 'string'
+                            ? j.detail
+                            : `Verification failed (HTTP ${r.status}).`;
+                    if (msg) {
+                        msg.style.color = '#fecaca';
+                        msg.textContent = d;
+                    }
+                    return;
+                }
+                if (codeEl) codeEl.value = '';
+                if (msg) {
+                    msg.style.color = '#86efac';
+                    msg.textContent = j.message || 'Verified — use Sign in with your password.';
+                }
+                if (banner) {
+                    banner.textContent =
+                        'Registration verified — sign in with email and password (or use OTP if you prefer).';
+                }
+            } catch (e) {
+                if (msg) {
+                    msg.style.color = '#fecaca';
+                    msg.textContent = String(e.message || e);
+                }
             }
         }
 
@@ -1847,10 +2090,21 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email }),
                 });
-                await r.json().catch(() => ({}));
-                banner.textContent =
-                    'If that email matches an eligible account, channels should receive an OTP shortly (check spam folders). Paste it below.';
-                if (!r.ok && r.status !== 429) banner.textContent += ` (HTTP ${r.status})`;
+                const j = await r.json().catch(() => ({}));
+                if (!r.ok && r.status !== 429) {
+                    banner.textContent = `Could not request OTP (HTTP ${r.status}). ${typeof j.detail === 'string' ? j.detail : ''}`.trim();
+                    return;
+                }
+                if (j != null && typeof j.code_ttl_minutes === 'number') {
+                    let line = `Facility login code queued (valid ${j.code_ttl_minutes} min). Check SMS, email, or WhatsApp — also spam folders. Paste it under Exchange OTP.`;
+                    if (Array.isArray(j.warnings) && j.warnings.length) {
+                        line += ` Note: ${j.warnings.slice(0, 4).join('; ')}`;
+                    }
+                    banner.textContent = line;
+                } else {
+                    banner.textContent =
+                        'No login code was issued. That usually means this email is either unknown, or not yet ready for OTP: you need registration verification, operator approval, and a linked facility/site. Try password Sign in to see a precise error, or ask an admin to complete your profile.';
+                }
             } catch (e) {
                 banner.textContent =
                     'Failed to contact API for login codes — verify API_BASE routing and MongoDB readiness.';
@@ -1885,6 +2139,7 @@
                     return;
                 }
                 sessionStorage.setItem(FACILITY_TOKEN_KEY, j.access_token);
+                sessionStorage.setItem(FACILITY_REPORTING_READY_KEY, '1');
                 sessionStorage.setItem(
                     FACILITY_CLAIMS_KEY,
                     JSON.stringify({
@@ -1896,6 +2151,7 @@
                 codeEl.value = '';
                 banner.textContent = 'Signed in — actions now write to MongoDB.';
                 syncFacilityReportingChrome();
+                await refreshUserRegistrationProfile();
                 await refreshFacilityAuditLog();
             } catch (e) {
                 banner.textContent = `Token exchange error: ${e.message || e}`;
@@ -1905,7 +2161,12 @@
 
         async function facilitySignOutReporting() {
             clearFacilityReportingSession();
+            const pnl = document.getElementById('firstTimeVerifyPanel');
+            if (pnl) pnl.style.display = 'none';
+            const rv = document.getElementById('regSignupVerifyMsg');
+            if (rv) rv.textContent = '';
             syncFacilityReportingChrome();
+            await refreshUserRegistrationProfile();
             await refreshFacilityAuditLog();
         }
 
@@ -1919,6 +2180,12 @@
             };
             if (!tok) {
                 if (banner) banner.textContent = 'Sign in with password or OTP first.';
+                return;
+            }
+            if (!facilityReportingReadyStored()) {
+                if (banner)
+                    banner.textContent =
+                        'Preparedness actions need an approved account with a facility linked (see banner above).';
                 return;
             }
             if (!actions[actionKey]) return;
@@ -2054,18 +2321,32 @@
         let aqData = {};
         let aqChart, caseChart;
         let scenarioSandboxUserTouched = false;
+        /** @type {ReturnType<typeof setInterval> | null} */
+        let __dashboardRefreshTimer = null;
 
-        // ===== INITIALIZATION =====
+        function applyDashboardAutoRefreshFromStorage() {
+            if (__dashboardRefreshTimer !== null) {
+                clearInterval(__dashboardRefreshTimer);
+                __dashboardRefreshTimer = null;
+            }
+            const dis = localStorage.getItem('dashboard_auto_refresh');
+            const on = dis === null ? true : dis === '1';
+            if (on) {
+                __dashboardRefreshTimer = setInterval(refreshAllData, 30 * 60 * 1000);
+            }
+        }
         document.addEventListener('DOMContentLoaded', () => {
             (async () => {
                 await initRuntimeConfig();
                 initThemeFromStorage();
                 syncFacilityReportingChrome();
+                refreshUserRegistrationProfile().catch(() => {});
                 initCharts();
                 initAirCompareChecks();
                 updateCityInfo(currentCity);
                 await refreshAllData();
                 setupEventListeners();
+                applyDashboardAutoRefreshFromStorage();
                 loadFromLocalStorage();
                 checkOnlineStatus();
             })();
@@ -2079,17 +2360,6 @@
             } else {
                 document.documentElement.dataset.theme = 'light';
             }
-            const cb = document.getElementById('darkModeToggle');
-            if (cb) cb.checked = useDark;
-        }
-
-        function setDarkTheme(enabled) {
-            if (enabled) {
-                document.documentElement.removeAttribute('data-theme');
-            } else {
-                document.documentElement.dataset.theme = 'light';
-            }
-            localStorage.setItem('theme_dark', enabled ? '1' : '0');
         }
 
         // ===== GEOGRAPHIC MODE SWITCHING =====
@@ -2671,11 +2941,7 @@
 
                 let alertLevel = 'LOW';
                 const alertCard = document.getElementById('alert-card');
-                const thrRaw = document.getElementById('alertThreshold')
-                    ? document.getElementById('alertThreshold').value
-                    : '150';
-                let thr = parseInt(String(thrRaw), 10);
-                if (Number.isNaN(thr) || thr < 1) thr = 150;
+                const thr = readPm25Threshold();
 
                 alertCard.classList.remove('high', 'moderate', 'low');
                 if (typeof pm25 !== 'number') {
@@ -2938,10 +3204,10 @@
 
         // ===== ALERTS =====
         function readPm25Threshold() {
-            const el = document.getElementById('alertThreshold');
-            if (!el) return 150;
-            const n = parseInt(String(el.value), 10);
-            return Number.isNaN(n) || n < 1 ? 150 : n;
+            const raw = localStorage.getItem('pm25_alert_threshold');
+            const n = parseInt(String(raw), 10);
+            if (!Number.isNaN(n) && n >= 1) return n;
+            return 150;
         }
 
         function displayAlerts(pm25) {
@@ -2994,7 +3260,7 @@
                 {
                     level: 'INFO',
                     time: 'Reference',
-                    message: `Default PM2.5 alert threshold: ${thr} µg/m³ (change under Settings).`,
+                    message: `Default PM2.5 alert threshold: ${thr} µg/m³ (change in Admin → Settings).`,
                     cls: 'low',
                 },
             );
@@ -3204,17 +3470,6 @@
         }
 
         function setupEventListeners() {
-            const darkCb = document.getElementById('darkModeToggle');
-            if (darkCb) {
-                darkCb.addEventListener('change', (e) => {
-                    setDarkTheme(e.target.checked);
-                });
-            }
-            document.getElementById('autoRefresh').addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    setInterval(refreshAllData, 30 * 60 * 1000);
-                }
-            });
             setupScenarioSandbox();
             const fcPw = document.getElementById('facilityPasswordLoginBtn');
             if (fcPw) fcPw.addEventListener('click', (ev) => facilityPasswordLogin(ev));
@@ -3224,6 +3479,10 @@
             if (fcEx) fcEx.addEventListener('click', (ev) => facilityExchangeLoginCode(ev));
             const fcOut = document.getElementById('facilityLogoutBtn');
             if (fcOut) fcOut.addEventListener('click', () => facilitySignOutReporting());
+            const regV = document.getElementById('regSignupVerifyBtn');
+            if (regV) regV.addEventListener('click', () => facilitySubmitRegistrationVerifyCode());
+            const upRf = document.getElementById('userProfileRefreshBtn');
+            if (upRf) upRf.addEventListener('click', () => refreshUserRegistrationProfile());
             const facWrap = document.getElementById('facilityActionButtons');
             if (facWrap) {
                 facWrap.addEventListener('click', (evt) => {

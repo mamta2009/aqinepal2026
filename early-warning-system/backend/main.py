@@ -35,6 +35,7 @@ import guide_documents
 from cities_config import CITIES_CONFIG
 from facility_auth import FacilityCaller, load_facility_caller
 from health_data_generator import HealthDataGenerator
+from notification_auth import notification_api_key_configured
 
 # Load env: backend/.env first, then config/.env (python-dotenv default override=False:
 # already-set keys are kept, so backend values win over config for duplicates).
@@ -327,6 +328,10 @@ async def runtime_config():
         "integrations": {
             **external_integrations.integrations_public_status(),
             "resend_configured": public_resend_email_ready(),
+        },
+        "operator_console": {
+            "notification_api_key_configured": notification_api_key_configured(),
+            "note": "Admin JSON routes require the same NOTIFICATION_API_KEY in Authorization; the browser cannot read backend/.env.",
         },
     }
 
@@ -1623,13 +1628,15 @@ def _system_discovery_payload() -> dict:
             "daily_report": "POST /api/health/cases/daily-report",
             "registration_portal": "/registration",
             "admin_dashboard": "/admin/dashboard",
-            "admin_registrants": "GET/POST /api/admin/registrants",
+            "admin_registrants": "GET/POST /api/admin/registrants; PATCH …/enrolment (facilities & cities)",
             "admin_blockchain_overview": "GET /api/admin/blockchain/overview",
             "admin_blockchain_runtime_network": "PATCH /api/admin/blockchain/runtime-network",
             "contacts_register": "POST /api/contacts/register",
             "contacts_verify": "POST /api/contacts/verify",
+            "contacts_verify_with_email": "POST /api/contacts/verify-with-email",
             "dashboard_login": "POST /api/auth/login",
             "dashboard_me": "GET /api/auth/me",
+            "dashboard_profile": "GET /api/auth/profile",
             "auth_change_password": "POST /api/auth/change-password",
             "admin_system_status": "GET /api/admin/system-status",
             "alerts_evaluate": "POST /api/alerts/evaluate",

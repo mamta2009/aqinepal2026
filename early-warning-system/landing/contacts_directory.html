@@ -103,6 +103,31 @@
             border-radius: 8px;
             font-size: 15px;
         }
+        .pw-row {
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
+            max-width: 420px;
+        }
+        .pw-row input[type="password"],
+        .pw-row input[type="text"] {
+            flex: 1;
+            min-width: 0;
+        }
+        .pw-toggle {
+            flex: 0 0 auto;
+            align-self: center;
+            padding: 8px 12px;
+            font-size: 13px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #475569;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .pw-toggle:hover { background: #e2e8f0; }
         .form-group input:focus {
             outline: none;
             border-color: #185fa5;
@@ -210,7 +235,10 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="pin">Directory passphrase</label>
-                    <input type="password" id="pin" autocomplete="off" placeholder="Passphrase">
+                    <div class="pw-row">
+                        <input type="password" id="pin" autocomplete="off" placeholder="Passphrase">
+                        <button type="button" class="pw-toggle" id="togglePin" aria-label="Show passphrase" aria-pressed="false">Show</button>
+                    </div>
                 </div>
                 <button type="button" class="primary" id="loadBtn">Load list</button>
             </div>
@@ -250,6 +278,19 @@
         const countLine = document.getElementById('countLine');
         const tableCard = document.getElementById('tableCard');
         const loadBtn = document.getElementById('loadBtn');
+
+        (function initPinToggle() {
+            const btn = document.getElementById('togglePin');
+            const inp = document.getElementById('pin');
+            if (!btn || !inp) return;
+            btn.addEventListener('click', function () {
+                const show = inp.type === 'password';
+                inp.type = show ? 'text' : 'password';
+                btn.textContent = show ? 'Hide' : 'Show';
+                btn.setAttribute('aria-pressed', show ? 'true' : 'false');
+                btn.setAttribute('aria-label', (show ? 'Hide ' : 'Show ') + 'passphrase');
+            });
+        })();
 
         function showMsg(text, kind) {
             msgEl.textContent = text;

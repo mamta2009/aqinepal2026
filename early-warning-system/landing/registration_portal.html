@@ -126,6 +126,52 @@
             box-shadow: 0 0 0 3px rgba(24, 95, 165, 0.1);
         }
 
+        input[type="password"] {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #185fa5;
+            box-shadow: 0 0 0 3px rgba(24, 95, 165, 0.1);
+        }
+
+        .pw-row {
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
+        }
+
+        .pw-row input[type="password"],
+        .pw-row input[type="text"] {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .pw-toggle {
+            flex: 0 0 auto;
+            align-self: center;
+            padding: 10px 14px;
+            font-size: 13px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #475569;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .pw-toggle:hover {
+            background: #e2e8f0;
+        }
+
         .coverage-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -633,12 +679,18 @@
                     <div class="two-column">
                         <div class="form-group">
                             <label for="password">Dashboard password *</label>
-                            <input type="password" id="password" name="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="At least 8 characters">
+                            <div class="pw-row">
+                                <input type="password" id="password" name="password" required minlength="8" maxlength="128" autocomplete="new-password" placeholder="At least 8 characters">
+                                <button type="button" class="pw-toggle" id="togglePassword" aria-label="Show password" aria-pressed="false">Show</button>
+                            </div>
                             <div class="inline-help">Used to sign in at the online dashboard after you verify your email / phone.</div>
                         </div>
                         <div class="form-group">
                             <label for="password2">Confirm password *</label>
-                            <input type="password" id="password2" name="password2" required minlength="8" maxlength="128" autocomplete="new-password">
+                            <div class="pw-row">
+                                <input type="password" id="password2" name="password2" required minlength="8" maxlength="128" autocomplete="new-password">
+                                <button type="button" class="pw-toggle" id="togglePassword2" aria-label="Show password" aria-pressed="false">Show</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -809,7 +861,10 @@
                             </div>
                             <div class="form-group" style="margin-bottom:12px;">
                                 <label for="devAdminApiKey">NOTIFICATION_API_KEY (only if your server has one)</label>
-                                <input type="password" id="devAdminApiKey" name="devAdminApiKey" autocomplete="off" placeholder="Leave blank if NOTIFICATION_API_KEY is unset">
+                                <div class="pw-row">
+                                    <input type="password" id="devAdminApiKey" name="devAdminApiKey" autocomplete="off" placeholder="Leave blank if NOTIFICATION_API_KEY is unset">
+                                    <button type="button" class="pw-toggle" id="toggleDevAdminApiKey" aria-label="Show API key" aria-pressed="false">Show</button>
+                                </div>
                             </div>
                             <button type="button" class="btn-secondary" id="devResetBtn" style="flex:unset;padding:12px 20px;background:#fde68a;border-color:#d97706;color:#78350f;">
                                 Clear contacts & consent records
@@ -824,6 +879,33 @@
                 <strong>✓ Registration Successful!</strong>
                 <p style="margin-top: 8px; font-size: 14px;">Check your email and SMS for verification codes. You'll be able to receive alerts once verified.</p>
             </div>
+
+            <details class="resend-panel" id="verifyCodePanel" open>
+                <summary>Enter your verification code</summary>
+                <p style="margin-top:12px;color:#475569;line-height:1.55;font-size:13px;">
+                    The code is the <strong>same</strong> on email, SMS, and WhatsApp. Easiest: enter your <strong>registration email</strong> and the code (no account ID needed).
+                    Or paste the <strong>reference ID</strong> from the green box if you prefer — we also store it in this browser after you register.
+                </p>
+                <div style="margin-top:14px;">
+                    <label for="verifyEmailInput" style="display:block;margin-bottom:6px;font-weight:500;font-size:13px;">Registration email (recommended)</label>
+                    <input type="email" id="verifyEmailInput" name="verifyEmailInput" autocomplete="email" placeholder="you@hospital.org" style="width:100%;max-width:440px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;">
+                </div>
+                <div style="margin-top:12px;">
+                    <label for="verifyContactId" style="display:block;margin-bottom:6px;font-weight:500;font-size:13px;">Reference ID (optional — if not using email above)</label>
+                    <input type="text" id="verifyContactId" name="verifyContactId" autocomplete="off" placeholder="e.g. 674abc…" spellcheck="false" style="width:100%;max-width:440px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;font-family:ui-monospace,Menlo,monospace;">
+                </div>
+                <div style="margin-top:12px;">
+                    <label for="verifyCodeInput" style="display:block;margin-bottom:6px;font-weight:500;font-size:13px;">Verification code</label>
+                    <input type="text" id="verifyCodeInput" name="verifyCodeInput" inputmode="numeric" autocomplete="one-time-code" maxlength="16" placeholder="Code from email or SMS" style="width:100%;max-width:240px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:17px;letter-spacing:0.12em;">
+                </div>
+                <button type="button" class="btn-secondary" id="verifySubmitBtn" style="margin-top:14px;padding:11px 20px;text-transform:none;background:#185fa5;color:#fff;border-color:#185fa5;font-weight:600;">
+                    Submit code &amp; finish verification
+                </button>
+                <p id="verifyCodeMsg" style="margin-top:12px;font-size:13px;min-height:1.35em;line-height:1.45;"></p>
+                <p style="margin-top:14px;font-size:13px;color:#64748b;line-height:1.5;">
+                    After this succeeds, open the <a href="/frontend/index.html" style="color:#185fa5;font-weight:600;">readiness dashboard</a> and sign in with the <strong>same email and password</strong> you used here.
+                </p>
+            </details>
 
             <details class="resend-panel" id="resendPanel">
                 <summary>Didn’t receive the verification email?</summary>
@@ -858,6 +940,75 @@
         const resendVerificationBtn = document.getElementById('resendVerificationBtn');
         const resendEmail = document.getElementById('resendEmail');
         const resendMsg = document.getElementById('resendMsg');
+        const verifyContactIdEl = document.getElementById('verifyContactId');
+        const verifyEmailInput = document.getElementById('verifyEmailInput');
+        const verifyCodeInput = document.getElementById('verifyCodeInput');
+        const verifySubmitBtn = document.getElementById('verifySubmitBtn');
+        const verifyCodeMsg = document.getElementById('verifyCodeMsg');
+
+        try {
+            const savedCid = sessionStorage.getItem('ew_reg_contact_id');
+            if (savedCid && verifyContactIdEl && !verifyContactIdEl.value.trim()) {
+                verifyContactIdEl.value = savedCid;
+            }
+            const savedEm = sessionStorage.getItem('ew_reg_email');
+            if (savedEm && verifyEmailInput && !verifyEmailInput.value.trim()) {
+                verifyEmailInput.value = savedEm;
+            }
+        } catch (e) { /* ignore */ }
+
+        verifySubmitBtn?.addEventListener('click', async () => {
+            if (!verifyCodeMsg) return;
+            verifyCodeMsg.textContent = '';
+            const em = (verifyEmailInput?.value || '').trim();
+            const cid = (verifyContactIdEl?.value || '').trim();
+            const code = (verifyCodeInput?.value || '').trim();
+            if (!code) {
+                verifyCodeMsg.style.color = '#b45309';
+                verifyCodeMsg.textContent = 'Enter the verification code from your email or SMS.';
+                return;
+            }
+            if (!em && !cid) {
+                verifyCodeMsg.style.color = '#b45309';
+                verifyCodeMsg.textContent = 'Enter your registration email, or paste the reference ID.';
+                return;
+            }
+            verifySubmitBtn.disabled = true;
+            try {
+                var r;
+                if (em) {
+                    r = await fetch('/api/contacts/verify-with-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: em, verification_code: code }),
+                    });
+                } else {
+                    r = await fetch('/api/contacts/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contact_id: cid, verification_code: code }),
+                    });
+                }
+                const j = await r.json().catch(() => ({}));
+                if (r.ok) {
+                    verifyCodeMsg.style.color = '#166534';
+                    verifyCodeMsg.textContent = j.message || 'Verified — you can sign in at the dashboard with your email and password.';
+                    try {
+                        sessionStorage.removeItem('ew_reg_contact_id');
+                        sessionStorage.removeItem('ew_reg_email');
+                    } catch (e) { /* ignore */ }
+                    if (verifyCodeInput) verifyCodeInput.value = '';
+                } else {
+                    const d = j.detail || r.statusText;
+                    verifyCodeMsg.style.color = '#b91c1c';
+                    verifyCodeMsg.textContent = typeof d === 'string' ? d : JSON.stringify(d);
+                }
+            } catch (e) {
+                verifyCodeMsg.style.color = '#b91c1c';
+                verifyCodeMsg.textContent = 'Could not reach the server. Open this page from your running API (e.g. http://127.0.0.1:8000/registration).';
+            }
+            verifySubmitBtn.disabled = false;
+        });
 
         resendVerificationBtn.addEventListener('click', async () => {
             resendMsg.textContent = '';
@@ -1000,6 +1151,17 @@
                         ${cid}
                     `;
                     successMessage.classList.add('show');
+
+                    if (emailBeforeSubmit) {
+                        try { sessionStorage.setItem('ew_reg_email', emailBeforeSubmit); } catch (e) { /* ignore */ }
+                        var vem = document.getElementById('verifyEmailInput');
+                        if (vem) vem.value = emailBeforeSubmit;
+                    }
+
+                    if (result.contact_id) {
+                        try { sessionStorage.setItem('ew_reg_contact_id', result.contact_id); } catch (e) { /* ignore */ }
+                        if (verifyContactIdEl) verifyContactIdEl.value = result.contact_id;
+                    }
 
                     const warns = Array.isArray(result.warnings) ? result.warnings : [];
                     if (warns.length) {
@@ -1159,6 +1321,25 @@
         });
 
         refreshDevResetPanel();
+
+        (function initPwToggles() {
+            function bind(btnId, inputId, ariaName) {
+                const btn = document.getElementById(btnId);
+                const inp = document.getElementById(inputId);
+                if (!btn || !inp) return;
+                ariaName = ariaName || 'password';
+                btn.addEventListener('click', function () {
+                    const show = inp.type === 'password';
+                    inp.type = show ? 'text' : 'password';
+                    btn.textContent = show ? 'Hide' : 'Show';
+                    btn.setAttribute('aria-pressed', show ? 'true' : 'false');
+                    btn.setAttribute('aria-label', (show ? 'Hide ' : 'Show ') + ariaName);
+                });
+            }
+            bind('togglePassword', 'password', 'password');
+            bind('togglePassword2', 'password2', 'password');
+            bind('toggleDevAdminApiKey', 'devAdminApiKey', 'API key');
+        })();
 
         // Update channel labels styling
         document.querySelectorAll('input[name="channels"]').forEach(input => {

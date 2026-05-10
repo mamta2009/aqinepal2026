@@ -8,6 +8,7 @@ Architecture diagram (on-disk; embedded on **`/guides`**):
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
 import secrets
@@ -20,7 +21,7 @@ from pathlib import Path
 
 import httpx
 from bson import ObjectId
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, EmailStr, Field
 
@@ -197,7 +198,14 @@ RESEND_VERIFICATION_GENERIC_MESSAGE = (
 
 class VerifyContactIn(BaseModel):
     contact_id: str
-    verification_code: str = Field(..., min_length=4, max_length=12)
+    verification_code: str = Field(..., min_length=4, max_length=16)
+
+
+class VerifyContactEmailIn(BaseModel):
+    """Complete signup verification using the registration email (pending contacts only)."""
+
+    email: EmailStr
+    verification_code: str = Field(..., min_length=4, max_length=16)
 
 
 class ResendVerificationIn(BaseModel):
@@ -327,7 +335,7 @@ def eligible_broadcast_contact_clause() -> dict[str, Any]:
     remain eligible until backfilled so older deployments behave like pre-governance demos.
     """
     return {
-        "active": True,
+        "$nor": [{"active": False}],
         "consent_given": True,
         "verification_status": "verified",
         "approval_status": {"$nin": ["revoked", "pending"]},
@@ -1044,6 +1052,38 @@ async def register_contact(contact: ContactRegistration):
     return await persist_contact_registration(contact, dispatch_verification=True)
 
 
+async def _finalize_contact_verification(db: Any, doc: dict[str, Any]) -> dict[str, Any]:
+    """Mark contact verified after code matched; shared by ``/verify`` and ``/verify-with-email``."""
+    oid = doc["_id"]
+    apr_now = str(doc.get("approval_status") or "").strip().lower()
+    set_fields: dict[str, Any] = {
+        "verification_status": "verified",
+        "verified_at": datetime.utcnow(),
+    }
+    auto_apr = facility_auth.auto_approve_verified_contacts()
+    if auto_apr:
+        set_fields["approval_status"] = "approved"
+    elif apr_now not in ("approved", "revoked"):
+        set_fields["approval_status"] = "pending"
+
+    await db.contacts.update_one(
+        {"_id": oid},
+        {"$set": set_fields, "$unset": {"verification_code": ""}},
+    )
+    msg = "Contact verified successfully"
+    hint = ""
+    if (
+        not auto_apr
+        and set_fields.get("approval_status") == "pending"
+        and apr_now not in ("approved",)
+    ):
+        hint = (
+            " Awaits partner approval before environmental alerts / facility dashboard reporting "
+            "(operator: PATCH /api/contacts/{id}/approval)."
+        )
+    return {"success": True, "message": msg + hint}
+
+
 @router.post("/api/contacts/verify")
 async def verify_contact(body: VerifyContactIn):
     db = db_state.require_mongo_db()
@@ -1060,36 +1100,42 @@ async def verify_contact(body: VerifyContactIn):
     if apr_now == "revoked":
         raise HTTPException(status_code=403, detail="This registration has been revoked")
 
-    if doc.get("verification_code") == body.verification_code:
-        set_fields: dict[str, Any] = {
-            "verification_status": "verified",
-            "verified_at": datetime.utcnow(),
-        }
+    if doc.get("verification_code") != body.verification_code:
+        raise HTTPException(status_code=400, detail="Invalid verification code")
 
-        auto_apr = facility_auth.auto_approve_verified_contacts()
-        if auto_apr:
-            set_fields["approval_status"] = "approved"
-        elif apr_now not in ("approved", "revoked"):
-            set_fields["approval_status"] = "pending"
+    return await _finalize_contact_verification(db, doc)
 
-        await db.contacts.update_one(
-            {"_id": oid},
-            {"$set": set_fields, "$unset": {"verification_code": ""}},
+
+@router.post("/api/contacts/verify-with-email")
+async def verify_contact_with_email(body: VerifyContactEmailIn):
+    """
+    Same as ``POST /api/contacts/verify`` but identifies the row by **registration email**
+    (so users do not need the Mongo ``contact_id``). Pending registrations only.
+    """
+    db = db_state.require_mongo_db()
+    email_key = str(body.email).strip()
+    doc = await db.contacts.find_one({"email": email_key})
+    if not doc:
+        await asyncio.sleep(0.14)
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid email or verification code.",
         )
-        msg = "Contact verified successfully"
-        hint = ""
-        if (
-            not auto_apr
-            and set_fields.get("approval_status") == "pending"
-            and apr_now not in ("approved",)
-        ):
-            hint = (
-                " Awaits partner approval before environmental alerts / facility dashboard reporting "
-                "(operator: PATCH /api/contacts/{id}/approval)."
-            )
-        return {"success": True, "message": msg + hint}
+    vs = str(doc.get("verification_status") or "").strip().lower()
+    if vs != "pending":
+        raise HTTPException(
+            status_code=400,
+            detail="This email is not waiting for verification — try signing in.",
+        )
+    apr_now = str(doc.get("approval_status") or "").strip().lower()
+    if apr_now == "revoked":
+        raise HTTPException(status_code=403, detail="This registration has been revoked")
 
-    raise HTTPException(status_code=400, detail="Invalid verification code")
+    if doc.get("verification_code") != body.verification_code:
+        await asyncio.sleep(0.08)
+        raise HTTPException(status_code=400, detail="Invalid email or verification code.")
+
+    return await _finalize_contact_verification(db, doc)
 
 
 @router.post("/api/contacts/resend-verification")
@@ -1161,6 +1207,110 @@ async def resend_verification_code(body: ResendVerificationIn):
     return out
 
 
+async def operator_resend_registration_verification_by_id(contact_id: str) -> dict[str, Any]:
+    """
+    Operator resend for ``verification_status=pending`` contacts.
+
+    Does **not** apply the public email cooldown (``VERIFICATION_RESEND_COOLDOWN_SECONDS``);
+    use from ``POST /api/admin/registrants/{id}/resend-verification`` only.
+    """
+    db = db_state.require_mongo_db()
+    try:
+        oid = ObjectId(contact_id.strip())
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=400, detail="Invalid contact_id") from exc
+
+    doc = await db.contacts.find_one({"_id": oid})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    if str(doc.get("approval_status") or "").strip().lower() == "revoked":
+        raise HTTPException(status_code=403, detail="Registration revoked")
+    vs = str(doc.get("verification_status") or "").strip().lower()
+    if vs != "pending":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Not awaiting verification (verification_status={vs or 'unknown'}).",
+        )
+
+    code = _verification_code()
+    cid = doc["_id"]
+    chans_raw = doc.get("preferred_channels") or []
+    chans = [str(c) for c in chans_raw]
+    normalized_phone = str(doc.get("phone_number") or "")
+    normalized_whatsapp = str(doc.get("whatsapp_number") or "") or normalized_phone
+    disp_name = str(doc.get("name") or "")
+    disp_email = str(doc.get("email") or "")
+
+    await db.contacts.update_one(
+        {"_id": cid},
+        {"$set": {"verification_code": code, "verification_last_sent_at": datetime.utcnow()}},
+    )
+
+    try:
+        warnings = await _dispatch_registration_verification_channels(
+            db,
+            cid,
+            contact_name=disp_name,
+            email=disp_email,
+            normalized_phone=normalized_phone,
+            normalized_whatsapp=normalized_whatsapp,
+            preferred_channel_values=chans,
+            code=code,
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("Operator resend verification dispatch failed: %s", exc)
+        raise HTTPException(status_code=500, detail="Verification dispatch failed") from exc
+
+    out: dict[str, Any] = {
+        "success": True,
+        "contact_id": str(cid),
+        "message": "Verification code sent to the enrollee's preferred channel(s).",
+        "channels": chans,
+    }
+    if warnings:
+        out["warnings"] = warnings
+    return out
+
+
+async def _log_registrant_unverified_login_attempt(email_key: str, doc: dict[str, Any]) -> None:
+    """Persist a row for the admin activity feed; optional email if ``ADMIN_UNVERIFIED_LOGIN_ALERT_EMAIL`` is set."""
+    mdb = db_state.mongo_db
+    if mdb is None:
+        return
+    oid = doc.get("_id")
+    cid_str = str(oid) if oid is not None else ""
+    entry: dict[str, Any] = {
+        "action_type": "registrant_login_blocked_unverified",
+        "contact_id": cid_str,
+        "facility_id": str(doc.get("facility_id") or "").strip() or None,
+        "facility_name": doc.get("facility_name"),
+        "city": doc.get("city"),
+        "reported_by_email_hash": hashlib.sha256(email_key.lower().encode("utf-8")).hexdigest()[:24],
+        "details": "Dashboard password login blocked: complete verification (POST /api/contacts/verify) first.",
+        "timestamp": datetime.utcnow(),
+    }
+    try:
+        await mdb.action_logs.insert_one(entry)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Could not log unverified login attempt: %s", str(exc)[:300])
+
+    alert_to = (os.getenv("ADMIN_UNVERIFIED_LOGIN_ALERT_EMAIL") or "").strip()
+    if not alert_to:
+        return
+    name = str(doc.get("name") or "")
+    subj = f"[Early warning] Unverified login attempt: {email_key}"
+    body = (
+        f"<p>Someone entered the correct password but <strong>verification_status</strong> is not verified yet.</p>"
+        f"<p>Email: {email_key}<br/>Name: {name}<br/>Contact id: {cid_str}</p>"
+        f"<p>Operators can resend the code from <strong>Admin → Registered enrollees → Resend verify</strong> "
+        f"or the user can use <strong>POST /api/contacts/resend-verification</strong>.</p>"
+    )
+    try:
+        await send_email(alert_to, subj, body)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("ADMIN_UNVERIFIED_LOGIN_ALERT_EMAIL send failed: %s", str(exc)[:300])
+
+
 @router.post("/api/auth/login")
 async def registrant_dashboard_login(body: RegistrantLoginIn):
     """Email + password session for the public dashboard (JWT), distinct from facility OTP tokens."""
@@ -1182,6 +1332,7 @@ async def registrant_dashboard_login(body: RegistrantLoginIn):
         raise HTTPException(status_code=403, detail="Account revoked.")
     vs = str(doc.get("verification_status") or "").strip().lower()
     if vs != "verified":
+        await _log_registrant_unverified_login_attempt(email_key, doc)
         raise HTTPException(status_code=403, detail="Verify your registration (code) before signing in.")
 
     token, ttl = registrant_auth.mint_registrant_session_token(doc)
@@ -1218,6 +1369,64 @@ async def registrant_profile(
     for k in ("password_hash", "verification_code", "facility_login_code", "facility_login_expires_at"):
         out.pop(k, None)
     out["scopes"] = registrant_auth.compute_registrant_scopes(doc)
+    return out
+
+
+def _authorization_bearer_raw(authorization: str | None) -> str | None:
+    if authorization and authorization.strip().lower().startswith("bearer "):
+        return authorization.strip()[7:].strip()
+    return None
+
+
+def _contact_id_from_dashboard_bearer_token(token: str | None) -> str | None:
+    """Resolve Mongo contact id from registrant session JWT or facility-actions JWT."""
+    if not token:
+        return None
+    rc = registrant_auth.decode_registrant_token_optional(token)
+    if rc:
+        s = str(rc.get("cid") or rc.get("sub") or "").strip()
+        return s or None
+    fc = facility_auth.decode_facility_access_token_optional(token)
+    if fc:
+        s = str(fc.get("cid") or fc.get("sub") or "").strip()
+        return s or None
+    return None
+
+
+@router.get("/api/auth/profile")
+async def dashboard_registration_profile(authorization: str | None = Header(None)):
+    """
+    Full enrolment record for the signed-in user (same shape as ``GET /api/auth/me``).
+
+    Accepts **either** a registrant session token (``POST /api/auth/login``) **or**
+    a facility reporting token (``POST /api/auth/facility-token`` after OTP) so dashboard
+    users can read their profile regardless of sign-in method.
+    """
+    raw = _authorization_bearer_raw(authorization)
+    cid = _contact_id_from_dashboard_bearer_token(raw)
+    if not cid:
+        raise HTTPException(
+            status_code=401,
+            detail="Sign in required — use password or OTP under Facility Actions, then retry.",
+        )
+    db = db_state.require_mongo_db()
+    try:
+        oid = ObjectId(cid)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=401, detail="Invalid session identity") from exc
+    doc = await db.contacts.find_one({"_id": oid})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    if str(doc.get("approval_status") or "").strip().lower() == "revoked":
+        raise HTTPException(status_code=403, detail="This registration has been revoked")
+    out = dict(doc)
+    oid_out = out.pop("_id", None)
+    out["_id"] = str(oid_out) if oid_out is not None else ""
+    for k in ("password_hash", "verification_code", "facility_login_code", "facility_login_expires_at"):
+        out.pop(k, None)
+    out["scopes"] = registrant_auth.compute_registrant_scopes(doc)
+    out["facility_name"] = facility_auth.facility_display_name(doc)
+    out["facility_reporting_ready"] = registrant_auth.registrant_can_facility_actions(doc)
     return out
 
 
@@ -1469,7 +1678,7 @@ async def list_contacts_directory(
     city: Optional[str] = None,
     include_inactive: bool = Query(
         True,
-        description="If false, only contacts with active=true.",
+        description="If false, exclude only archived contacts (active=false); rows without `active` still count as active.",
     ),
     unmasked_phones: bool = Query(
         False,
@@ -1485,7 +1694,7 @@ async def list_contacts_directory(
     db = db_state.require_mongo_db()
     query: dict[str, Any] = {}
     if not include_inactive:
-        query["active"] = True
+        query["$nor"] = [{"active": False}]
     if facility_id:
         query["facility_id"] = facility_id
     if city:
@@ -1541,7 +1750,8 @@ async def list_contacts(
     _: None = Depends(require_notification_api_key),
 ):
     db = db_state.require_mongo_db()
-    query: dict[str, Any] = {"active": True}
+    # Same as admin "Active (not archived)": legacy docs may omit `active` (treat as active).
+    query: dict[str, Any] = {"$nor": [{"active": False}]}
     if facility_id:
         query["facility_id"] = facility_id
     if contact_type:

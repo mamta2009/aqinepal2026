@@ -95,6 +95,16 @@
             padding: 10px 12px; border-radius: 8px; border: 1px solid #334155;
             max-width: 100%; background: #0f172a; color: #e2e8f0;
         }
+        .pw-row {
+            display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap;
+            max-width: 560px;
+        }
+        .pw-row > input[type="password"],
+        .pw-row > input[type="text"] { flex: 1; min-width: 140px; }
+        button.pw-toggle {
+            flex: 0 0 auto; align-self: center; margin: 0;
+            padding: 8px 12px; font-size: 12px; font-weight: 600;
+        }
         textarea { min-height: 72px; width: 100%; max-width: 560px; font-family: inherit; resize: vertical; }
         select[multiple] { min-height: 120px; }
         .row-flex { display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: flex-end; margin-bottom: 12px; }
@@ -210,6 +220,34 @@
         }
         .modal-close:hover { background: #475569; }
         .toolbar { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: center; margin-bottom: 12px; }
+        input[type="number"] { max-width: 160px; }
+        input[type="checkbox"] { width: auto; accent-color: #3b82f6; }
+        /* Light theme — matches dashboard preference (localStorage theme_dark) */
+        html[data-theme="light"] body { background: #f1f5f9; color: #0f172a; }
+        html[data-theme="light"] .admin-global-nav { background: rgba(248, 250, 252, 0.98); border-bottom-color: #e2e8f0; }
+        html[data-theme="light"] .admin-nav-brand { color: #059669; }
+        html[data-theme="light"] .admin-nav-links a { color: #334155; }
+        html[data-theme="light"] .admin-nav-links a:hover { color: #0284c7; }
+        html[data-theme="light"] .admin-nav-meta { color: #64748b; }
+        html[data-theme="light"] h1 { color: #0f172a; }
+        html[data-theme="light"] h2 { color: #475569; }
+        html[data-theme="light"] section { background: #fff; border: 1px solid #e2e8f0; }
+        html[data-theme="light"] .hint, html[data-theme="light"] .muted { color: #64748b; }
+        html[data-theme="light"] label { color: #334155; }
+        html[data-theme="light"] input, html[data-theme="light"] select, html[data-theme="light"] textarea {
+            background: #fff; border-color: #cbd5e1; color: #0f172a;
+        }
+        html[data-theme="light"] .admin-global-footer { background: #f8fafc; border-top-color: #e2e8f0; color: #64748b; }
+        html[data-theme="light"] table.tbl th { color: #64748b; border-color: #e2e8f0; }
+        html[data-theme="light"] table.tbl td { border-color: #e2e8f0; }
+        html[data-theme="light"] table.tbl tbody tr:hover { background: #f1f5f9; }
+        html[data-theme="light"] pre { background: #f8fafc; border-color: #e2e8f0; color: #0f172a; }
+        html[data-theme="light"] #pinOverlay { background: rgba(241, 245, 249, 0.97); }
+        html[data-theme="light"] #pinCard { background: #fff; border-color: #e2e8f0; }
+        html[data-theme="light"] #pinCard h2 { color: #0f172a; }
+        html[data-theme="light"] .chain-card { background: #f8fafc; border-color: #e2e8f0; }
+        html[data-theme="light"] .modal-panel { background: #fff; border-color: #cbd5e1; }
+        html[data-theme="light"] .modal-backdrop { background: rgba(15, 23, 42, 0.35); }
     </style>
 </head>
 <body>
@@ -246,7 +284,10 @@
             otherwise the dev default applies.
         </p>
         <label for="adminPin">PIN</label>
-        <input type="password" id="adminPin" maxlength="240" autocomplete="off" aria-label="Operator PIN"/>
+        <div class="pw-row">
+            <input type="password" id="adminPin" maxlength="240" autocomplete="off" aria-label="Operator PIN"/>
+            <button type="button" class="secondary sm pw-toggle" id="toggleAdminPin" aria-label="Show PIN" aria-pressed="false">Show</button>
+        </div>
         <div>
             <button type="button" id="pinSubmit">Unlock</button>
         </div>
@@ -265,13 +306,32 @@
 
     <section>
         <h2>API key (this browser tab)</h2>
-        <p class="muted" style="margin-top:0;">Generate a long random string for production (e.g. terminal: <code class="mono">openssl rand -hex 32</code>), put it on the server as <code class="mono">NOTIFICATION_API_KEY=…</code>, then paste it here and Save.</p>
-        <input type="password" id="adminKey" placeholder="NOTIFICATION_API_KEY" autocomplete="off" aria-label="Notification API key"/>
+        <p id="serverKeyStatus" class="muted" style="margin-top:0;min-height:1.35em;" aria-live="polite"></p>
+        <p class="muted" style="margin-top:0;">Paste the same value as <code class="mono">NOTIFICATION_API_KEY</code> in <code>backend/.env</code>. Use the buttons below immediately — <strong>Save</strong> only keeps the key after you refresh the page.</p>
+        <div class="pw-row" style="margin-bottom:8px;">
+            <input type="password" id="adminKey" placeholder="NOTIFICATION_API_KEY" autocomplete="off" aria-label="Notification API key"/>
+            <button type="button" class="secondary sm pw-toggle" id="toggleAdminKey" aria-label="Show API key" aria-pressed="false">Show</button>
+        </div>
         <div>
             <button type="button" id="saveKey">Save</button>
             <button type="button" class="secondary" id="clearKey">Clear</button>
             <button type="button" class="secondary" id="lockConsole">Lock (PIN)</button>
         </div>
+    </section>
+
+    <section id="adminDashboardSettings" aria-labelledby="adminSettingsHeading">
+        <h2 id="adminSettingsHeading">Settings <span style="font-weight:400;color:#94a3b8;font-size:0.88em;">— shared with the main dashboard</span></h2>
+        <p class="muted" style="margin-top:0;">
+            Stored in this browser only (<span class="mono">localStorage</span>). The public dashboard on this device uses the same theme, PM2.5 alert line, and 30-minute refresh preference.
+        </p>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;max-width:520px;">
+            <input type="checkbox" id="adminDarkModeToggle" checked/> Dark theme (uncheck for light)
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-top:12px;max-width:520px;">
+            <input type="checkbox" id="adminAutoRefresh" checked/> Auto-refresh dashboard data (30&nbsp;min)
+        </label>
+        <label for="adminAlertThreshold" style="margin-top:14px;">Alert threshold (PM2.5, µg/m³)</label>
+        <input type="number" id="adminAlertThreshold" value="150" min="50" max="300" step="10" inputmode="numeric" aria-label="PM2.5 alert threshold"/>
     </section>
 
     <section id="docSection">
@@ -330,7 +390,10 @@
         <p class="admin-explainer">
             <strong>What this screen does:</strong> lists everyone registered to receive advisory messages and use the preparedness dashboard — hospitals, wards, municipalities.
             Normal practice is to invite people via the public form; operators can fix mistakes (password reset, archive, permanent delete).
-            Buttons <strong>Add new enrollee</strong> (opens a guided form), <strong>Load registrants</strong> refreshes this table.
+            For <strong>verification pending</strong>, use <strong>Resend verify</strong> to send a fresh code (email/SMS/WhatsApp per their preferences).
+            <strong>Dashboard login</strong> after signup requires verification first: password alone is not enough until they submit the code (see <code>POST /api/contacts/verify</code>).
+            Unverified login attempts are recorded under <strong>Load activity → Recent action logs</strong> (and optional email if <code>ADMIN_UNVERIFIED_LOGIN_ALERT_EMAIL</code> is set).
+            Buttons <strong>Add new enrollee</strong> (opens a guided form), <strong>Sites / area</strong> on a row to add hospitals/wards or municipalities for an existing person, <strong>Load registrants</strong> refreshes this table.
             <strong>Unmask phones</strong> shows whole phone numbers — use only inside your organisation.
         </p>
         <div class="toolbar">
@@ -384,7 +447,12 @@
                 <label class="grow">WhatsApp (optional)<br/><input type="text" id="addWa" placeholder="+977…" autocomplete="off"/></label>
             </div>
             <div class="row-flex" style="align-items:flex-start;">
-                <label class="grow">Password (min 8) *<br/><input type="password" id="addPassword" minlength="8" maxlength="128" autocomplete="new-password"/></label>
+                <label class="grow">Password (min 8) *
+                    <div class="pw-row" style="margin-top:4px;max-width:none;">
+                        <input type="password" id="addPassword" minlength="8" maxlength="128" autocomplete="new-password"/>
+                        <button type="button" class="secondary sm pw-toggle" id="toggleAddPassword" aria-label="Show password" aria-pressed="false">Show</button>
+                    </div>
+                </label>
                 <label class="grow">Role *<br/>
                     <select id="addContactType">
                         <option value="health_worker">Health worker</option>
@@ -417,6 +485,28 @@
             <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:10px;">
                 <button type="button" id="btnAddUser">Create enrollee</button>
                 <button type="button" class="secondary" id="btnCancelAddUserModal">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editEnrolModal" class="modal-backdrop" role="dialog" aria-labelledby="editEnrolModalTitle" aria-modal="true" aria-hidden="true">
+        <div class="modal-panel" tabindex="-1">
+            <button type="button" class="modal-close" id="btnCloseEditEnrolModal" aria-label="Close form">×</button>
+            <h2 id="editEnrolModalTitle">Facilities &amp; coverage areas</h2>
+            <p class="muted" style="margin:0 0 14px;line-height:1.5;">
+                Add <strong>more facility names</strong> (hospital / ward lines) and <strong>more municipalities</strong> where this person should receive air-quality and heat alerts.
+                Keys must match <code>GET /api/cities</code> (same list as public registration). <code>facility_id</code> is your internal reference for reporting integration.
+            </p>
+            <input type="hidden" id="editEnrolContactId" value=""/>
+            <label>Facility names (one per line)<br/><textarea id="editFacilityLines" rows="4" placeholder="City Hospital&#10;Ward 4 clinic" autocomplete="off"></textarea></label>
+            <label style="margin-top:10px;display:block;">Facility reference ID (optional, internal)<br/><input type="text" id="editFacilityId" placeholder="e.g. MOH-H-042" autocomplete="off" style="max-width:100%;"/></label>
+            <label style="margin-top:12px;display:block;">Municipality coverage * (⌘ Ctrl-click to select several)<br/>
+                <select id="editCityMulti" multiple aria-label="Coverage municipalities" style="min-height:140px;width:100%;max-width:100%;"></select>
+            </label>
+            <p id="editEnrolMsg" class="muted" style="margin-top:10px;min-height:1.2em;"></p>
+            <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:10px;">
+                <button type="button" id="btnSaveEnrol">Save changes</button>
+                <button type="button" class="secondary" id="btnCancelEditEnrolModal">Cancel</button>
             </div>
         </div>
     </div>
@@ -473,6 +563,69 @@
 (function () {
     var UNLOCK_KEY = 'ew_admin_console_unlocked';
 
+    function bindPwToggle(btnId, inputId, nameForAria) {
+        var btn = document.getElementById(btnId);
+        var inp = document.getElementById(inputId);
+        if (!btn || !inp) return;
+        nameForAria = nameForAria || 'password';
+        btn.addEventListener('click', function () {
+            var show = inp.type === 'password';
+            inp.type = show ? 'text' : 'password';
+            btn.textContent = show ? 'Hide' : 'Show';
+            btn.setAttribute('aria-pressed', show ? 'true' : 'false');
+            btn.setAttribute('aria-label', (show ? 'Hide ' : 'Show ') + nameForAria);
+        });
+    }
+    bindPwToggle('toggleAdminPin', 'adminPin', 'PIN');
+    bindPwToggle('toggleAdminKey', 'adminKey', 'API key');
+    bindPwToggle('toggleAddPassword', 'addPassword', 'password');
+
+    (function applyAdminThemeFromStorage() {
+        var dark = localStorage.getItem('theme_dark');
+        var useDark = dark === null ? true : dark === '1';
+        if (useDark) document.documentElement.removeAttribute('data-theme');
+        else document.documentElement.dataset.theme = 'light';
+    })();
+
+    function initAdminDashboardSettings() {
+        var darkCb = document.getElementById('adminDarkModeToggle');
+        var arCb = document.getElementById('adminAutoRefresh');
+        var thrIn = document.getElementById('adminAlertThreshold');
+        var dark = localStorage.getItem('theme_dark');
+        var useDark = dark === null ? true : dark === '1';
+        if (useDark) document.documentElement.removeAttribute('data-theme');
+        else document.documentElement.dataset.theme = 'light';
+        if (darkCb) darkCb.checked = useDark;
+        var thr = localStorage.getItem('pm25_alert_threshold');
+        var tn = parseInt(String(thr), 10);
+        if (thrIn && !Number.isNaN(tn) && tn >= 1) thrIn.value = String(tn);
+        var ar = localStorage.getItem('dashboard_auto_refresh');
+        var arOn = ar === null ? true : ar === '1';
+        if (arCb) arCb.checked = arOn;
+        if (darkCb) {
+            darkCb.addEventListener('change', function (e) {
+                var on = e.target.checked;
+                if (on) document.documentElement.removeAttribute('data-theme');
+                else document.documentElement.dataset.theme = 'light';
+                localStorage.setItem('theme_dark', on ? '1' : '0');
+            });
+        }
+        if (arCb) {
+            arCb.addEventListener('change', function (e) {
+                localStorage.setItem('dashboard_auto_refresh', e.target.checked ? '1' : '0');
+            });
+        }
+        function persistThr(el) {
+            var v = parseInt(String(el.value), 10);
+            if (!Number.isNaN(v) && v >= 1) localStorage.setItem('pm25_alert_threshold', String(v));
+        }
+        if (thrIn) {
+            thrIn.addEventListener('change', function (e) { persistThr(e.target); });
+            thrIn.addEventListener('input', function (e) { persistThr(e.target); });
+        }
+    }
+    initAdminDashboardSettings();
+
     function showApp() {
         document.getElementById('pinOverlay').style.display = 'none';
         document.getElementById('adminApp').hidden = false;
@@ -488,6 +641,27 @@
     }
 
     if (sessionStorage.getItem(UNLOCK_KEY) === '1') showApp();
+
+    fetch('/api/runtime-config')
+        .then(function (r) { return r.json(); })
+        .then(function (cfg) {
+            var el = document.getElementById('serverKeyStatus');
+            if (!el) return;
+            var op = (cfg && cfg.operator_console) || {};
+            if (op.notification_api_key_configured) {
+                el.textContent =
+                    'Server reports NOTIFICATION_API_KEY is set. Paste the same string from backend/.env in the box above — this page cannot read .env. Use Save only if you want it kept after refresh.';
+                el.style.color = '#15803d';
+            } else {
+                el.textContent =
+                    'Server reports NOTIFICATION_API_KEY is missing or empty; admin JSON calls return 503 until it is set and the API is restarted.';
+                el.style.color = '#b45309';
+            }
+        })
+        .catch(function () {
+            var el = document.getElementById('serverKeyStatus');
+            if (el) el.textContent = 'Could not load /api/runtime-config to verify server key state.';
+        });
 
     document.getElementById('pinSubmit').onclick = async function () {
         var pinEl = document.getElementById('adminPin');
@@ -527,7 +701,13 @@
     var initK = sessionStorage.getItem('ew_admin_key');
     if (initK) document.getElementById('adminKey').value = initK;
 
-    function getKey() { return sessionStorage.getItem('ew_admin_key') || ''; }
+    // Typed key in the box is used first; Save only persists across refresh.
+    function getKey() {
+        var inp = document.getElementById('adminKey');
+        var typed = inp && inp.value.trim();
+        if (typed) return typed;
+        return sessionStorage.getItem('ew_admin_key') || '';
+    }
 
     function authHeaders() {
         var k = getKey();
@@ -556,7 +736,7 @@
         var msg = document.getElementById('privateDocMsg');
         var sel = document.getElementById('privateDocSelect');
         var cv = document.getElementById('privateDocCanvas');
-        if (!h) { msg.textContent = 'Save API key first.'; return; }
+        if (!h) { msg.textContent = 'Add NOTIFICATION_API_KEY in the box above.'; return; }
         msg.textContent = 'Loading…';
         sel.innerHTML = '<option value="">— choose —</option>';
         cv.hidden = true;
@@ -575,7 +755,7 @@
     document.getElementById('btnPrivateDocOpen').onclick = async function () {
         var h = authHeaders(); var sel = document.getElementById('privateDocSelect');
         var cv = document.getElementById('privateDocCanvas'); var msg = document.getElementById('privateDocMsg');
-        if (!h) { alert('Save NOTIFICATION_API_KEY first.'); return; }
+        if (!h) { alert('Add NOTIFICATION_API_KEY in the box above (same as backend/.env).'); return; }
         var rel = sel && sel.value;
         if (!rel) { alert('Pick a file first (Refresh list).'); return; }
         msg.textContent = 'Loading "' + rel + '"…';
@@ -621,8 +801,63 @@
     }
 
     document.addEventListener('keydown', function (ev) {
-        if (ev.key === 'Escape' && addUserModal && addUserModal.classList.contains('open')) closeAddUserModal();
+        if (ev.key !== 'Escape') return;
+        if (addUserModal && addUserModal.classList.contains('open')) closeAddUserModal();
+        var em = document.getElementById('editEnrolModal');
+        if (em && em.classList.contains('open')) closeEditEnrolModal();
     });
+
+    var editEnrolModal = document.getElementById('editEnrolModal');
+    document.getElementById('btnCloseEditEnrolModal').onclick = closeEditEnrolModal;
+    document.getElementById('btnCancelEditEnrolModal').onclick = closeEditEnrolModal;
+    if (editEnrolModal) {
+        editEnrolModal.addEventListener('click', function (ev) {
+            if (ev.target === editEnrolModal) closeEditEnrolModal();
+        });
+    }
+    document.getElementById('btnSaveEnrol').onclick = async function () {
+        var h = authHeaders();
+        if (!h) return;
+        var id = document.getElementById('editEnrolContactId').value.trim();
+        var msgEl = document.getElementById('editEnrolMsg');
+        var sel = document.getElementById('editCityMulti');
+        var cities = [];
+        Array.prototype.forEach.call(sel.options, function (o) {
+            if (o.selected) cities.push(o.value);
+        });
+        if (!cities.length) {
+            msgEl.style.color = '#fecaca';
+            msgEl.textContent = 'Select at least one municipality for alerts.';
+            return;
+        }
+        var rawF = document.getElementById('editFacilityLines').value;
+        var facNames = rawF.split(/[\r\n;,]+/).map(function (s) { return s.trim(); }).filter(Boolean);
+        var fid = document.getElementById('editFacilityId').value.trim();
+        var payload = { cities: cities, facility_names: facNames };
+        payload.facility_id = fid ? fid : '';
+        msgEl.style.color = '#94a3b8';
+        msgEl.textContent = 'Saving…';
+        try {
+            var r = await fetch('/api/admin/registrants/' + encodeURIComponent(id) + '/enrolment', {
+                method: 'PATCH',
+                headers: h,
+                body: JSON.stringify(payload)
+            });
+            var j = await r.json().catch(function () { return {}; });
+            if (!r.ok) {
+                msgEl.style.color = '#fecaca';
+                msgEl.textContent = j.detail ? String(j.detail) : ('HTTP ' + r.status);
+                return;
+            }
+            msgEl.style.color = '#bbf7d0';
+            msgEl.textContent = j.message || 'Saved.';
+            closeEditEnrolModal();
+            await reloadUsers('Enrolment updated.');
+        } catch (e) {
+            msgEl.style.color = '#fecaca';
+            msgEl.textContent = String(e.message || e);
+        }
+    };
 
     function populateAddUserCities() {
         fetch('/api/cities').then(function (r) { return r.json(); }).then(function (d) {
@@ -636,6 +871,54 @@
                 sel.appendChild(o);
             });
         }).catch(function () {});
+    }
+
+    function populateEditEnrolCitySelect(done) {
+        fetch('/api/cities').then(function (r) { return r.json(); }).then(function (d) {
+            var sel = document.getElementById('editCityMulti');
+            if (!sel || !d || !Array.isArray(d.cities)) {
+                if (done) done();
+                return;
+            }
+            sel.innerHTML = '';
+            d.cities.forEach(function (c) {
+                var o = document.createElement('option');
+                o.value = c.name;
+                o.textContent = c.name;
+                sel.appendChild(o);
+            });
+            if (done) done();
+        }).catch(function () { if (done) done(); });
+    }
+
+    function openEditEnrolModal(u) {
+        var modal = document.getElementById('editEnrolModal');
+        if (!modal) return;
+        document.getElementById('editEnrolContactId').value = u._id || '';
+        var names = Array.isArray(u.facility_names) && u.facility_names.length
+            ? u.facility_names.join('\n')
+            : '';
+        if (!names && u.facility_name) names = String(u.facility_name);
+        document.getElementById('editFacilityLines').value = names;
+        document.getElementById('editFacilityId').value = u.facility_id ? String(u.facility_id) : '';
+        document.getElementById('editEnrolMsg').textContent = '';
+        var want = Array.isArray(u.cities) ? u.cities.slice() : (u.city ? [String(u.city)] : []);
+        populateEditEnrolCitySelect(function () {
+            var sel = document.getElementById('editCityMulti');
+            if (!sel) return;
+            Array.prototype.forEach.call(sel.options, function (o) {
+                o.selected = want.indexOf(o.value) >= 0;
+            });
+        });
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeEditEnrolModal() {
+        var modal = document.getElementById('editEnrolModal');
+        if (!modal) return;
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
     }
 
     document.getElementById('btnAddUser').onclick = async function () {
@@ -714,7 +997,7 @@
         var raw = document.getElementById('outChainRaw');
         raw.style.display = 'none';
         if (!j || j.detail === 'Set API key first') {
-            box.textContent = 'Save NOTIFICATION_API_KEY above first.';
+            box.textContent = 'Add NOTIFICATION_API_KEY in the box above.';
             faucets.innerHTML = '';
             return;
         }
@@ -764,7 +1047,7 @@
 
     async function patchRuntimeNetwork(network) {
         var h = authHeaders();
-        if (!h) { alert('Save NOTIFICATION_API_KEY first.'); return; }
+        if (!h) { alert('Add NOTIFICATION_API_KEY in the box above (same as backend/.env).'); return; }
         if (network === 'mainnet') {
             if (!window.confirm('Switch this API process to Polygon mainnet?\n\nBalances and optional on-chain logging use real POL. Confirm POLYGON_RPC_URL and intent before continuing.')) return;
         }
@@ -792,7 +1075,7 @@
         var el = document.getElementById('usersMsg');
         var h = authHeaders();
         if (!h) {
-            el.textContent = 'Set NOTIFICATION_API_KEY first.';
+            el.textContent = 'Add NOTIFICATION_API_KEY in the box above.';
             return;
         }
         el.textContent = msg || 'Loading…';
@@ -830,6 +1113,19 @@
                     + '<td>' + stBadge + '<br/><span class="muted">verified:</span> ' + v + '<br/><span class="muted">approval:</span> ' + ap + '</td>'
                     + '<td></td>';
                 var actCell = tr.querySelector('td:last-child');
+                var bSites = document.createElement('button');
+                bSites.className = 'secondary sm'; bSites.type = 'button'; bSites.textContent = 'Sites / area';
+                bSites.title = 'Add or edit facility names, facility ID, and alert municipalities';
+                bSites.onclick = function () { openEditEnrolModal(u); };
+                actCell.appendChild(bSites);
+                var vRaw = String(u.verification_status || '').toLowerCase();
+                if (vRaw === 'pending') {
+                    var bV = document.createElement('button');
+                    bV.className = 'secondary sm'; bV.type = 'button'; bV.textContent = 'Resend verify';
+                    bV.title = 'Send a fresh verification code to their email/SMS/WhatsApp';
+                    bV.onclick = resendVerification.bind(null, u._id, u.email);
+                    actCell.appendChild(bV);
+                }
                 if (!archived) {
                     var bA = document.createElement('button');
                     bA.className = 'secondary sm'; bA.type = 'button'; bA.textContent = 'Archive';
@@ -856,6 +1152,22 @@
             el.textContent = '';
             alert(String(e.message || e));
         }
+    }
+
+    async function resendVerification(id, email) {
+        var h = authHeaders();
+        if (!h) return;
+        if (!window.confirm('Send a fresh verification code to this enrollee\'s preferred channels' + (email ? ' (' + email + ')?' : '?'))) return;
+        try {
+            var r = await fetch('/api/admin/registrants/' + encodeURIComponent(id) + '/resend-verification', {
+                method: 'POST', headers: h
+            });
+            var j = await r.json().catch(function () { return {}; });
+            if (!r.ok) { alert(j.detail || ('HTTP ' + r.status)); return; }
+            var parts = [j.message || 'Sent.'];
+            if (j.warnings && j.warnings.length) parts.push('Warnings: ' + j.warnings.join('; '));
+            alert(parts.join('\n\n'));
+        } catch (e) { alert(String(e)); }
     }
 
     async function patchActive(id, active) {

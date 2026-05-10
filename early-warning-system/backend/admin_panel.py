@@ -18,7 +18,12 @@ import external_integrations
 import registrant_auth
 import guide_documents
 from notification_auth import require_strict_notification_api_key
-from notifications_api import ContactRegistration, persist_contact_registration
+from notifications_api import (
+    ContactRegistration,
+    operator_resend_registration_verification_by_id,
+    persist_contact_registration,
+)
+from notifications_api import _normalize_city_list, _normalize_facility_names
 
 from onchain_logger import effective_polygon_bundle, runtime_polygon_network, set_runtime_polygon_network
 
@@ -352,7 +357,8 @@ async def admin_list_registrants(
         raise HTTPException(status_code=400, detail="filter_status must be all | active | archived")
     q: dict[str, Any] = {}
     if st == "active":
-        q["active"] = True
+        # Not archived: include legacy rows with no `active` field (only explicit false is archive).
+        q["$nor"] = [{"active": False}]
     elif st == "archived":
         q["active"] = False
     if email_contains and email_contains.strip():
@@ -370,6 +376,111 @@ async def admin_list_registrants(
         "has_more": has_more,
         "count_this_page": len(rows),
         "registrants": [_serialize_contact_public(r, mask_phone=not unmasked_phones) for r in rows],
+    }
+
+
+@router.post("/registrants/{contact_id}/resend-verification")
+async def admin_resend_verification_email(
+    contact_id: str,
+    _: None = Depends(require_strict_notification_api_key),
+) -> dict[str, Any]:
+    """
+    Send a fresh verification code to pending enrollees (email/SMS/WhatsApp per their preferences).
+    Bypasses the public resend cooldown — for operator helpdesk use.
+    """
+    return await operator_resend_registration_verification_by_id(contact_id)
+
+
+class AdminRegistrantEnrolmentPatch(BaseModel):
+    """Update site names, internal facility id, and/or alert coverage municipalities (see ``CITIES_CONFIG`` keys)."""
+
+    facility_names: list[str] | None = Field(
+        default=None,
+        description="Full replacement list of facility/site display names; merge with ``facility_name`` line when both sent.",
+    )
+    facility_name: str | None = Field(
+        default=None,
+        description="Additional free-text / newline facility line (same convention as public registration).",
+    )
+    facility_id: str | None = Field(
+        default=None,
+        description="Internal stable facility identifier; send empty string to clear.",
+    )
+    cities: list[str] | None = Field(
+        default=None,
+        description="Coverage municipalities (must be keys from ``GET /api/cities``). Replaces stored list when set.",
+    )
+    city: str | None = Field(
+        default=None,
+        description="Legacy primary municipality key — combined with ``cities`` when updating coverage.",
+    )
+
+
+@router.patch("/registrants/{contact_id}/enrolment")
+async def admin_patch_registrant_enrolment(
+    contact_id: str,
+    body: AdminRegistrantEnrolmentPatch,
+    _: None = Depends(require_strict_notification_api_key),
+) -> dict[str, Any]:
+    """Adjust facilities and/or locations for an existing enrollee without re-registering."""
+    db = db_state.require_mongo_db()
+    try:
+        oid = ObjectId(contact_id.strip())
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=400, detail="Invalid contact_id") from exc
+
+    doc = await db.contacts.find_one({"_id": oid})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Contact not found")
+
+    provided = body.model_dump(exclude_unset=True)
+    if not provided:
+        raise HTTPException(status_code=400, detail="Provide at least one of facility_names, facility_name, facility_id, cities, city")
+
+    set_doc: dict[str, Any] = {"updated_at": datetime.utcnow()}
+
+    if "facility_names" in provided or "facility_name" in provided:
+        norm_f, summary = _normalize_facility_names(body.facility_names, body.facility_name)
+        set_doc["facility_names"] = norm_f
+        set_doc["facility_name"] = summary
+
+    if "facility_id" in provided:
+        raw_fid = body.facility_id
+        if raw_fid is None or (isinstance(raw_fid, str) and not raw_fid.strip()):
+            set_doc["facility_id"] = None
+        else:
+            set_doc["facility_id"] = str(raw_fid).strip()
+
+    if "cities" in provided or "city" in provided:
+        inherit_cities = doc.get("cities")
+        if not isinstance(inherit_cities, list):
+            inherit_cities = []
+        list_arg: list[str] | None = None
+        if "cities" in provided and body.cities is not None:
+            list_arg = [str(x).strip() for x in body.cities if str(x).strip()]
+        elif "city" in provided:
+            list_arg = [str(x) for x in inherit_cities]
+        legacy_city: str | None = None
+        if "city" in provided:
+            legacy_city = body.city
+        elif "cities" in provided:
+            legacy_city = str(doc.get("city") or "").strip() or None
+        norm_c, primary = _normalize_city_list(list_arg if list_arg else None, legacy_city)
+        if not norm_c:
+            raise HTTPException(status_code=400, detail="Select at least one valid municipality (see GET /api/cities)")
+        set_doc["cities"] = norm_c
+        set_doc["city"] = primary
+
+    await db.contacts.update_one({"_id": oid}, {"$set": set_doc})
+    updated = await db.contacts.find_one({"_id": oid})
+    return {
+        "success": True,
+        "message": "Enrolment scope updated.",
+        "facility_names": updated.get("facility_names") if updated else None,
+        "facility_name": updated.get("facility_name") if updated else None,
+        "facility_id": updated.get("facility_id") if updated else None,
+        "cities": updated.get("cities") if updated else None,
+        "city": updated.get("city") if updated else None,
     }
 
 
