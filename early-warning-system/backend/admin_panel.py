@@ -177,8 +177,13 @@ def _mask_e164_tail(raw: str | None) -> str | None:
 def _env_hints() -> dict[str, bool]:
     keys = [
         "MONGODB_URL",
-        "DATABASE_URL",
         "MONGODB_URI",
+        "DATABASE_URL",
+        "MONGODB_DB_NAME",
+        "MONGO_DB_NAME",
+        "MONGODB_DATABASE",
+        "MONGODB_DEFAULT_DB",
+        "DB_NAME",
         "NOTIFICATION_API_KEY",
         "SENDGRID_API_KEY",
         "SENDGRID_FROM_EMAIL",
