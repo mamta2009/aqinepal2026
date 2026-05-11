@@ -53,3 +53,8 @@ htmlcov/
 
 node_modules/
 npm-debug.log
+
+# Root-level convenience archives (not maintained in git)
+/files.zip
+/landingpage.zip
+/notification_cursor.zip
