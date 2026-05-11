@@ -113,22 +113,19 @@ def _mongo_url_usable(url: str) -> bool:
 
 
 async def _connect_mongo() -> tuple[Any | None, Any | None]:
-    url = (
-        os.getenv("MONGODB_URL", "").strip()
-        or os.getenv("DATABASE_URL", "").strip()
-    )
+    url = db_state.mongo_env_connection_string()
     if not url:
         db_state.set_mongo_last_connect_error(
-            "environment variable `MONGODB_URL` or `DATABASE_URL` is not set on this service."
+            "no connection string: set `MONGODB_URL`, `DATABASE_URL`, or `MONGODB_URI` on this service."
         )
-        logger.info("MongoDB: skipped (empty MONGODB_URL / DATABASE_URL)")
+        logger.info("MongoDB: skipped (no MONGODB_URL / DATABASE_URL / MONGODB_URI)")
         return None, None
     if not _mongo_url_usable(url):
         db_state.set_mongo_last_connect_error(
             "connection string looks like a template (e.g. literal `username:password@` or `your_…`). "
             "Replace it with the full Atlas SRV URI from Cluster → Connect."
         )
-        logger.info("MongoDB: skipped (empty or placeholder MONGODB_URL / DATABASE_URL)")
+        logger.info("MongoDB: skipped (placeholder or invalid MONGODB_URL / DATABASE_URL / MONGODB_URI)")
         return None, None
     try:
         from motor.motor_asyncio import AsyncIOMotorClient
@@ -1424,7 +1421,7 @@ async def public_connection_status() -> dict[str, Any]:
     Unauthenticated integration probe for the admin dashboard footer (Mongo ping, weather probe, PIN resolution hints).
     Does not reveal secrets or the effective PIN.
     """
-    raw_url = (os.getenv("MONGODB_URL") or os.getenv("DATABASE_URL") or "").strip()
+    raw_url = db_state.mongo_env_connection_string()
     template_or_invalid_url = bool(raw_url) and not _mongo_url_usable(raw_url)
 
     mongo_block: dict[str, Any]
@@ -1435,7 +1432,7 @@ async def public_connection_status() -> dict[str, Any]:
             "client_attached": False,
             "url_looks_like_template": True,
             "last_error": db_state.mongo_last_connect_error,
-            "detail": "MONGODB_URL / DATABASE_URL looks like a placeholder or template — replace with your Atlas URI.",
+            "detail": "Mongo connection env looks like a placeholder or template — replace with your Atlas URI (MONGODB_URL, DATABASE_URL, or MONGODB_URI).",
         }
     elif db_state.mongo_db is not None:
         mongo_block = {
@@ -1461,7 +1458,7 @@ async def public_connection_status() -> dict[str, Any]:
             "detail": (
                 "MongoDB client did not start — check startup logs and Atlas URI/network"
                 if raw_url
-                else "MONGODB_URL / DATABASE_URL not set"
+                else "Mongo env not set (MONGODB_URL, DATABASE_URL, or MONGODB_URI)"
             ),
         }
 
