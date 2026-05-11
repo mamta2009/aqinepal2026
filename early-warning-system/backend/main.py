@@ -328,6 +328,7 @@ async def runtime_config():
         "integrations": {
             **external_integrations.integrations_public_status(),
             "resend_configured": public_resend_email_ready(),
+            "sendgrid_configured": public_resend_email_ready(),
         },
         "operator_console": {
             "notification_api_key_configured": notification_api_key_configured(),

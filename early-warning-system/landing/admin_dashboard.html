@@ -300,7 +300,7 @@
     <p class="hint">
         <strong>PIN:</strong> this tab only (see <code>ADMIN_CONSOLE_PIN</code> / <code>REGISTRATION_DIRECTORY_SECRET</code> on the server).<br/>
         <strong><code>NOTIFICATION_API_KEY</code>:</strong> a <strong>secret you invent</strong> — set it once in <code>backend/.env</code>, restart the API, then paste the <em>exact same string</em> below.
-        It is <strong>not</strong> your Twilio, Resend, or Polygon keys; it only unlocks JSON admin endpoints as <code>Authorization: Bearer …</code> (or header <code>X-API-Key</code>).<br/>
+        It is <strong>not</strong> your Twilio, SendGrid, or Polygon keys; it only unlocks JSON admin endpoints as <code>Authorization: Bearer …</code> (or header <code>X-API-Key</code>).<br/>
         Use on trusted networks; pair with VPN / IP restrictions in production.
     </p>
 
@@ -390,7 +390,7 @@
         <p class="admin-explainer">
             <strong>What this screen does:</strong> lists everyone registered to receive advisory messages and use the preparedness dashboard — hospitals, wards, municipalities.
             Normal practice is to invite people via the public form; operators can fix mistakes (password reset, archive, permanent delete).
-            For <strong>verification pending</strong>, use <strong>Resend verify</strong> to send a fresh code (email/SMS/WhatsApp per their preferences).
+            For <strong>verification pending</strong>, use <strong>Resend verify</strong> to send a fresh code via email/SMS/WhatsApp (per their preferences; email uses SendGrid when configured).
             <strong>Dashboard login</strong> after signup requires verification first: password alone is not enough until they submit the code (see <code>POST /api/contacts/verify</code>).
             Unverified login attempts are recorded under <strong>Load activity → Recent action logs</strong> (and optional email if <code>ADMIN_UNVERIFIED_LOGIN_ALERT_EMAIL</code> is set).
             Buttons <strong>Add new enrollee</strong> (opens a guided form), <strong>Sites / area</strong> on a row to add hospitals/wards or municipalities for an existing person, <strong>Load registrants</strong> refreshes this table.
@@ -515,7 +515,7 @@
         <h2>MongoDB + integrations status</h2>
         <p class="admin-explainer">
             <strong>MongoDB</strong> is the database storing enrollee profiles, preparedness actions, broadcast history, consent records — the living memory behind this early-warning suite.
-            <strong>Integration flags</strong> show whether auxiliary services appear configured — email gateway (Resend), SMS/WhatsApp (Twilio), air-quality keys, Polygon wallet, DHIS hooks.
+            <strong>Integration flags</strong> show whether auxiliary services appear configured — email (SendGrid), SMS/WhatsApp (Twilio), air-quality keys, Polygon wallet, DHIS hooks.
             Greens or “configured” summaries help your IT teammate know what is plugged in — this screen does not show secret passwords.
             Press <strong>Refresh status</strong> after someone changes `.env`; the server loads those values at startup unless they hot-redeploy.
         </p>

@@ -94,8 +94,8 @@ def _env_hints() -> dict[str, bool]:
         "MONGODB_URL",
         "DATABASE_URL",
         "NOTIFICATION_API_KEY",
-        "RESEND_API_KEY",
-        "RESEND_FROM_EMAIL",
+        "SENDGRID_API_KEY",
+        "SENDGRID_FROM_EMAIL",
         "TWILIO_ACCOUNT_SID",
         "TWILIO_AUTH_TOKEN",
         "TWILIO_PHONE_NUMBER",
@@ -140,6 +140,7 @@ async def admin_system_status(
         "mongodb": mongo_block,
         "integrations": {
             **external_integrations.integrations_public_status(),
+            "sendgrid_email_ready": public_resend_email_ready(),
             "resend_email_ready": public_resend_email_ready(),
         },
         "env_flags": _env_hints(),

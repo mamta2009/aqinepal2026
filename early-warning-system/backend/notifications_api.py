@@ -1,6 +1,6 @@
 """
 Registration, broadcast alerts, webhooks, and analytics (ported from notification_cursor.zip).
-Requires MongoDB and optional Twilio / Resend configuration.
+Requires MongoDB and optional Twilio / SendGrid email configuration.
 
 Architecture diagram (on-disk; embedded on **`/guides`**):
 ``docs/tech/NOTIFICATION_FLOW_DIAGRAM.svg``
@@ -45,7 +45,7 @@ _BACKEND_ROOT = Path(__file__).resolve().parent
 _REGISTRATION_HTML = _BACKEND_ROOT.parent / "landing" / "registration_portal.html"
 _CONTACTS_DIR_HTML = _BACKEND_ROOT.parent / "landing" / "contacts_directory.html"
 
-RESEND_API_URL = "https://api.resend.com/emails"
+SENDGRID_MAIL_API_URL = "https://api.sendgrid.com/v3/mail/send"
 
 
 # ---------------------------------------------------------------------------
@@ -192,7 +192,7 @@ def _verification_resend_cooldown_seconds() -> int:
 
 RESEND_VERIFICATION_GENERIC_MESSAGE = (
     "If this email has a pending registration, a verification code was sent to your "
-    "selected channels. Check spam for email and confirm Resend domain setup; SMS/WhatsApp work if enabled."
+    "selected channels. Check spam for email and confirm SendGrid sender authentication; SMS/WhatsApp work if enabled."
 )
 
 
@@ -502,24 +502,24 @@ def _strip_env_secret(raw: str | None) -> str:
     return s.strip('"').strip("'")
 
 
-def _resend_api_key_effective() -> str:
-    return _strip_env_secret(os.getenv("RESEND_API_KEY"))
+def _sendgrid_api_key_effective() -> str:
+    return _strip_env_secret(os.getenv("SENDGRID_API_KEY"))
 
 
-def _resend_from_effective(default: str = "alerts@early-warning.local") -> str:
-    v = _strip_env_secret(os.getenv("RESEND_FROM_EMAIL"))
+def _sendgrid_from_effective(default: str = "info@intelladapt.com") -> str:
+    v = _strip_env_secret(os.getenv("SENDGRID_FROM_EMAIL"))
     return v if v else default
 
 
-def _resend_configured() -> bool:
-    key = _resend_api_key_effective()
+def _sendgrid_configured() -> bool:
+    key = _sendgrid_api_key_effective()
     kl = key.lower()
     return bool(key and "paste" not in kl and "your_" not in kl)
 
 
 def public_resend_email_ready() -> bool:
-    """True when this process considers Resend outbound email usable (SPA / health checks)."""
-    return _resend_configured()
+    """True when SendGrid outbound email is configured (name kept for API/SPA compatibility)."""
+    return _sendgrid_configured()
 
 
 def _verification_code() -> str:
@@ -600,31 +600,35 @@ async def send_whatsapp(whatsapp_number: str, message: str) -> dict[str, Any]:
 
 
 async def send_email(to_email: str, subject: str, html_content: str) -> dict[str, Any]:
-    key = _resend_api_key_effective()
-    from_email = _resend_from_effective()
+    key = _sendgrid_api_key_effective()
+    from_email = _sendgrid_from_effective()
     if not key:
         return {
             "success": False,
             "status": "failed",
-            "error": "resend_not_configured",
+            "error": "sendgrid_not_configured",
         }
+    payload = {
+        "personalizations": [{"to": [{"email": to_email}]}],
+        "from": {"email": from_email},
+        "subject": subject,
+        "content": [{"type": "text/html", "value": html_content}],
+    }
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
             response = await client.post(
-                RESEND_API_URL,
-                headers={"Authorization": f"Bearer {key}"},
-                json={
-                    "from": from_email,
-                    "to": to_email,
-                    "subject": subject,
-                    "html": html_content,
+                SENDGRID_MAIL_API_URL,
+                headers={
+                    "Authorization": f"Bearer {key}",
+                    "Content-Type": "application/json",
                 },
+                json=payload,
             )
-        if response.status_code == 200:
+        if response.status_code in (200, 202):
             return {"success": True, "status": "sent"}
         body_preview = (response.text or "")[:1200]
         logger.warning(
-            "Resend rejected email: status=%s to=%s from=%s preview=%s",
+            "SendGrid rejected email: status=%s to=%s from=%s preview=%s",
             response.status_code,
             to_email,
             from_email,
@@ -636,7 +640,7 @@ async def send_email(to_email: str, subject: str, html_content: str) -> dict[str
             "status": "failed",
         }
     except Exception as exc:  # noqa: BLE001
-        logger.warning("Resend email transport error to %s: %s", to_email, exc)
+        logger.warning("SendGrid email transport error to %s: %s", to_email, exc)
         return {"success": False, "error": str(exc), "status": "failed"}
 
 
@@ -671,7 +675,7 @@ async def _dispatch_verification_email(
             }
         )
         return {"success": True}
-    raw_err = result.get("error") or "resend_send_failed"
+    raw_err = result.get("error") or "sendgrid_send_failed"
     err = raw_err if isinstance(raw_err, str) else str(raw_err)
     logger.warning("Verification email not sent to %s: %s", email, err[:400])
     return {"success": False, "error": err[:500]}
@@ -746,7 +750,7 @@ async def _dispatch_registration_verification_channels(
 ) -> list[str]:
     warnings: list[str] = []
     if "email" in preferred_channel_values:
-        if _resend_configured():
+        if _sendgrid_configured():
             er = await _dispatch_verification_email(
                 db, contact_id, email, contact_name, code
             )
@@ -795,7 +799,7 @@ async def _send_facility_login_code(db: Any, doc: dict[str, Any], code: str) -> 
 
     try:
         if "email" in chans:
-            if _resend_configured():
+            if _sendgrid_configured():
                 er = await send_email(
                     doc["email"],
                     "Facility dashboard login code",
@@ -880,6 +884,11 @@ async def persist_contact_registration(
     """
     db = db_state.require_mongo_db()
     if not contact.phone_number.strip().startswith("+"):
+        logger.warning(
+            "registration rejected: phone must be E.164 (start with +); got %s chars starting %r",
+            len(contact.phone_number.strip()),
+            contact.phone_number.strip()[:3],
+        )
         raise HTTPException(status_code=400, detail="Phone must start with + (E.164)")
 
     normalized_phone = (
@@ -895,8 +904,17 @@ async def persist_contact_registration(
         contact.facility_names,
         contact.facility_name,
     )
-    norm_cities, primary_city = _normalize_city_list(contact.cities, contact.city)
+    try:
+        norm_cities, primary_city = _normalize_city_list(contact.cities, contact.city)
+    except HTTPException:
+        logger.warning(
+            "registration rejected: invalid municipality payload cities=%r city=%r",
+            contact.cities,
+            contact.city,
+        )
+        raise
     if not norm_cities:
+        logger.warning("registration rejected: no coverage cities after normalize")
         raise HTTPException(
             status_code=400,
             detail="Select at least one municipality / coverage area (use city or cities).",
@@ -2602,7 +2620,7 @@ class TwilioTestIn(BaseModel):
 class ResendTestIn(BaseModel):
     to: EmailStr
     subject: str = Field(
-        default="Early Warning — Resend connectivity test",
+        default="Early Warning — SendGrid connectivity test",
         min_length=1,
         max_length=200,
     )
@@ -2643,25 +2661,25 @@ async def notifications_resend_test(
     _: None = Depends(require_notification_api_key),
 ):
     """
-    Send one email through Resend using the running process env (sanity-check key + verified domain/from).
+    Send one email through SendGrid (path name kept); sanity-check API key + verified sender.
     """
-    if not _resend_configured():
+    if not _sendgrid_configured():
         raise HTTPException(
             status_code=503,
             detail=(
-                "Resend not configured: set RESEND_API_KEY (and avoid placeholder tokens). "
-                "See server logs after registration for Resend rejection details."
+                "SendGrid not configured: set SENDGRID_API_KEY (and avoid placeholder tokens). "
+                "Authenticate the from-address in SendGrid; see server logs for API errors."
             ),
         )
     result = await send_email(
         str(payload.to),
         payload.subject.strip(),
-        "<p>Early Warning backend: Resend connectivity test succeeded.</p>",
+        "<p>Early Warning backend: SendGrid connectivity test succeeded.</p>",
     )
     if not result.get("success"):
-        err = result.get("error") or "resend_failed"
+        err = result.get("error") or "sendgrid_failed"
         err_s = err if isinstance(err, str) else str(err)
         raise HTTPException(status_code=502, detail=err_s[:2000])
-    return {"success": True, "status": result.get("status"), "detail": "Message accepted by Resend API"}
+    return {"success": True, "status": result.get("status"), "detail": "Message accepted by SendGrid API"}
 
 
