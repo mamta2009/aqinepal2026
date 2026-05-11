@@ -20,7 +20,9 @@ FACILITY_PRESETS_BY_CITY: dict[str, list[str]] = {
         "Patan Academy of Health Sciences (PAHS)",
         "Kist Medical College Hospital",
         "Alka Hospital",
-        "Lalitpur district hospital / ward clinic",
+        "Lalitpur Metropolitan Hospital / district hospital",
+        "Ward health post / municipal clinic (Lalitpur)",
+        "Urban PHC / sub-health post",
     ],
     "Bhaktapur": [
         "Bhaktapur Cancer Hospital",

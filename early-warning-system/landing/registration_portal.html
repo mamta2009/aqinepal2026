@@ -751,8 +751,19 @@
 
                     <div class="form-group">
                         <label for="facilityName">Facility name(s)</label>
-                        <textarea id="facilityName" name="facilityName" placeholder="Enter one facility per line (optional for some roles)" rows="3"></textarea>
-                        <div class="inline-help">Multiple sites or hospitals: enter each name on its own line.</div>
+                        <textarea id="facilityName" name="facilityName" rows="4"
+                            placeholder="e.g. Patan Academy of Health Sciences (PAHS)&#10;or: Ward 12 municipal clinic — one site per line"
+                            aria-describedby="facilityNameHelp"></textarea>
+                        <div id="facilityNameHelp" class="inline-help" style="line-height:1.55;">
+                            <strong>Examples</strong> (types of sites — use your real names):
+                            <span style="display:block;margin-top:6px;">
+                                <strong>Lalitpur:</strong> large hospitals (e.g. PAHS, Kist, Alka), district/metropolitan hospital, <strong>ward clinics</strong>, urban <strong>PHC</strong> / sub-health post, municipal health post.
+                            </span>
+                            <span style="display:block;margin-top:6px;">
+                                <strong>Kathmandu:</strong> TUTH, Bir, Patan (Lagankhel), Kanti, Teku infectious disease hospital, ward or community clinic.
+                            </span>
+                            <span style="display:block;margin-top:8px;">Enter <strong>one facility or site per line</strong> if you cover more than one place. Optional for some roles. After you choose municipalities below, you can tap <strong>name ideas</strong> to insert suggestions.</span>
+                        </div>
                         <div id="facilityPresetPanel" class="facility-preset-panel" hidden>
                             <span class="label-block" style="font-weight:600;color:#375a71;font-size:13px;">Name ideas from your selected municipalities</span>
                             <p class="inline-help" style="margin-top:6px;margin-bottom:0;">Illustrative only — tap a chip to append a line. You can edit or replace any text.</p>

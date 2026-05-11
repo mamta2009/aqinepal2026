@@ -96,6 +96,33 @@
             vertical-align: middle;
         }
         .admin-footer-powered strong { color: #cbd5e1; font-weight: 700; }
+        .admin-footer-connections {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 14px 20px;
+            margin-bottom: 14px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .conn-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .conn-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .conn-dot--ok { background: #22c55e; box-shadow: 0 0 7px rgba(34, 197, 94, 0.45); }
+        .conn-dot--bad { background: #ef4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.35); }
+        .conn-dot--na { background: #64748b; }
+        .conn-dot--pending { background: #475569; animation: connDotPulse 1.1s ease-in-out infinite; }
+        @keyframes connDotPulse { 50% { opacity: 0.42; } }
+        .conn-pin-hint { max-width: min(720px, 100%); text-align: center; line-height: 1.45; color: #a8b9d0; }
         /* Private Markdown preview (trusted server-rendered Markdown) */
         #privateDocCanvas table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
         #privateDocCanvas th, #privateDocCanvas td { border: 1px solid #475569; padding: 8px 10px; vertical-align: top; }
@@ -257,6 +284,8 @@
             background: #fff; border-color: #cbd5e1; color: #0f172a;
         }
         html[data-theme="light"] .admin-global-footer { background: #f8fafc; border-top-color: #e2e8f0; color: #64748b; }
+        html[data-theme="light"] .admin-footer-connections { color: #64748b; }
+        html[data-theme="light"] .conn-pin-hint { color: #64748b; }
         html[data-theme="light"] table.tbl th { color: #64748b; border-color: #e2e8f0; }
         html[data-theme="light"] table.tbl td { border-color: #e2e8f0; }
         html[data-theme="light"] table.tbl tbody tr:hover { background: #f1f5f9; }
@@ -606,6 +635,17 @@
 </div><!-- .admin-main-wrap -->
 
 <footer class="admin-global-footer" role="contentinfo">
+    <div class="admin-footer-connections" id="adminFooterConnections" aria-label="Backend connectivity">
+        <span class="conn-pill" id="connPillMongo">
+            <span class="conn-dot conn-dot--pending" id="connDotMongo" aria-hidden="true"></span>
+            <span>MongoDB</span>
+        </span>
+        <span class="conn-pill" id="connPillWeather">
+            <span class="conn-dot conn-dot--pending" id="connDotWeather" aria-hidden="true"></span>
+            <span>Weather API</span>
+        </span>
+        <span class="conn-pin-hint mono" id="connPinHint"></span>
+    </div>
     <p>
         <a href="/">Home</a> ·
         <a href="/frontend/index.html">Dashboard</a> ·
@@ -684,6 +724,68 @@
     }
     initAdminDashboardSettings();
 
+    function setConnDot(el, state, title) {
+        if (!el) return;
+        el.classList.remove('conn-dot--pending', 'conn-dot--ok', 'conn-dot--bad', 'conn-dot--na');
+        var cls = 'conn-dot--bad';
+        if (state === 'ok') cls = 'conn-dot--ok';
+        else if (state === 'na') cls = 'conn-dot--na';
+        el.classList.add(cls);
+        var pill = el.closest('.conn-pill');
+        if (pill) pill.title = title || '';
+    }
+
+    function applyConnectionFooter(data) {
+        var m = (data && data.mongodb) || {};
+        var w = (data && data.weather) || {};
+        var op = (data && data.operator_pin) || {};
+        var dotM = document.getElementById('connDotMongo');
+        var dotW = document.getElementById('connDotWeather');
+        var hint = document.getElementById('connPinHint');
+
+        if (m.ok) {
+            setConnDot(dotM, 'ok', 'MongoDB ping OK');
+        } else {
+            var md = m.last_error || m.detail || 'MongoDB not connected';
+            setConnDot(dotM, 'bad', md);
+        }
+
+        if (w.ok) {
+            var wm = (w.mode && w.mode !== 'none') ? (' — ' + w.mode) : '';
+            setConnDot(dotW, 'ok', 'Weather upstream OK' + wm);
+        } else if (!w.configured) {
+            setConnDot(dotW, 'na', w.detail || 'No weather API keys configured');
+        } else {
+            setConnDot(dotW, 'bad', w.detail || 'Weather upstream failed');
+        }
+
+        var hints = {
+            admin_console_pin: 'PIN source: ADMIN_CONSOLE_PIN — use that exact value after trim',
+            registration_directory_secret: 'PIN source: REGISTRATION_DIRECTORY_SECRET (ADMIN_CONSOLE_PIN is empty)',
+            default_dev: 'PIN source: dev fallback on the server — set ADMIN_CONSOLE_PIN in deployment env'
+        };
+        if (hint) {
+            var res = op.resolution || 'default_dev';
+            hint.textContent = hints[res] || '';
+        }
+    }
+
+    function refreshConnectionFooter() {
+        fetch('/api/public/connection-status', { credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(applyConnectionFooter)
+            .catch(function () {
+                var dotM = document.getElementById('connDotMongo');
+                var dotW = document.getElementById('connDotWeather');
+                var hi = document.getElementById('connPinHint');
+                setConnDot(dotM, 'bad', 'Could not reach /api/public/connection-status');
+                setConnDot(dotW, 'bad', 'Could not reach /api/public/connection-status');
+                if (hi) hi.textContent = 'Could not load connection status — check same-origin API base URL';
+            });
+    }
+    refreshConnectionFooter();
+    setInterval(refreshConnectionFooter, 60000);
+
     function jsonHeaders() {
         return { 'Content-Type': 'application/json' };
     }
@@ -758,7 +860,17 @@
                 body: JSON.stringify({ pin: pinEl.value })
             });
             if (!r.ok) {
-                errEl.textContent = 'Incorrect PIN — try again.';
+                var j = await r.json().catch(function () { return {}; });
+                var det = typeof j.detail === 'string' ? j.detail : (Array.isArray(j.detail) ? JSON.stringify(j.detail) : '');
+                if (r.status === 401) {
+                    errEl.textContent = 'Incorrect PIN — try again.';
+                } else if (r.status === 422) {
+                    errEl.textContent = det || 'PIN rejected (empty after trim or invalid).';
+                } else if (r.status === 503 || (det && det.indexOf('MongoDB') !== -1)) {
+                    errEl.textContent = det || 'MongoDB not available — unlock needs MongoDB for the operator session. Set MONGODB_URL on Render and redeploy.';
+                } else {
+                    errEl.textContent = det || ('Could not unlock (HTTP ' + r.status + ').');
+                }
                 pinEl.value = '';
                 pinEl.focus();
                 return;
