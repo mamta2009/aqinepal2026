@@ -2,11 +2,17 @@
 
 from __future__ import annotations
 
+import hashlib
 import hmac
 import os
+from datetime import datetime
 from typing import Any
 
 from fastapi import Header, HTTPException, Request
+
+import db_state
+
+OPERATOR_CONSOLE_SESSION_COLLECTION = "operator_console_sessions"
 
 logger = None  # lazily use notifications logger to avoid import cycle
 
@@ -22,6 +28,67 @@ def _log() -> Any:
 
 def notification_api_key_configured() -> bool:
     return bool((os.getenv("NOTIFICATION_API_KEY") or "").strip())
+
+
+def operator_session_cookie_name() -> str:
+    name = (os.getenv("ADMIN_SESSION_COOKIE_NAME") or "ew_admin_session").strip()
+    return name or "ew_admin_session"
+
+
+def operator_session_ttl_hours() -> float:
+    try:
+        return float((os.getenv("ADMIN_CONSOLE_SESSION_HOURS") or "24").strip())
+    except ValueError:
+        return 24.0
+
+
+def cookie_secure_for_request(request: Request) -> bool:
+    if (os.getenv("ADMIN_SESSION_COOKIE_SECURE") or "").strip().lower() in ("1", "true", "yes"):
+        return True
+    xf = (request.headers.get("x-forwarded-proto") or "").split(",")[0].strip().lower()
+    if xf == "https":
+        return True
+    return request.url.scheme == "https"
+
+
+def _notification_api_key_value() -> str:
+    return (os.getenv("NOTIFICATION_API_KEY") or "").strip()
+
+
+def _notification_bearer_token(
+    authorization: str | None, x_api_key: str | None
+) -> str | None:
+    token: str | None = None
+    if authorization and authorization.lower().startswith("bearer "):
+        token = authorization[7:].strip()
+    if not token and x_api_key:
+        token = x_api_key.strip()
+    return token
+
+
+def _notification_key_matches(token: str | None, key: str) -> bool:
+    if not token or not key:
+        return False
+    return hmac.compare_digest(token.encode("utf-8"), key.encode("utf-8"))
+
+
+async def _operator_session_cookie_valid(request: Request) -> bool:
+    name = operator_session_cookie_name()
+    raw = (request.cookies.get(name) or "").strip()
+    if len(raw) < 16:
+        return False
+    th = hashlib.sha256(raw.encode("utf-8")).hexdigest()
+    db = db_state.mongo_db
+    if db is None:
+        return False
+    try:
+        coll = db[OPERATOR_CONSOLE_SESSION_COLLECTION]
+        doc = await coll.find_one(
+            {"token_sha256": th, "expires_at": {"$gt": datetime.utcnow()}}
+        )
+        return doc is not None
+    except Exception:  # noqa: BLE001
+        return False
 
 
 def registration_directory_secret_configured() -> bool:
@@ -51,26 +118,48 @@ async def require_registration_directory_secret(request: Request) -> None:
         raise HTTPException(status_code=401, detail="Invalid or missing directory passphrase")
 
 
+async def require_admin_operator(
+    request: Request,
+    authorization: str | None = Header(None),
+    x_api_key: str | None = Header(None),
+) -> None:
+    """
+    Operator JSON routes: accept a MongoDB-backed session cookie from
+    ``POST /api/admin/console-unlock-pin``, or (for automation) Bearer / ``X-API-Key``
+    matching ``NOTIFICATION_API_KEY`` when that env var is set.
+    """
+    if await _operator_session_cookie_valid(request):
+        return
+    key = _notification_api_key_value()
+    if not key:
+        raise HTTPException(
+            status_code=401,
+            detail="Unlock the operator console with your PIN, or set NOTIFICATION_API_KEY for Bearer access.",
+        )
+    tok = _notification_bearer_token(authorization, x_api_key)
+    if not _notification_key_matches(tok, key):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid or missing operator session or notification API key.",
+        )
+
+
 async def require_strict_notification_api_key(
     authorization: str | None = Header(None),
     x_api_key: str | None = Header(None),
 ) -> None:
     """
-    Admin UI / operator routes: ``NOTIFICATION_API_KEY`` must be set in the environment
-    (fails closed — unlike ``require_notification_api_key`` which no-ops when unset).
+    Routes that always require Bearer / ``X-API-Key`` (no browser session cookie).
+    ``NOTIFICATION_API_KEY`` must be set in the environment (fails closed).
     """
-    key = (os.getenv("NOTIFICATION_API_KEY") or "").strip()
+    key = _notification_api_key_value()
     if not key:
         raise HTTPException(
             status_code=503,
             detail="Configure NOTIFICATION_API_KEY in the server environment to enable admin endpoints.",
         )
-    token: str | None = None
-    if authorization and authorization.lower().startswith("bearer "):
-        token = authorization[7:].strip()
-    if not token and x_api_key:
-        token = x_api_key.strip()
-    if not token or not hmac.compare_digest(token.encode("utf-8"), key.encode("utf-8")):
+    tok = _notification_bearer_token(authorization, x_api_key)
+    if not _notification_key_matches(tok, key):
         raise HTTPException(status_code=401, detail="Invalid or missing notification API key")
 
 
@@ -79,15 +168,11 @@ async def require_notification_api_key(
     x_api_key: str | None = Header(None),
 ) -> None:
     """When ``NOTIFICATION_API_KEY`` is set, require ``Authorization: Bearer <key>`` or ``X-API-Key``."""
-    key = (os.getenv("NOTIFICATION_API_KEY") or "").strip()
+    key = _notification_api_key_value()
     if not key:
         return
-    token: str | None = None
-    if authorization and authorization.lower().startswith("bearer "):
-        token = authorization[7:].strip()
-    if not token and x_api_key:
-        token = x_api_key.strip()
-    if not token or token != key:
+    tok = _notification_bearer_token(authorization, x_api_key)
+    if not _notification_key_matches(tok, key):
         raise HTTPException(status_code=401, detail="Invalid or missing notification API key")
 
 

@@ -406,8 +406,9 @@
                     <p><strong>Two layers</strong> are implemented in this codebase:</p>
                     <ul>
                         <li><strong>Cryptographic anchoring (always safe):</strong> payload digests and optional EIP-191-style signing in <span class="mono">blockchain_integration.py</span>. Shown on API responses as <span class="mono">verification</span> so exports can be checked for tampering.</li>
-                        <li><strong>Optional Polygon transactions (off by default):</strong> hashed “alert / action / outcome” events can be written as on-chain transactions via <span class="mono">onchain_logger.py</span> when you enable env flags. Each write costs testnet/mainnet gas—use testnets first.</li>
+                        <li><strong>Optional Polygon transactions (off by default):</strong> hashed “alert / action / outcome” events are written via <span class="mono">onchain_logger.py</span> when <span class="mono">POLYGON_ONCHAIN_LOG=true</span>. The bridge module <span class="mono">onchain_hooks.py</span> calls these APIs from real product flows (air/heat broadcasts, facility <span class="mono">POST /api/action-log</span>) and records every attempt in MongoDB <span class="mono">onchain_anchor_log</span>. Each successful write costs testnet or mainnet gas.</li>
                     </ul>
+                    <p><strong>Operator verification (not on the public users page):</strong> open <a href="/admin/dashboard"><span class="mono">GET /admin/dashboard</span></a> → Polygon section → <strong>Refresh blockchain overview</strong>, <strong>Load recent anchors</strong>, and <strong>Send test on-chain touch</strong> (one minimal on-chain transaction to prove signer + RPC). On <strong>mainnet</strong>, that smoke test spends <strong>real POL</strong>; use <strong>Amoy</strong> first.</p>
                     <div class="btn-row">
                         <a class="btn" href="/api/blockchain/status" target="_blank" rel="noopener">GET /api/blockchain/status</a>
                         <a class="btn outline" href="/api/blockchain/integration" target="_blank" rel="noopener">GET /api/blockchain/integration</a>
@@ -416,10 +417,11 @@
                     <ul>
                         <li><span class="mono">POLYGON_ONCHAIN_LOG=true</span> — turn on the optional transaction logger at API startup.</li>
                         <li><span class="mono">POLYGON_PRIVATE_KEY</span> — funded wallet key (never commit; use secrets in production).</li>
-                        <li><span class="mono">BLOCKCHAIN_ONCHAIN_NETWORK=amoy</span> (recommended testnet), <span class="mono">mumbai</span> (deprecated), or <span class="mono">mainnet</span>.</li>
+                        <li><span class="mono">BLOCKCHAIN_ONCHAIN_NETWORK=amoy</span> (recommended testnet), <span class="mono">mumbai</span> (deprecated), or <span class="mono">mainnet</span> (live ledger — real POL).</li>
                     </ul>
+                    <p style="color:#94a3b8;font-size:0.95rem;">Full operator route list: <span class="mono">docs/guides/IMPLEMENTATION_SNAPSHOT.md</span> → <strong>Operator admin</strong> → Polygon / <span class="mono">/api/admin/blockchain/*</span>.</p>
                     <div class="callout warn">
-                        <strong>Testnets change.</strong> Polygon has been transitioning away from Mumbai; your deployment may need <strong>Amoy</strong> (chain 80002) and updated RPC URLs over time. Check current Polygon docs before going to production.
+                        <strong>Testnets change.</strong> Polygon has been transitioning away from Mumbai; your deployment should prefer <strong>Amoy</strong> (chain 80002) and current RPC URLs. Check Polygon documentation before production.
                     </div>
                 </section>
 

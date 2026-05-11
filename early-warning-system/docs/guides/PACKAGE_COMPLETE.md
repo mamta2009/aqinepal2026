@@ -71,7 +71,7 @@ Older “`/outputs`” or duplicate guides elsewhere may exist from packaging hi
 - Regional/national demo mode flags in payloads
 - Optional MongoDB enrollees, logs, broadcasts when **`MONGODB_URL`** (or **`DATABASE_URL`**) is set
 - Optional Twilio / Resend when configured; **`NOTIFICATION_API_KEY`** protects operator notification JSON routes (and admin JSON under **`/api/admin/*`**)
-- Blockchain helpers and optional gas-spend on Polygon — **off by default** (`docs/blockchain-ai/`)
+- Blockchain helpers and optional gas-spend on Polygon — **off by default**; product wiring in **`backend/onchain_hooks.py`**, operator audit in Mongo **`onchain_anchor_log`** (`docs/guides/blockchain-ai/README.md`)
 
 ---
 

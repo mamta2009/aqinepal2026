@@ -80,6 +80,31 @@ class FacilityCaller:
     email: str
 
 
+def effective_facility_id(contact: dict[str, Any]) -> str | None:
+    """
+    Stable facility scope for action-log / JWT.
+
+    Prefer explicit ``facility_id`` when set; otherwise derive ``site-{ObjectId}`` when the
+    enrollee named at least one facility (list or legacy string) so reporting works without
+    operators pasting IDs.
+    """
+    fid = str(contact.get("facility_id") or "").strip()
+    if fid:
+        return fid
+    names = contact.get("facility_names")
+    has_names = isinstance(names, list) and any(str(x).strip() for x in names)
+    legacy = contact.get("facility_name")
+    has_legacy = isinstance(legacy, str) and legacy.strip()
+    if not (has_names or has_legacy):
+        return None
+    oid = contact.get("_id")
+    if isinstance(oid, ObjectId):
+        return f"site-{str(oid)}"
+    if oid is not None:
+        return f"site-{str(oid)}"
+    return None
+
+
 def facility_display_name(contact: dict[str, Any]) -> str | None:
     """Prefer ``facility_names`` list; fallback to legacy ``facility_name`` string."""
     raw = contact.get("facility_names")
@@ -97,7 +122,7 @@ def mint_facility_access_token(contact: dict[str, Any]) -> tuple[str, int]:
     hours = max(1, min(24 * 60, _facility_token_ttl_hours()))
     now = datetime.now(timezone.utc)
     cid = str(contact["_id"]) if isinstance(contact.get("_id"), ObjectId) else str(contact["_id"])
-    fid = str((contact.get("facility_id") or "")).strip()
+    fid = effective_facility_id(contact) or ""
     payload: dict[str, Any] = {
         "iss": JWT_ISS,
         "aud": JWT_AUD,
@@ -163,7 +188,7 @@ async def resolve_facility_caller(
             if "facility_actions" not in _reg.compute_registrant_scopes(doc_pre):
                 raise HTTPException(
                     status_code=403,
-                    detail="Facility reporting requires approved registration with facility_id — use OTP flow or finish onboarding.",
+                    detail="Facility reporting requires a verified, approved account with a facility / site on file — finish registration or wait for partner approval.",
                 )
             claims = {"cid": cid_try, "fid": ""}
             from_registrant_session = True
@@ -196,9 +221,12 @@ async def resolve_facility_caller(
         if a != "approved":
             raise HTTPException(status_code=403, detail="Contact not approved for facility reporting")
 
-    facility_id_live = str((doc.get("facility_id") or "")).strip()
+    facility_id_live = effective_facility_id(doc)
     if not facility_id_live:
-        raise HTTPException(status_code=403, detail="Contact has no facility_id — complete registration facility field")
+        raise HTTPException(
+            status_code=403,
+            detail="Add at least one facility / site name during registration (or ask an admin to set facility_id).",
+        )
     if fid_claim and fid_claim != facility_id_live:
         raise HTTPException(status_code=403, detail="Facility scope mismatch")
 

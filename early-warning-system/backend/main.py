@@ -18,6 +18,7 @@ from datetime import date, datetime
 from io import StringIO
 from typing import Any
 
+from bson import ObjectId
 import httpx
 from dotenv import load_dotenv
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query
@@ -32,10 +33,11 @@ import blockchain_integration
 import db_state
 import external_integrations
 import guide_documents
+import onchain_hooks
 from cities_config import CITIES_CONFIG
 from facility_auth import FacilityCaller, load_facility_caller
 from health_data_generator import HealthDataGenerator
-from notification_auth import notification_api_key_configured
+from notification_auth import notification_api_key_configured, operator_session_ttl_hours
 
 # Load env: backend/.env first, then config/.env (python-dotenv default override=False:
 # already-set keys are kept, so backend values win over config for duplicates).
@@ -142,6 +144,7 @@ async def lifespan(app: FastAPI):
         from notifications_api import ensure_notification_indexes
 
         await ensure_notification_indexes(mdb)
+        await ensure_operator_console_session_indexes(mdb)
         await aq_snapshot_sync.ensure_operational_data_indexes(mdb)
         if aq_snapshot_sync.aq_snapshot_sync_enabled():
             from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -199,7 +202,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from admin_panel import router as admin_panel_router  # noqa: E402
+from admin_panel import ensure_operator_console_session_indexes, router as admin_panel_router  # noqa: E402
 from notifications_api import (  # noqa: E402
     eligible_broadcast_contact_clause,
     public_resend_email_ready,
@@ -289,6 +292,11 @@ class DailyReportIn(BaseModel):
 class ActionLogIn(BaseModel):
     action_type: str = Field(..., min_length=2, max_length=80)
     details: str | None = Field(None, max_length=4000)
+    facility_site: str | None = Field(
+        None,
+        max_length=200,
+        description="Which registered facility/site this preparedness tap refers to (must match a name on file).",
+    )
 
 
 class OpenRouterChatIn(BaseModel):
@@ -332,7 +340,12 @@ async def runtime_config():
         },
         "operator_console": {
             "notification_api_key_configured": notification_api_key_configured(),
-            "note": "Admin JSON routes require the same NOTIFICATION_API_KEY in Authorization; the browser cannot read backend/.env.",
+            "session_ttl_hours": operator_session_ttl_hours(),
+            "note": (
+                "Admin JSON routes accept an HttpOnly cookie session after POST /api/admin/console-unlock-pin "
+                "(MongoDB stores a hash; the browser never holds NOTIFICATION_API_KEY), or Bearer / X-API-Key "
+                "when NOTIFICATION_API_KEY is set."
+            ),
         },
     }
 
@@ -811,6 +824,17 @@ async def refresh_air_quality_snapshots(background_tasks: BackgroundTasks):
     return {"success": True, "queued": True}
 
 
+def _contact_facility_site_labels(contact_doc: dict[str, Any]) -> list[str]:
+    from notifications_api import contact_facility_site_labels
+
+    return contact_facility_site_labels(contact_doc)
+
+
+def _matches_registered_facility_site(site_raw: str, labels: list[str]) -> bool:
+    s = site_raw.strip().lower()
+    return any(x.strip().lower() == s for x in labels)
+
+
 @app.post("/api/action-log")
 async def create_action_log(
     entry: ActionLogIn,
@@ -835,6 +859,40 @@ async def create_action_log(
     if not fid:
         raise HTTPException(status_code=403, detail="facility_id missing on approved contact")
 
+    cdoc = await mdb.contacts.find_one({"_id": ObjectId(caller.contact_id)})
+    if cdoc is None:
+        raise HTTPException(status_code=401, detail="Contact not found")
+
+    labels = _contact_facility_site_labels(cdoc)
+    site_in = (entry.facility_site or "").strip()
+    facility_site: str | None = None
+    if labels:
+        if len(labels) > 1 and not site_in:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "facility_site is required when you have multiple registered facilities "
+                    "— pick which site you are reporting for."
+                ),
+            )
+        if site_in:
+            if not _matches_registered_facility_site(site_in, labels):
+                raise HTTPException(
+                    status_code=400,
+                    detail="facility_site must match one of your registered facility names.",
+                )
+            facility_site = next(
+                (x for x in labels if x.strip().lower() == site_in.strip().lower()),
+                site_in,
+            )
+        else:
+            facility_site = labels[0]
+    elif site_in:
+        raise HTTPException(
+            status_code=400,
+            detail="Add at least one facility name to your profile before tagging actions to a site.",
+        )
+
     doc = {
         "facility_id": fid,
         "contact_id": caller.contact_id,
@@ -845,8 +903,23 @@ async def create_action_log(
         "details": entry.details.strip() if entry.details else None,
         "timestamp": datetime.utcnow(),
     }
+    if facility_site:
+        doc["facility_site"] = facility_site
     r = await mdb.action_logs.insert_one(doc)
-    return {"success": True, "id": str(r.inserted_id), "facility_id": fid}
+    await onchain_hooks.anchor_facility_action(
+        mdb,
+        facility_id=fid,
+        action_type=entry.action_type.strip(),
+        facility_site=facility_site,
+        details=entry.details.strip() if entry.details else None,
+        action_log_id=str(r.inserted_id),
+    )
+    return {
+        "success": True,
+        "id": str(r.inserted_id),
+        "facility_id": fid,
+        "facility_site": facility_site,
+    }
 
 
 @app.get("/api/action-log/me")
@@ -1077,7 +1150,8 @@ async def forecast_respiratory_legacy(
     Lightweight compatibility response for UNICEF/integration docs samples.
 
     **Note:** Facility records are not stored yet; numeric rows mirror the synthetic trend used by the SPA
-    when live PM2.5 is unavailable. Prefer ``GET /api/models/predict/week/{city}``.
+    when live PM2.5 is unavailable. Prefer ``GET /api/models/surge-forecast/{city}`` for risk score + surge
+    probability, or ``GET /api/models/predict/week/{city}`` for the legacy trend only.
     """
     cty = city or "Kathmandu"
     if cty not in CITIES_CONFIG:
@@ -1374,6 +1448,7 @@ async def blockchain_integration_info():
         "package": "blockchain_AI.zip (reference under docs/blockchain-ai/)",
         "runtime_modules": {
             "payload_hashes_and_signing": "backend/blockchain_integration.py",
+            "product_onchain_hooks": "backend/onchain_hooks.py → onchain_anchor_log (MongoDB) + admin GET /api/admin/blockchain/anchors",
             "optional_polygon_transactions": {
                 "module": "backend/onchain_logger.py",
                 "reference_impl": "docs/blockchain-ai/reference_blockchain_logger.py",
@@ -1423,8 +1498,43 @@ async def predict_week_for_city(city: str):
     if city not in CITIES_CONFIG:
         raise HTTPException(status_code=404, detail=f"City {city} not found")
     week = HealthDataGenerator.week(city)
-    trend = ai_models.predict_week_trend(week.get("days") or [])
-    return {"city": city, "input_days": week.get("days"), "forecast": trend}
+    days = week.get("days") or []
+    trend = ai_models.predict_week_trend(days)
+    return {"city": city, "input_days": days, "forecast": trend}
+
+
+@app.get("/api/models/surge-forecast/{city}")
+async def surge_forecast_for_city(city: str):
+    """
+    **Partner contract:** polynomial regression on the weekly case series → **risk score (0–100)**,
+    **surge probability** for days 3–5 ahead, accuracy metadata (declared % + in-sample R²),
+    and **monthly retrain** policy fields.
+
+    Input series today is the same **synthetic week** as ``/api/cases/week/{city}`` until DHIS2
+    or facility exports feed real counts — see response ``input_meta``.
+    """
+    if city not in CITIES_CONFIG:
+        raise HTTPException(status_code=404, detail=f"City {city} not found")
+    week = HealthDataGenerator.week(city)
+    days = week.get("days") or []
+    surge = ai_models.predict_surge_forecast(days)
+    trend = ai_models.predict_week_trend(days)
+    ts = datetime.utcnow().isoformat() + "Z"
+    out = {
+        "city": city,
+        "input_meta": {
+            "series_length": len(days),
+            "source": "synthetic_health_data_generator",
+            "generator_note": week.get("note"),
+        },
+        "input_days_cases": days,
+        "surge_forecast": surge,
+        "legacy_week_trend": trend,
+        "generated_at": ts,
+    }
+    env = {"type": "surge_forecast_bundle_v1", "generated_at": ts, "city": city, "risk": surge.get("risk_score_0_100")}
+    out["verification"] = blockchain_integration.build_verification(envelope=env)
+    return out
 
 
 @app.get("/api/dhis2/system-check")
@@ -1580,6 +1690,7 @@ _landing_root = os.path.normpath(os.path.join(_backend_root, "..", "landing"))
 _landing_html = os.path.join(_landing_root, "landing.html")
 _guides_hub_html = os.path.join(_landing_root, "guides.html")
 _admin_dashboard_html = os.path.join(_landing_root, "admin_dashboard.html")
+_users_html = os.path.join(_landing_root, "users.html")
 _intelladapt_logo_path = Path(_landing_root) / "assets" / "intelladapt-logo.png"
 _docs_root = os.path.normpath(os.path.join(_backend_root, "..", "docs"))
 _docs_technology_dir = os.path.join(_docs_root, "tech")
@@ -1609,6 +1720,7 @@ def _system_discovery_payload() -> dict:
             "blockchain": "/api/blockchain/status",
             "blockchain_integration": "/api/blockchain/integration",
             "predict": "/api/models/predict/week/{city}",
+            "surge_forecast": "/api/models/surge-forecast/{city}",
             "weather_current": "/api/weather/current",
             "weather_openweather13_fiveday": "/api/weather/open-weather13/fiveday",
             "weather_openweathermap_current": "/api/weather/openweather/current",
@@ -1629,15 +1741,21 @@ def _system_discovery_payload() -> dict:
             "daily_report": "POST /api/health/cases/daily-report",
             "registration_portal": "/registration",
             "admin_dashboard": "/admin/dashboard",
+            "users_account": "/users",
             "admin_registrants": "GET/POST /api/admin/registrants; PATCH …/enrolment (facilities & cities)",
             "admin_blockchain_overview": "GET /api/admin/blockchain/overview",
             "admin_blockchain_runtime_network": "PATCH /api/admin/blockchain/runtime-network",
+            "admin_blockchain_anchors": "GET /api/admin/blockchain/anchors",
+            "admin_blockchain_smoke_touch": "POST /api/admin/blockchain/smoke-touch",
+            "admin_blockchain_log_outcome": "POST /api/admin/blockchain/log-outcome",
             "contacts_register": "POST /api/contacts/register",
             "contacts_verify": "POST /api/contacts/verify",
             "contacts_verify_with_email": "POST /api/contacts/verify-with-email",
             "dashboard_login": "POST /api/auth/login",
             "dashboard_me": "GET /api/auth/me",
             "dashboard_profile": "GET /api/auth/profile",
+            "dashboard_notification_inbox": "GET /api/auth/notification-inbox",
+            "registrant_patch_preferences": "PATCH /api/auth/preferences",
             "auth_change_password": "POST /api/auth/change-password",
             "admin_system_status": "GET /api/admin/system-status",
             "alerts_evaluate": "POST /api/alerts/evaluate",
@@ -1718,6 +1836,18 @@ async def admin_dashboard_page():
         except OSError:
             logger.exception("Could not read %s", path)
     raise HTTPException(status_code=404, detail="admin_dashboard.html missing")
+
+
+@app.get("/users", response_class=HTMLResponse)
+async def users_account_page():
+    """Registrant HTML: sign-in, profile, facility actions (static shell + /frontend/user-account.js)."""
+    path = Path(_users_html)
+    if path.is_file():
+        try:
+            return HTMLResponse(content=path.read_text(encoding="utf-8"))
+        except OSError:
+            logger.exception("Could not read %s", path)
+    raise HTTPException(status_code=404, detail="users.html missing")
 
 
 @app.get("/favicon.ico", include_in_schema=False)

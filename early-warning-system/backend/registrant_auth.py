@@ -15,6 +15,7 @@ from bson import ObjectId
 from fastapi import Header, HTTPException
 
 import db_state
+import facility_auth
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +76,7 @@ def registrant_can_facility_actions(doc: dict[str, Any]) -> bool:
             return False
         if a != "approved":
             return False
-    return bool(str(doc.get("facility_id") or "").strip())
+    return bool(facility_auth.effective_facility_id(doc))
 
 
 def compute_registrant_scopes(doc: dict[str, Any]) -> list[str]:

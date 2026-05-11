@@ -121,7 +121,7 @@ Configured sources include: `weatherapi_com`, `waqi`, `rapidapi_weather_air_qual
 
 ## Operator admin (`admin_panel.py`, `GET /admin/dashboard`)
 
-Browser UI: **`GET /admin/dashboard`** serves **`landing/admin_dashboard.html`** (enrollee table, system status including Mongo + integration flags, **24-hour** activity summary, recent **`action_logs`**, optional blockchain widgets). **`GET /guides`** is linked from that page so non-engineering operators can open diagrams and markdown guides (**`/guides/md/…`**). **Partner-restricted** markdown under **`docs-private/`** is listed only inside the admin console (**Private documentation** panel).
+Browser UI: **`GET /admin/dashboard`** serves **`landing/admin_dashboard.html`** (enrollee table, system status including Mongo + integration flags, **24-hour** activity summary, recent **`action_logs`**, Polygon network overview, **on-chain anchor audit** + optional **smoke-touch** test). **`GET /guides`** is linked from that page so non-engineering operators can open diagrams and markdown guides (**`/guides/md/…`**). **Partner-restricted** markdown under **`docs-private/`** is listed only inside the admin console (**Private documentation** panel).
 
 **PIN vs API key**
 
@@ -140,10 +140,20 @@ The HTML console stores that API key in **`sessionStorage`** (per browser tab).
 | **`PATCH /api/admin/registrants/{contact_id}`** | Update enrollee lifecycle fields as implemented in **`admin_panel.py`**. |
 | **`DELETE /api/admin/registrants/{contact_id}`** | Archive/delete semantics as implemented in **`admin_panel.py`**. |
 | **`PATCH /api/admin/contacts/{contact_id}/password`** | Set password for enrollee auth where configured. |
-| **`GET /api/admin/blockchain/overview`** | Polygon / on-chain logger readiness summary. |
+| **`GET /api/admin/blockchain/overview`** | Polygon / on-chain logger readiness summary (signer, RPC, balance, `POLYGON_ONCHAIN_LOG`). |
 | **`PATCH /api/admin/blockchain/runtime-network`** | Temporary network switch until process restart (**set `.env` for durable production**). |
+| **`GET /api/admin/blockchain/anchors`** | Recent rows from MongoDB **`onchain_anchor_log`** (optional `event_type=` filter: `ALERT`, `ACTION`, `OUTCOME`, `HEAT_ALERT`, `SMOKE_TEST`). **Operator-only** — not a public ledger browser. |
+| **`POST /api/admin/blockchain/smoke-touch`** | Sends one minimal **`log_action`** (“smoke test”) to verify signer + RPC; **uses gas** on the effective network (test POL on Amoy, **real POL on mainnet**). |
+| **`POST /api/admin/blockchain/log-outcome`** | Operator-submitted outcome snapshot → **`log_outcome`** when logging is enabled (+ Mongo row). |
 | **`GET /api/admin/private-documentation/md-files`** | List **`docs-private/**/*.md`** (operator preview only). |
 | **`GET /api/admin/private-documentation/md`** | **`?path=`** — render Markdown → HTML fragment for the admin dashboard. |
+
+**Polygon on-chain audit trail (product wiring)**
+
+- **Runtime:** [`backend/onchain_logger.py`](../../backend/onchain_logger.py) (`BlockchainLogger`) — optional txs when **`POLYGON_ONCHAIN_LOG=true`** and **`POLYGON_PRIVATE_KEY`** is set; network from **`BLOCKCHAIN_ONCHAIN_NETWORK`** (`amoy` \| `mumbai` \| `mainnet`).
+- **Bridge:** [`backend/onchain_hooks.py`](../../backend/onchain_hooks.py) — calls `log_alert` / `log_action` / `log_outcome` from real flows and persists every attempt (success, skip, or error) to MongoDB **`onchain_anchor_log`**.
+- **Triggers (examples):** air **`POST /api/alerts/broadcast`**, **`POST /api/alerts/evaluate`**, heat **`POST /api/alerts/evaluate-heat`**, facility **`POST /api/action-log`**, plus admin outcome + smoke endpoints above.
+- **Verification:** use **Admin → Polygon** (overview + **Load recent anchors** + **Send test on-chain touch**). On mainnet, smoke tests spend **real POL**; use **Amoy** first (`BLOCKCHAIN_ONCHAIN_NETWORK=amoy`, faucet-funded signer).
 
 ---
 
@@ -151,7 +161,7 @@ The HTML console stores that API key in **`sessionStorage`** (per browser tab).
 
 **`frontend/index.html`**: header links to **`/registration`** and **`/guides`**; **`GET /api/runtime-config`** for API base; **Regional/National** mode UI; AQ card and compare table use **`/api/air-quality/current`** (with **`provenance`** in status/compare when present); chart note states WeatherAPI-first messaging for headline readings.
 
-**`landing/admin_dashboard.html`**: operator console (tables, modals, Guides links + **Private documentation** panel); consumes **`/api/admin/*`** after unlock.
+**`landing/admin_dashboard.html`**: operator console (tables, modals, Guides links + **Private documentation** panel); **Polygon** section includes network overview, **recent `onchain_anchor_log`**, optional **outcome** posting, and a **smoke-touch** button for ledger verification. Consumes **`/api/admin/*`** after unlock.
 
 ---
 

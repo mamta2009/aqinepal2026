@@ -17,17 +17,20 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Literal, Optional
 
+import uuid
+
 from pathlib import Path
 
 import httpx
 from bson import ObjectId
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 import db_state
 import external_integrations
 import facility_auth
+import onchain_hooks
 import registrant_auth
 import twilio_notify
 from cities_config import CITIES_CONFIG
@@ -147,6 +150,15 @@ def _normalize_facility_names(
     return names, summary
 
 
+def contact_facility_site_labels(doc: dict[str, Any]) -> list[str]:
+    """Human-readable facility/site names on file for this contact (list + legacy line)."""
+    names, _ = _normalize_facility_names(
+        doc.get("facility_names") if isinstance(doc.get("facility_names"), list) else None,
+        doc.get("facility_name"),
+    )
+    return names
+
+
 def _normalize_city_list(
     raw_cities: Optional[list[str]],
     legacy_city: Optional[str],
@@ -217,6 +229,16 @@ class ResendVerificationIn(BaseModel):
 class RegistrantLoginIn(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=1, max_length=128)
+    reverification_code: Optional[str] = Field(
+        None,
+        max_length=16,
+        description="Required about every 90 days: the security code sent after password check.",
+    )
+    new_password: Optional[str] = Field(
+        None,
+        max_length=128,
+        description="With reverification_code on periodic renewal — min 8 characters (validated when renewing).",
+    )
 
 
 class RegistrantChangePasswordIn(BaseModel):
@@ -255,6 +277,71 @@ class ConsentUpdate(BaseModel):
         None,
         description="If set: which municipal hazard alerts to receive: air, heat. Empty list unsubscribes from both.",
     )
+
+
+class RegistrantSelfPrefsPatch(BaseModel):
+    """Self-service updates for the signed-in registrant (dashboard / facility JWT)."""
+
+    preferred_channels: Optional[list[NotificationChannel]] = None
+    consent_given: Optional[bool] = None
+    environmental_topics: Optional[list[str]] = None
+    add_facility_name: Optional[str] = Field(
+        None,
+        max_length=200,
+        description="Append one facility/site name to your enrolment (deduplicated case-insensitively).",
+    )
+    facility_site_pm25_thresholds: Optional[dict[str, float]] = Field(
+        None,
+        description="Optional per-site PM2.5 alert threshold (µg/m³) — keys must match a registered facility name.",
+    )
+
+    @model_validator(mode="after")
+    def _at_least_one_field(self) -> RegistrantSelfPrefsPatch:
+        if not self.model_fields_set:
+            raise ValueError("Provide at least one field to update")
+        return self
+
+
+class SharedAlertContactCreate(BaseModel):
+    """Friend/family entry for optional user-initiated SMS / WhatsApp / email from the dashboard."""
+
+    display_name: str = Field(..., min_length=1, max_length=120)
+    channel: Literal["sms", "email", "whatsapp"]
+    phone_e164: Optional[str] = None
+    email: Optional[EmailStr] = None
+
+    @model_validator(mode="after")
+    def _dest_matches_channel(self) -> SharedAlertContactCreate:
+        if self.channel in ("sms", "whatsapp"):
+            p = (self.phone_e164 or "").strip()
+            if len(p) < 5 or not p.startswith("+"):
+                raise ValueError("SMS/WhatsApp require phone_e164 starting with + (E.164)")
+        if self.channel == "email":
+            if self.email is None or not str(self.email).strip():
+                raise ValueError("email is required when channel is email")
+        return self
+
+
+class SharedAlertContactUpdate(BaseModel):
+    display_name: Optional[str] = Field(None, min_length=1, max_length=120)
+    channel: Optional[Literal["sms", "email", "whatsapp"]] = None
+    phone_e164: Optional[str] = None
+    email: Optional[EmailStr] = None
+
+
+class SharedNotifyIn(BaseModel):
+    contact_ids: list[str] = Field(..., min_length=1, max_length=25)
+    message: str = Field(..., min_length=1, max_length=1200)
+    confirm_recipients_consented: bool = Field(
+        ...,
+        description="Must be true: you confirm recipients agreed to receive this message.",
+    )
+
+    @model_validator(mode="after")
+    def _confirm_ok(self) -> SharedNotifyIn:
+        if not self.confirm_recipients_consented:
+            raise ValueError("confirm_recipients_consented must be true")
+        return self
 
 
 class NotificationRequest(BaseModel):
@@ -555,6 +642,8 @@ async def ensure_notification_indexes(db: Any) -> None:
         await db.inbound_messages.create_index("timestamp")
         await db.consent_records.create_index("contact_id")
         await db.consent_records.create_index("timestamp")
+        await db.shared_alert_dispatch_log.create_index("initiator_contact_id")
+        await db.shared_alert_dispatch_log.create_index("timestamp")
         await db.alert_broadcasts.create_index("city")
         await db.alert_broadcasts.create_index("timestamp")
         await db.alert_broadcasts.create_index("hazard_type")
@@ -571,6 +660,7 @@ async def ensure_notification_indexes(db: Any) -> None:
         except Exception:
             pass
         await coll_cd.create_index([("city", 1), ("hazard", 1)], unique=True)
+        await onchain_hooks.ensure_onchain_anchor_indexes(db)
         logger.info("MongoDB notification indexes ensured")
     except Exception as exc:  # noqa: BLE001
         logger.warning("Notification index creation: %s", exc)
@@ -850,6 +940,109 @@ async def _send_facility_login_code(db: Any, doc: dict[str, Any], code: str) -> 
     except Exception as exc:  # noqa: BLE001
         logger.exception("facility login code dispatch failed: %s", exc)
         warnings.append(f"facility_login_dispatch_exception:{str(exc)[:200]}")
+    return warnings
+
+
+def _session_reverification_days() -> int:
+    """0 = disabled (password-only after initial registration verify)."""
+    try:
+        v = int((os.getenv("SESSION_REVERIFICATION_DAYS") or "90").strip())
+        return max(0, min(3650, v))
+    except ValueError:
+        return 90
+
+
+def _session_reverification_code_ttl_minutes() -> int:
+    try:
+        return max(5, min(120, int((os.getenv("SESSION_REVERIFICATION_CODE_TTL_MINUTES") or "30").strip())))
+    except ValueError:
+        return 30
+
+
+def _reverification_anchor(doc: dict[str, Any]) -> datetime | None:
+    sr = doc.get("session_reverified_at")
+    if isinstance(sr, datetime):
+        return sr
+    va = doc.get("verified_at")
+    return va if isinstance(va, datetime) else None
+
+
+def _needs_session_reverification(doc: dict[str, Any]) -> bool:
+    days = _session_reverification_days()
+    if days <= 0:
+        return False
+    anchor = _reverification_anchor(doc)
+    if anchor is None:
+        return False
+    return datetime.utcnow() > anchor + timedelta(days=days)
+
+
+async def _send_session_reverification_code(
+    db: Any, doc: dict[str, Any], code: str, ttl_minutes: int
+) -> list[str]:
+    """90-day (or configured) security codes; same outbound channels as facility OTP."""
+    warnings: list[str] = []
+    contact_id = doc["_id"]
+    chans = doc.get("preferred_channels") or []
+    name = str(doc.get("name") or "")
+    hint = (
+        f"Early Warning periodic renewal code: {code}. Valid {ttl_minutes} minutes. "
+        "Use it when signing in with your current password and a NEW dashboard password."
+    )
+
+    try:
+        if "email" in chans:
+            if _sendgrid_configured():
+                er = await send_email(
+                    doc["email"],
+                    "Security code — Early Warning dashboard",
+                    f"<p>{name or 'Hello'},</p><p>{hint}</p>",
+                )
+                if not er.get("success"):
+                    warnings.append(f"email_reverify_failed:{er.get('error', 'unknown')}")
+            else:
+                warnings.append("email_reverify_skipped_sendgrid_not_configured")
+        if "sms" in chans:
+            if twilio_notify.twilio_configured():
+                result = await send_sms(doc["phone_number"], hint)
+                if result.get("success"):
+                    await db.notification_logs.insert_one(
+                        {
+                            "recipient_id": str(contact_id),
+                            "channel": "sms",
+                            "recipient": doc["phone_number"],
+                            "type": "session_reverify",
+                            "status": "sent",
+                            "twilio_sid": result.get("sid"),
+                            "timestamp": datetime.utcnow(),
+                        }
+                    )
+                else:
+                    warnings.append(f"sms_reverify_failed:{result.get('error', 'unknown')}")
+            else:
+                warnings.append("sms_reverify_skipped_twilio_not_configured")
+        if "whatsapp" in chans:
+            if twilio_notify.twilio_configured():
+                result = await send_whatsapp(doc.get("whatsapp_number") or doc["phone_number"], hint)
+                if result.get("success"):
+                    await db.notification_logs.insert_one(
+                        {
+                            "recipient_id": str(contact_id),
+                            "channel": "whatsapp",
+                            "recipient": doc.get("whatsapp_number") or doc["phone_number"],
+                            "type": "session_reverify",
+                            "status": "sent",
+                            "twilio_sid": result.get("sid"),
+                            "timestamp": datetime.utcnow(),
+                        }
+                    )
+                else:
+                    warnings.append(f"whatsapp_reverify_failed:{result.get('error', 'unknown')}")
+            else:
+                warnings.append("whatsapp_reverify_skipped_twilio_not_configured")
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("session reverification code dispatch failed: %s", exc)
+        warnings.append(f"session_reverify_dispatch_exception:{str(exc)[:200]}")
     return warnings
 
 
@@ -1331,7 +1524,13 @@ async def _log_registrant_unverified_login_attempt(email_key: str, doc: dict[str
 
 @router.post("/api/auth/login")
 async def registrant_dashboard_login(body: RegistrantLoginIn):
-    """Email + password session for the public dashboard (JWT), distinct from facility OTP tokens."""
+    """
+    Email + password → registrant session JWT (used for dashboard and, when eligible, facility actions).
+
+    After initial registration, users verify once with the signup code. Optionally, about every
+    ``SESSION_REVERIFICATION_DAYS`` (default 90), renewal requires a channel code plus choosing a **new password**
+    with the **current password** (disabled when ``SESSION_REVERIFICATION_DAYS=0``).
+    """
     db = db_state.require_mongo_db()
     email_key = str(body.email).strip()
     doc = await db.contacts.find_one({"email": email_key})
@@ -1353,9 +1552,101 @@ async def registrant_dashboard_login(body: RegistrantLoginIn):
         await _log_registrant_unverified_login_attempt(email_key, doc)
         raise HTTPException(status_code=403, detail="Verify your registration (code) before signing in.")
 
+    if _needs_session_reverification(doc):
+        code_in = (body.reverification_code or "").strip()
+        new_pw = (body.new_password or "").strip()
+
+        if code_in:
+            stored = doc.get("session_reverification_code")
+            exp_at = doc.get("session_reverification_expires_at")
+            if stored != code_in:
+                raise HTTPException(status_code=400, detail="Invalid security code")
+            if isinstance(exp_at, datetime) and datetime.utcnow() > exp_at:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Security code expired — sign in again without a code to receive a new one.",
+                )
+            if len(new_pw) < 8:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Periodic renewal requires a NEW password — at least 8 characters.",
+                )
+            cur_hash = str(doc.get("password_hash") or "")
+            if registrant_auth.verify_password(new_pw, cur_hash):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Choose a new password that differs from your current one.",
+                )
+            await db.contacts.update_one(
+                {"_id": doc["_id"]},
+                {
+                    "$set": {
+                        "session_reverified_at": datetime.utcnow(),
+                        "password_hash": registrant_auth.hash_password(new_pw),
+                    },
+                    "$unset": {
+                        "session_reverification_code": "",
+                        "session_reverification_expires_at": "",
+                    },
+                },
+            )
+            doc = await db.contacts.find_one({"_id": doc["_id"]})
+            if not doc:
+                raise HTTPException(status_code=500, detail="Contact state lost — try again.")
+        else:
+            existing_exp = doc.get("session_reverification_expires_at")
+            pending_valid = (
+                doc.get("session_reverification_code")
+                and isinstance(existing_exp, datetime)
+                and datetime.utcnow() <= existing_exp
+            )
+            if pending_valid:
+                ttl_left = max(1, int((existing_exp - datetime.utcnow()).total_seconds() // 60))
+                raise HTTPException(
+                    status_code=403,
+                    detail={
+                        "error": "reverification_required",
+                        "requires_password_change": True,
+                        "message": (
+                            "Annual renewal: enter the security code we sent PLUS a NEW password (8+ characters) "
+                            "with your CURRENT password."
+                        ),
+                        "code_ttl_minutes": ttl_left,
+                        "code_already_sent": True,
+                    },
+                )
+            ttl_m = _session_reverification_code_ttl_minutes()
+            code_new = _verification_code()
+            exp_new = datetime.utcnow() + timedelta(minutes=ttl_m)
+            await db.contacts.update_one(
+                {"_id": doc["_id"]},
+                {
+                    "$set": {
+                        "session_reverification_code": code_new,
+                        "session_reverification_expires_at": exp_new,
+                    },
+                },
+            )
+            merged = dict(doc)
+            merged["session_reverification_code"] = code_new
+            warns = await _send_session_reverification_code(db, merged, code_new, ttl_m)
+            detail_any: dict[str, Any] = {
+                "error": "reverification_required",
+                "requires_password_change": True,
+                "message": (
+                    "Periodic renewal: we sent a security code to your channels. "
+                    "Sign in again with CURRENT password + code + NEW password (see form below)."
+                ),
+                "code_ttl_minutes": ttl_m,
+            }
+            if warns:
+                detail_any["warnings"] = warns
+            raise HTTPException(status_code=403, detail=detail_any)
+
     token, ttl = registrant_auth.mint_registrant_session_token(doc)
     scopes = registrant_auth.compute_registrant_scopes(doc)
     cov = doc.get("cities")
+    eff_fac = facility_auth.effective_facility_id(doc)
     return {
         "access_token": token,
         "token_type": "bearer",
@@ -1367,7 +1658,7 @@ async def registrant_dashboard_login(body: RegistrantLoginIn):
         "city": doc.get("city"),
         "coverage_cities": cov if isinstance(cov, list) else None,
         "facility_name": facility_auth.facility_display_name(doc),
-        "facility_id": str(doc.get("facility_id") or "").strip() or None,
+        "facility_id": eff_fac,
         "facility_reporting_ready": registrant_auth.registrant_can_facility_actions(doc),
     }
 
@@ -1384,9 +1675,19 @@ async def registrant_profile(
     out = dict(doc)
     oid = out.pop("_id", None)
     out["_id"] = str(oid) if oid is not None else ""
-    for k in ("password_hash", "verification_code", "facility_login_code", "facility_login_expires_at"):
+    for k in (
+        "password_hash",
+        "verification_code",
+        "facility_login_code",
+        "facility_login_expires_at",
+        "session_reverification_code",
+        "session_reverification_expires_at",
+        "shared_alert_contacts",
+    ):
         out.pop(k, None)
     out["scopes"] = registrant_auth.compute_registrant_scopes(doc)
+    out["facility_name"] = facility_auth.facility_display_name(doc)
+    out["facility_id"] = facility_auth.effective_facility_id(doc)
     return out
 
 
@@ -1440,10 +1741,19 @@ async def dashboard_registration_profile(authorization: str | None = Header(None
     out = dict(doc)
     oid_out = out.pop("_id", None)
     out["_id"] = str(oid_out) if oid_out is not None else ""
-    for k in ("password_hash", "verification_code", "facility_login_code", "facility_login_expires_at"):
+    for k in (
+        "password_hash",
+        "verification_code",
+        "facility_login_code",
+        "facility_login_expires_at",
+        "session_reverification_code",
+        "session_reverification_expires_at",
+        "shared_alert_contacts",
+    ):
         out.pop(k, None)
     out["scopes"] = registrant_auth.compute_registrant_scopes(doc)
     out["facility_name"] = facility_auth.facility_display_name(doc)
+    out["facility_id"] = facility_auth.effective_facility_id(doc)
     out["facility_reporting_ready"] = registrant_auth.registrant_can_facility_actions(doc)
     return out
 
@@ -1467,6 +1777,657 @@ async def registrant_change_password_endpoint(
     return {"success": True, "message": "Password updated."}
 
 
+@router.patch("/api/auth/preferences")
+async def registrant_patch_own_preferences(
+    body: RegistrantSelfPrefsPatch,
+    authorization: str | None = Header(None),
+):
+    """
+    Update notification channels, optional facility name, and per-site PM2.5 thresholds on your own contact.
+    Accepts the same ``Authorization: Bearer`` as ``GET /api/auth/profile`` (password or facility OTP session).
+    """
+    raw = _authorization_bearer_raw(authorization)
+    cid = _contact_id_from_dashboard_bearer_token(raw)
+    if not cid:
+        raise HTTPException(status_code=401, detail="Sign in required.")
+    db = db_state.require_mongo_db()
+    try:
+        oid = ObjectId(cid)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=401, detail="Invalid session identity") from exc
+
+    doc = await db.contacts.find_one({"_id": oid})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    if str(doc.get("approval_status") or "").strip().lower() == "revoked":
+        raise HTTPException(status_code=403, detail="This registration has been revoked")
+    vs = str(doc.get("verification_status") or "").strip().lower()
+    if vs != "verified":
+        raise HTTPException(status_code=403, detail="Verify your registration before changing preferences")
+
+    updates: dict[str, Any] = {}
+
+    payload = body.model_dump(exclude_unset=True)
+    if "preferred_channels" in payload and body.preferred_channels is not None:
+        updates["preferred_channels"] = [ch.value for ch in body.preferred_channels]
+    if "consent_given" in payload and body.consent_given is not None:
+        updates["consent_given"] = body.consent_given
+    if "environmental_topics" in payload and body.environmental_topics is not None:
+        updates["environmental_topics"] = _validated_environment_topics(
+            body.environmental_topics,
+            default_both=False,
+        )
+
+    merged = dict(doc)
+    merged.update({k: v for k, v in updates.items() if k in updates})
+
+    if body.add_facility_name and body.add_facility_name.strip():
+        add_one = body.add_facility_name.strip()
+        cur_names, _ = _normalize_facility_names(
+            merged.get("facility_names") if isinstance(merged.get("facility_names"), list) else None,
+            merged.get("facility_name"),
+        )
+        lower_have = {x.lower() for x in cur_names}
+        if add_one.lower() not in lower_have:
+            cur_names.append(add_one)
+        new_names, summary = _normalize_facility_names(cur_names, None)
+        updates["facility_names"] = new_names
+        updates["facility_name"] = summary
+        merged["facility_names"] = new_names
+        merged["facility_name"] = summary
+
+    if body.facility_site_pm25_thresholds is not None:
+        labels = contact_facility_site_labels(merged)
+        if not labels:
+            raise HTTPException(
+                status_code=400,
+                detail="Add at least one facility name before setting per-site PM2.5 thresholds.",
+            )
+        cleaned: dict[str, float] = {}
+        lower_map = {x.strip().lower(): x for x in labels}
+        for k_raw, v in body.facility_site_pm25_thresholds.items():
+            ks = str(k_raw).strip().lower()
+            if ks not in lower_map:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Unknown facility name in thresholds: {k_raw!r} (use one of your registered sites).",
+                )
+            if v is None or v < 5.0 or v > 600.0:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"PM2.5 threshold must be between 5 and 600 µg/m³ ({k_raw!r}).",
+                )
+            canon = lower_map[ks]
+            cleaned[canon] = float(v)
+        updates["facility_site_pm25_thresholds"] = cleaned
+
+    if not updates:
+        raise HTTPException(status_code=400, detail="No changes applied")
+
+    updates["updated_at"] = datetime.utcnow()
+
+    await db.contacts.update_one({"_id": oid}, {"$set": updates})
+
+    fresh = await db.contacts.find_one({"_id": oid})
+    if fresh is None:
+        return {"success": True, "message": "Updated."}
+
+    if "preferred_channels" in updates or "consent_given" in updates:
+        await db.consent_records.insert_one(
+            {
+                "contact_id": cid,
+                "consent_given": bool(fresh.get("consent_given")),
+                "channels": fresh.get("preferred_channels") or [],
+                "timestamp": datetime.utcnow(),
+                "source": "registrant_self_service",
+            }
+        )
+
+    out = dict(fresh)
+    oid_out = out.pop("_id", None)
+    out["_id"] = str(oid_out) if oid_out is not None else ""
+    for k in (
+        "password_hash",
+        "verification_code",
+        "facility_login_code",
+        "facility_login_expires_at",
+        "session_reverification_code",
+        "session_reverification_expires_at",
+        "shared_alert_contacts",
+    ):
+        out.pop(k, None)
+    out["scopes"] = registrant_auth.compute_registrant_scopes(fresh)
+    out["facility_name"] = facility_auth.facility_display_name(fresh)
+    out["facility_id"] = facility_auth.effective_facility_id(fresh)
+    out["facility_reporting_ready"] = registrant_auth.registrant_can_facility_actions(fresh)
+    return {"success": True, "message": "Preferences saved.", "profile": out}
+
+
+def _log_ts_iso(ts: Any) -> str | None:
+    if isinstance(ts, datetime):
+        return ts.replace(microsecond=0).isoformat() + "Z"
+    return None
+
+
+def _shared_alert_max_contacts() -> int:
+    raw = (os.getenv("SHARED_ALERT_CONTACTS_MAX") or "50").strip()
+    try:
+        n = int(raw)
+    except ValueError:
+        n = 50
+    return max(1, min(n, 500))
+
+
+def _shared_alert_daily_notify_cap() -> int:
+    raw = (os.getenv("SHARED_ALERT_NOTIFY_DAILY_MAX") or "100").strip()
+    try:
+        n = int(raw)
+    except ValueError:
+        n = 100
+    return max(1, min(n, 5000))
+
+
+def _utc_midnight_today() -> datetime:
+    now = datetime.utcnow()
+    return datetime(now.year, now.month, now.day)
+
+
+async def _shared_alerts_recipients_sent_today(db: Any, initiator_cid: str) -> int:
+    start = _utc_midnight_today()
+    cursor = db.shared_alert_dispatch_log.aggregate(
+        [
+            {
+                "$match": {
+                    "initiator_contact_id": initiator_cid,
+                    "timestamp": {"$gte": start},
+                }
+            },
+            {"$group": {"_id": None, "n": {"$sum": "$recipient_count"}}},
+        ]
+    )
+    rows = await cursor.to_list(1)
+    if not rows:
+        return 0
+    return int(rows[0].get("n") or 0)
+
+
+def _normalize_shared_phone_e164(raw: str) -> str:
+    s = raw.strip().replace(" ", "").replace("-", "")
+    if not s.startswith("+"):
+        raise HTTPException(
+            status_code=400,
+            detail="Phone must be in E.164 form starting with + (e.g. +593991234567).",
+        )
+    return twilio_notify.normalize_e164(s)
+
+
+def _mask_destination(channel: str, phone: str | None, email: str | None) -> str:
+    if channel == "email" and email:
+        e = str(email).strip()
+        if "@" in e and len(e) > 4:
+            a, _, d = e.partition("@")
+            return (a[:2] + "***@" + d) if len(a) > 2 else "***@" + d
+        return "***"
+    if phone:
+        p = phone.strip()
+        if len(p) > 6:
+            return p[:3] + "…" + p[-2:]
+        return "***"
+    return "(unknown)"
+
+
+def _merge_shared_contact_updates(
+    existing: dict[str, Any], body: SharedAlertContactUpdate
+) -> SharedAlertContactCreate:
+    ch = body.channel if body.channel is not None else str(existing.get("channel") or "sms")
+    if ch not in ("sms", "email", "whatsapp"):
+        ch = "sms"
+    disp = body.display_name if body.display_name is not None else str(
+        existing.get("display_name") or ""
+    )
+    phone_src = (
+        body.phone_e164
+        if body.phone_e164 is not None
+        else existing.get("phone_e164")
+    )
+    email_src = body.email if body.email is not None else existing.get("email")
+    return SharedAlertContactCreate(
+        display_name=disp,
+        channel=ch,  # type: ignore[arg-type]
+        phone_e164=str(phone_src).strip() if phone_src else None,
+        email=email_src,
+    )
+
+
+@router.get("/api/auth/shared-contacts")
+async def registrant_list_shared_contacts(
+    authorization: str | None = Header(None),
+):
+    """Friends & family list for optional SMS / email / WhatsApp from the dashboard (not included in profile JSON)."""
+    raw = _authorization_bearer_raw(authorization)
+    cid = _contact_id_from_dashboard_bearer_token(raw)
+    if not cid:
+        raise HTTPException(status_code=401, detail="Sign in required.")
+    db = db_state.require_mongo_db()
+    try:
+        oid = ObjectId(cid)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=401, detail="Invalid session identity") from exc
+    doc = await db.contacts.find_one({"_id": oid})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    if str(doc.get("approval_status") or "").strip().lower() == "revoked":
+        raise HTTPException(status_code=403, detail="This registration has been revoked")
+    rows = doc.get("shared_alert_contacts")
+    if not isinstance(rows, list):
+        rows = []
+    out_list: list[dict[str, Any]] = []
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        cid_row = str(r.get("id") or "").strip()
+        if not cid_row:
+            continue
+        channel = str(r.get("channel") or "sms").strip().lower()
+        if channel not in ("sms", "email", "whatsapp"):
+            channel = "sms"
+        created = r.get("created_at")
+        updated = r.get("updated_at")
+        out_list.append(
+            {
+                "id": cid_row,
+                "display_name": str(r.get("display_name") or "").strip() or "Contact",
+                "channel": channel,
+                "phone_e164": r.get("phone_e164"),
+                "email": r.get("email"),
+                "created_at": _log_ts_iso(created) if isinstance(created, datetime) else None,
+                "updated_at": _log_ts_iso(updated) if isinstance(updated, datetime) else None,
+            }
+        )
+    cap = _shared_alert_max_contacts()
+    daily_cap = _shared_alert_daily_notify_cap()
+    sent_today = await _shared_alerts_recipients_sent_today(db, cid)
+    return {
+        "contacts": out_list,
+        "limits": {
+            "max_contacts": cap,
+            "notify_recipients_daily_max": daily_cap,
+            "notify_recipients_sent_today": sent_today,
+        },
+    }
+
+
+@router.post("/api/auth/shared-contacts")
+async def registrant_create_shared_contact(
+    body: SharedAlertContactCreate,
+    authorization: str | None = Header(None),
+):
+    raw = _authorization_bearer_raw(authorization)
+    cid = _contact_id_from_dashboard_bearer_token(raw)
+    if not cid:
+        raise HTTPException(status_code=401, detail="Sign in required.")
+    db = db_state.require_mongo_db()
+    try:
+        oid = ObjectId(cid)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=401, detail="Invalid session identity") from exc
+    doc = await db.contacts.find_one({"_id": oid})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    if str(doc.get("approval_status") or "").strip().lower() == "revoked":
+        raise HTTPException(status_code=403, detail="This registration has been revoked")
+    vs = str(doc.get("verification_status") or "").strip().lower()
+    if vs != "verified":
+        raise HTTPException(status_code=403, detail="Verify your registration before managing contacts")
+
+    cur = doc.get("shared_alert_contacts")
+    lst: list[dict[str, Any]] = [x for x in cur if isinstance(x, dict)] if isinstance(cur, list) else []
+    cap = _shared_alert_max_contacts()
+    if len(lst) >= cap:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Maximum {cap} contacts — remove one or increase SHARED_ALERT_CONTACTS_MAX.",
+        )
+
+    phone_norm: str | None = None
+    email_norm: str | None = None
+    if body.channel in ("sms", "whatsapp"):
+        phone_norm = _normalize_shared_phone_e164(body.phone_e164 or "")
+    if body.channel == "email":
+        email_norm = str(body.email).strip().lower() if body.email else None
+        if not email_norm:
+            raise HTTPException(status_code=400, detail="email is required for email channel")
+
+    now = datetime.utcnow()
+    new_id = str(uuid.uuid4())
+    entry: dict[str, Any] = {
+        "id": new_id,
+        "display_name": body.display_name.strip(),
+        "channel": body.channel,
+        "phone_e164": phone_norm,
+        "email": email_norm,
+        "created_at": now,
+        "updated_at": now,
+    }
+    lst.append(entry)
+    await db.contacts.update_one(
+        {"_id": oid},
+        {"$set": {"shared_alert_contacts": lst, "updated_at": now}},
+    )
+    return {"success": True, "contact": {"id": new_id, **{k: v for k, v in entry.items() if k != "created_at"}}}
+
+
+@router.post("/api/auth/shared-contacts/notify")
+async def registrant_notify_shared_contacts(
+    body: SharedNotifyIn,
+    authorization: str | None = Header(None),
+):
+    """Send a one-off message to selected saved contacts (SMS / WhatsApp / email). Rate-limited per day."""
+    raw = _authorization_bearer_raw(authorization)
+    cid = _contact_id_from_dashboard_bearer_token(raw)
+    if not cid:
+        raise HTTPException(status_code=401, detail="Sign in required.")
+    db = db_state.require_mongo_db()
+    try:
+        oid = ObjectId(cid)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=401, detail="Invalid session identity") from exc
+    doc = await db.contacts.find_one({"_id": oid})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    if str(doc.get("approval_status") or "").strip().lower() == "revoked":
+        raise HTTPException(status_code=403, detail="This registration has been revoked")
+    vs = str(doc.get("verification_status") or "").strip().lower()
+    if vs != "verified":
+        raise HTTPException(status_code=403, detail="Verify your registration before sending")
+
+    cur = doc.get("shared_alert_contacts")
+    lst: list[dict[str, Any]] = [x for x in cur if isinstance(x, dict)] if isinstance(cur, list) else []
+    by_id = {str(r.get("id") or ""): r for r in lst if isinstance(r, dict) and r.get("id")}
+    ordered_ids = list(dict.fromkeys(body.contact_ids))
+    n_req = len(ordered_ids)
+    daily_cap = _shared_alert_daily_notify_cap()
+    sent_already = await _shared_alerts_recipients_sent_today(db, cid)
+    if sent_already + n_req > daily_cap:
+        raise HTTPException(
+            status_code=429,
+            detail=(
+                f"Daily limit for friend/family sends is {daily_cap} recipients "
+                f"({sent_already} already today). Try again tomorrow or raise SHARED_ALERT_NOTIFY_DAILY_MAX."
+            ),
+        )
+
+    sender_name = str(doc.get("name") or "Early Warning user").strip() or "Early Warning user"
+    msg = body.message.strip()
+    results: list[dict[str, Any]] = []
+    for rid in ordered_ids:
+        row = by_id.get(str(rid).strip())
+        if not row:
+            results.append(
+                {
+                    "contact_id": rid,
+                    "ok": False,
+                    "error": "not_found",
+                }
+            )
+            continue
+        channel = str(row.get("channel") or "sms").strip().lower()
+        if channel not in ("sms", "email", "whatsapp"):
+            channel = "sms"
+        dest_display = _mask_destination(
+            channel,
+            str(row.get("phone_e164") or "") or None,
+            str(row.get("email") or "") or None,
+        )
+        text = f"[{sender_name}] {msg}"
+
+        async def _log_line(
+            *,
+            ch: str,
+            status: str,
+            ok: bool,
+            err: str | None,
+            extra: dict[str, Any] | None = None,
+        ) -> None:
+            log_payload: dict[str, Any] = {
+                "recipient_id": cid,
+                "channel": ch,
+                "recipient": dest_display,
+                "type": "shared_alert",
+                "status": status,
+                "message": text[:8000],
+                "timestamp": datetime.utcnow(),
+                "shared_contact_id": str(row.get("id") or ""),
+                "shared_recipient_masked": dest_display,
+            }
+            if extra:
+                log_payload.update(extra)
+            await db.notification_logs.insert_one(log_payload)
+
+        if channel == "email":
+            to_em = str(row.get("email") or "").strip()
+            if not to_em:
+                results.append({"contact_id": rid, "ok": False, "error": "missing_email"})
+                await _log_line(ch="email", status="failed", ok=False, err="missing_email")
+                continue
+            subj = f"Message from {sender_name} (Early Warning)"
+            html = f"<p><strong>{sender_name}</strong> sent you a message via Early Warning:</p><p>{msg}</p>"
+            r = await send_email(to_em, subj, html)
+            ok = bool(r.get("success"))
+            results.append(
+                {
+                    "contact_id": rid,
+                    "channel": "email",
+                    "ok": ok,
+                    "error": None if ok else (r.get("error") or "send_failed"),
+                }
+            )
+            await _log_line(
+                ch="email",
+                status="sent" if ok else "failed",
+                ok=ok,
+                err=None if ok else str(r.get("error") or ""),
+            )
+            continue
+
+        phone = str(row.get("phone_e164") or "").strip()
+        if not phone:
+            results.append({"contact_id": rid, "ok": False, "error": "missing_phone"})
+            await _log_line(ch=channel, status="failed", ok=False, err="missing_phone")
+            continue
+        try:
+            phone = _normalize_shared_phone_e164(phone)
+        except HTTPException:
+            results.append({"contact_id": rid, "ok": False, "error": "invalid_phone"})
+            await _log_line(ch=channel, status="failed", ok=False, err="invalid_phone")
+            continue
+
+        if channel == "sms":
+            r = await send_sms(phone, text)
+        else:
+            r = await send_whatsapp(phone, text)
+        ok = bool(r.get("success"))
+        results.append(
+            {
+                "contact_id": rid,
+                "channel": channel,
+                "ok": ok,
+                "error": None if ok else (r.get("error") or "send_failed"),
+            }
+        )
+        await _log_line(
+            ch=channel,
+            status="sent" if ok else "failed",
+            ok=ok,
+            err=None if ok else str(r.get("error") or ""),
+            extra={"twilio_sid": r.get("sid")} if r.get("sid") else None,
+        )
+
+    ok_n = sum(1 for x in results if x.get("ok"))
+    await db.shared_alert_dispatch_log.insert_one(
+        {
+            "initiator_contact_id": cid,
+            "timestamp": datetime.utcnow(),
+            "recipient_count": n_req,
+            "ok_count": ok_n,
+            "message_preview": msg[:500],
+        }
+    )
+    return {"success": True, "results": results, "daily_cap": daily_cap, "sent_today_before": sent_already}
+
+
+@router.patch("/api/auth/shared-contacts/{contact_row_id}")
+async def registrant_update_shared_contact(
+    contact_row_id: str,
+    body: SharedAlertContactUpdate,
+    authorization: str | None = Header(None),
+):
+    payload = body.model_dump(exclude_unset=True)
+    if not payload:
+        raise HTTPException(status_code=400, detail="No fields to update")
+    raw = _authorization_bearer_raw(authorization)
+    cid = _contact_id_from_dashboard_bearer_token(raw)
+    if not cid:
+        raise HTTPException(status_code=401, detail="Sign in required.")
+    if not contact_row_id.strip():
+        raise HTTPException(status_code=400, detail="Missing contact id")
+    db = db_state.require_mongo_db()
+    try:
+        oid = ObjectId(cid)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=401, detail="Invalid session identity") from exc
+    doc = await db.contacts.find_one({"_id": oid})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    if str(doc.get("approval_status") or "").strip().lower() == "revoked":
+        raise HTTPException(status_code=403, detail="This registration has been revoked")
+    vs = str(doc.get("verification_status") or "").strip().lower()
+    if vs != "verified":
+        raise HTTPException(status_code=403, detail="Verify your registration before managing contacts")
+
+    cur = doc.get("shared_alert_contacts")
+    lst: list[dict[str, Any]] = [x for x in cur if isinstance(x, dict)] if isinstance(cur, list) else []
+    found: dict[str, Any] | None = None
+    idx = -1
+    for i, row in enumerate(lst):
+        if str(row.get("id") or "").strip() == contact_row_id.strip():
+            found = row
+            idx = i
+            break
+    if found is None or idx < 0:
+        raise HTTPException(status_code=404, detail="Contact not found")
+
+    merged = _merge_shared_contact_updates(found, body)
+    phone_norm: str | None = None
+    email_norm: str | None = None
+    if merged.channel in ("sms", "whatsapp"):
+        phone_norm = _normalize_shared_phone_e164(merged.phone_e164 or "")
+    if merged.channel == "email":
+        email_norm = str(merged.email).strip().lower() if merged.email else None
+        if not email_norm:
+            raise HTTPException(status_code=400, detail="email is required for email channel")
+
+    now = datetime.utcnow()
+    updated_entry: dict[str, Any] = {
+        **found,
+        "display_name": merged.display_name.strip(),
+        "channel": merged.channel,
+        "phone_e164": phone_norm,
+        "email": email_norm,
+        "updated_at": now,
+    }
+    lst[idx] = updated_entry
+    await db.contacts.update_one(
+        {"_id": oid},
+        {"$set": {"shared_alert_contacts": lst, "updated_at": now}},
+    )
+    return {"success": True, "contact": updated_entry}
+
+
+@router.delete("/api/auth/shared-contacts/{contact_row_id}")
+async def registrant_delete_shared_contact(
+    contact_row_id: str,
+    authorization: str | None = Header(None),
+):
+    raw = _authorization_bearer_raw(authorization)
+    cid = _contact_id_from_dashboard_bearer_token(raw)
+    if not cid:
+        raise HTTPException(status_code=401, detail="Sign in required.")
+    db = db_state.require_mongo_db()
+    try:
+        oid = ObjectId(cid)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=401, detail="Invalid session identity") from exc
+    doc = await db.contacts.find_one({"_id": oid})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    cur = doc.get("shared_alert_contacts")
+    lst: list[dict[str, Any]] = [x for x in cur if isinstance(x, dict)] if isinstance(cur, list) else []
+    nid = contact_row_id.strip()
+    new_lst = [x for x in lst if str(x.get("id") or "").strip() != nid]
+    if len(new_lst) == len(lst):
+        raise HTTPException(status_code=404, detail="Contact not found")
+    await db.contacts.update_one(
+        {"_id": oid},
+        {"$set": {"shared_alert_contacts": new_lst, "updated_at": datetime.utcnow()}},
+    )
+    return {"success": True, "deleted_id": nid}
+
+
+@router.get("/api/auth/notification-inbox")
+async def registrant_notification_inbox(
+    authorization: str | None = Header(None),
+    limit: int = Query(50, ge=1, le=200),
+):
+    """
+    Recent outbound attempts to this contact (SMS / email / WhatsApp) from ``notification_logs``.
+    Helps when a device did not receive SMS or email — the same sends are listed here.
+    """
+    raw = _authorization_bearer_raw(authorization)
+    cid = _contact_id_from_dashboard_bearer_token(raw)
+    if not cid:
+        raise HTTPException(
+            status_code=401,
+            detail="Sign in required — use Sign in below, then retry.",
+        )
+    db = db_state.require_mongo_db()
+    try:
+        ObjectId(cid)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=401, detail="Invalid session identity") from exc
+
+    cur = (
+        db.notification_logs.find({"recipient_id": cid})
+        .sort("timestamp", -1)
+        .limit(limit)
+    )
+    rows = await cur.to_list(length=limit)
+    entries: list[dict[str, Any]] = []
+    for r in rows:
+        msg = r.get("message")
+        err = r.get("error")
+        entries.append(
+            {
+                "timestamp": _log_ts_iso(r.get("timestamp")),
+                "channel": r.get("channel"),
+                "status": r.get("status"),
+                "city": r.get("city"),
+                "alert_level": r.get("alert_level"),
+                "hazard_type": r.get("hazard_type"),
+                "message": (
+                    (str(msg)[:8000] + ("…" if len(str(msg)) > 8000 else "")) if msg is not None else None
+                ),
+                "message_preview": (str(msg)[:600] + ("…" if len(str(msg)) > 600 else ""))
+                if msg is not None
+                else None,
+                "error": (str(err)[:220] + ("…" if len(str(err)) > 220 else ""))
+                if err
+                else None,
+            }
+        )
+    return {"count": len(entries), "entries": entries}
+
+
 def _facility_scope_ok_for_login(doc: dict[str, Any]) -> tuple[bool, str]:
     apr_raw = doc.get("approval_status")
     if apr_raw is not None:
@@ -1479,8 +2440,7 @@ def _facility_scope_ok_for_login(doc: dict[str, Any]) -> tuple[bool, str]:
             return False, "blocked"
     if str(doc.get("verification_status") or "").strip().lower() != "verified":
         return False, "not_verified"
-    fid = str(doc.get("facility_id") or "").strip()
-    if not fid:
+    if not facility_auth.effective_facility_id(doc):
         return False, "no_facility"
     return True, ""
 
@@ -1561,7 +2521,7 @@ async def facility_dashboard_token(body: FacilityTokenExchangeIn):
     refreshed = await db.contacts.find_one({"_id": doc["_id"]})
     token, ttl_s = facility_auth.mint_facility_access_token(refreshed or doc)
     row = refreshed or doc
-    fid = str(row.get("facility_id") or "").strip()
+    fid = facility_auth.effective_facility_id(row) or ""
     city_live = row.get("city")
     cov = row.get("cities")
     out_cov = cov if isinstance(cov, list) else None
@@ -1956,6 +2916,7 @@ async def broadcast_to_recipients(
                     "alert_level": level_label,
                     "hazard_type": haz,
                     "city": city,
+                    "message": (str(message)[:8000] + ("…" if len(str(message)) > 8000 else "")),
                     "status": result["status"],
                     "twilio_sid": result.get("sid"),
                     "error": result.get("error"),
@@ -2032,6 +2993,15 @@ async def broadcast_alert(
         clauses.append(_coverage_municipality_clause(alert.filter_city))
 
     recipients = await db.contacts.find({"$and": clauses}).to_list(length=5000)
+    await onchain_hooks.anchor_air_alert(
+        db,
+        city=alert.city,
+        alert_level=alert.aqi_level.value,
+        pm25=float(alert.aqi_value),
+        risk_score=onchain_hooks.risk_score_from_alert_level(alert.aqi_level.value),
+        source="api_alerts_broadcast",
+        facility_id=None,
+    )
     background_tasks.add_task(
         broadcast_to_recipients,
         recipients,
@@ -2177,6 +3147,14 @@ async def evaluate_air_alert(
         clauses_eval_air.append(_coverage_municipality_clause(filter_city))
 
     recipients = await db.contacts.find({"$and": clauses_eval_air}).to_list(length=5000)
+    await onchain_hooks.anchor_air_alert_from_payload(
+        db,
+        city=city,
+        alert_level=level.value,
+        aqi_value=aqi_value,
+        aq_payload=aq_payload,
+        source="api_alerts_evaluate_air",
+    )
     background_tasks.add_task(
         _broadcast_eval_then_cooldown,
         recipients,
@@ -2311,6 +3289,14 @@ async def evaluate_heat_alert(
     recipients = await db.contacts.find({"$and": clauses_eval_heat}).to_list(length=5000)
 
     headline = f"{t_display} °C effective (snapshot)"
+
+    await onchain_hooks.anchor_heat_alert(
+        db,
+        city=city,
+        heat_level=level.value,
+        temp_display=str(t_display),
+        source="api_alerts_evaluate_heat",
+    )
 
     background_tasks.add_task(
         _broadcast_eval_then_cooldown,

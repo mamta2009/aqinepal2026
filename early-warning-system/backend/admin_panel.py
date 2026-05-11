@@ -6,18 +6,24 @@ import asyncio
 import hashlib
 import hmac
 import os
+import secrets
 from datetime import datetime, timedelta
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, Field
 
 import db_state
 import external_integrations
 import registrant_auth
 import guide_documents
-from notification_auth import require_strict_notification_api_key
+from notification_auth import (
+    cookie_secure_for_request,
+    operator_session_cookie_name,
+    operator_session_ttl_hours,
+    require_admin_operator,
+)
 from notifications_api import (
     ContactRegistration,
     operator_resend_registration_verification_by_id,
@@ -27,7 +33,16 @@ from notifications_api import _normalize_city_list, _normalize_facility_names
 
 from onchain_logger import effective_polygon_bundle, runtime_polygon_network, set_runtime_polygon_network
 
+import onchain_hooks
+
 router = APIRouter(prefix="/api/admin", tags=["admin"])
+
+
+async def ensure_operator_console_session_indexes(db: Any) -> None:
+    """TTL on ``expires_at`` plus lookup by ``token_sha256`` for operator console cookies."""
+    coll = db["operator_console_sessions"]
+    await coll.create_index([("expires_at", 1)], expireAfterSeconds=0)
+    await coll.create_index("token_sha256", unique=True)
 
 
 def _strip_pin_or_secret(raw: str | None) -> str:
@@ -62,10 +77,13 @@ class AdminConsoleUnlockIn(BaseModel):
 
 
 @router.post("/console-unlock-pin")
-async def admin_console_unlock_pin(body: AdminConsoleUnlockIn) -> dict[str, Any]:
+async def admin_console_unlock_pin(
+    request: Request, body: AdminConsoleUnlockIn, response: Response
+) -> dict[str, Any]:
     """
-    Validates the operator PIN for the `/admin/dashboard` HTML shell only.
-    All JSON routes below still require ``NOTIFICATION_API_KEY``.
+    Validates the operator PIN and issues an HttpOnly cookie bound to a row in MongoDB
+    (``operator_console_sessions``). JSON admin routes accept this session **or**
+    ``Authorization: Bearer NOTIFICATION_API_KEY`` for automation.
     """
     await asyncio.sleep(0.06)
     got = _strip_pin_or_secret(body.pin)
@@ -73,6 +91,49 @@ async def admin_console_unlock_pin(body: AdminConsoleUnlockIn) -> dict[str, Any]
     if not hmac.compare_digest(_pin_digest(got), _pin_digest(exp)):
         await asyncio.sleep(0.28)
         raise HTTPException(status_code=401, detail="Incorrect PIN")
+
+    db = db_state.require_mongo_db()
+    token = secrets.token_hex(32)
+    token_sha256 = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    now = datetime.utcnow()
+    ttl_h = operator_session_ttl_hours()
+    sess_exp = now + timedelta(hours=ttl_h)
+    await db.operator_console_sessions.insert_one(
+        {
+            "token_sha256": token_sha256,
+            "created_at": now,
+            "expires_at": sess_exp,
+        }
+    )
+
+    cn = operator_session_cookie_name()
+    max_age = int(ttl_h * 3600)
+    response.set_cookie(
+        key=cn,
+        value=token,
+        max_age=max_age,
+        httponly=True,
+        samesite="lax",
+        secure=cookie_secure_for_request(request),
+        path="/",
+    )
+    return {"success": True}
+
+
+@router.post("/console-session-logout")
+async def admin_console_session_logout(request: Request, response: Response) -> dict[str, Any]:
+    """Invalidate the MongoDB session row and clear the HttpOnly cookie."""
+    cn = operator_session_cookie_name()
+    raw = (request.cookies.get(cn) or "").strip()
+    if raw and len(raw) >= 16:
+        th = hashlib.sha256(raw.encode("utf-8")).hexdigest()
+        db = db_state.mongo_db
+        if db is not None:
+            try:
+                await db.operator_console_sessions.delete_many({"token_sha256": th})
+            except Exception:  # noqa: BLE001
+                pass
+    response.delete_cookie(key=cn, path="/")
     return {"success": True}
 
 
@@ -120,7 +181,7 @@ def _env_hints() -> dict[str, bool]:
 
 @router.get("/system-status")
 async def admin_system_status(
-    _: None = Depends(require_strict_notification_api_key),
+    _: None = Depends(require_admin_operator),
 ) -> dict[str, Any]:
     mongo_block: dict[str, Any] = {"configured": False, "ping_ok": False, "detail": None}
     try:
@@ -149,7 +210,7 @@ async def admin_system_status(
 
 @router.get("/activity/summary")
 async def admin_activity_summary(
-    _: None = Depends(require_strict_notification_api_key),
+    _: None = Depends(require_admin_operator),
 ) -> dict[str, Any]:
     db = db_state.require_mongo_db()
     now = datetime.utcnow()
@@ -179,7 +240,7 @@ async def admin_activity_summary(
 @router.get("/activity/recent-action-logs")
 async def admin_recent_action_logs(
     limit: int = Query(40, ge=1, le=200),
-    _: None = Depends(require_strict_notification_api_key),
+    _: None = Depends(require_admin_operator),
 ) -> dict[str, Any]:
     db = db_state.require_mongo_db()
     cur = db.action_logs.find({}).sort("timestamp", -1).limit(limit)
@@ -204,7 +265,7 @@ class AdminPasswordReset(BaseModel):
 async def admin_reset_contact_password(
     contact_id: str,
     body: AdminPasswordReset,
-    _: None = Depends(require_strict_notification_api_key),
+    _: None = Depends(require_admin_operator),
 ):
     db = db_state.require_mongo_db()
     try:
@@ -237,7 +298,7 @@ class BlockchainRuntimeNetworkPatch(BaseModel):
 @router.patch("/blockchain/runtime-network")
 async def admin_patch_polygon_runtime_network(
     body: BlockchainRuntimeNetworkPatch,
-    _: None = Depends(require_strict_notification_api_key),
+    _: None = Depends(require_admin_operator),
 ) -> dict[str, Any]:
     """
     Quick Amoy / mainnet switch for RPC balance checks and the optional on-chain logger (if enabled).
@@ -303,7 +364,14 @@ def _serialize_contact_public(c: dict[str, Any], *, mask_phone: bool) -> dict[st
     doc = dict(c)
     oid = doc.pop("_id", None)
     doc["_id"] = str(oid) if oid is not None else None
-    for k in ("verification_code", "facility_login_code", "facility_login_expires_at", "password_hash"):
+    for k in (
+        "verification_code",
+        "facility_login_code",
+        "facility_login_expires_at",
+        "password_hash",
+        "session_reverification_code",
+        "session_reverification_expires_at",
+    ):
         doc.pop(k, None)
     if mask_phone:
         if doc.get("phone_number"):
@@ -328,7 +396,7 @@ class OperatorContactCreateIn(ContactRegistration):
 @router.post("/registrants")
 async def admin_create_registrant(
     body: OperatorContactCreateIn,
-    _: None = Depends(require_strict_notification_api_key),
+    _: None = Depends(require_admin_operator),
 ) -> dict[str, Any]:
     reg = ContactRegistration.model_validate(body.model_dump(exclude={"send_verification"}))
     return await persist_contact_registration(
@@ -349,7 +417,7 @@ async def admin_list_registrants(
         False,
         description="Return full phone / WhatsApp (trusted console only).",
     ),
-    _: None = Depends(require_strict_notification_api_key),
+    _: None = Depends(require_admin_operator),
 ) -> dict[str, Any]:
     """All registrants (including archived contacts with ``active:false``)."""
     db = db_state.require_mongo_db()
@@ -383,7 +451,7 @@ async def admin_list_registrants(
 @router.post("/registrants/{contact_id}/resend-verification")
 async def admin_resend_verification_email(
     contact_id: str,
-    _: None = Depends(require_strict_notification_api_key),
+    _: None = Depends(require_admin_operator),
 ) -> dict[str, Any]:
     """
     Send a fresh verification code to pending enrollees (email/SMS/WhatsApp per their preferences).
@@ -421,7 +489,7 @@ class AdminRegistrantEnrolmentPatch(BaseModel):
 async def admin_patch_registrant_enrolment(
     contact_id: str,
     body: AdminRegistrantEnrolmentPatch,
-    _: None = Depends(require_strict_notification_api_key),
+    _: None = Depends(require_admin_operator),
 ) -> dict[str, Any]:
     """Adjust facilities and/or locations for an existing enrollee without re-registering."""
     db = db_state.require_mongo_db()
@@ -493,7 +561,7 @@ class RegistrantActivePatch(BaseModel):
 async def admin_patch_registrant_active_state(
     contact_id: str,
     body: RegistrantActivePatch,
-    _: None = Depends(require_strict_notification_api_key),
+    _: None = Depends(require_admin_operator),
 ) -> dict[str, Any]:
     db = db_state.require_mongo_db()
     try:
@@ -513,7 +581,7 @@ async def admin_patch_registrant_active_state(
 @router.delete("/registrants/{contact_id}")
 async def admin_delete_registrant(
     contact_id: str,
-    _: None = Depends(require_strict_notification_api_key),
+    _: None = Depends(require_admin_operator),
 ) -> dict[str, Any]:
     """
     Permanent delete — frees the unique email constraint for QA.
@@ -539,7 +607,7 @@ async def admin_delete_registrant(
 
 @router.get("/blockchain/overview")
 async def admin_blockchain_overview(
-    _: None = Depends(require_strict_notification_api_key),
+    _: None = Depends(require_admin_operator),
 ) -> dict[str, Any]:
     """
     Read-only operator view for Polygon signer + RPC + testnet faucets.
@@ -614,7 +682,7 @@ async def admin_blockchain_overview(
 
 @router.get("/private-documentation/md-files")
 async def admin_private_md_paths(
-    _: None = Depends(require_strict_notification_api_key),
+    _: None = Depends(require_admin_operator),
 ) -> dict[str, Any]:
     """Markdown paths under docs-private/, for operator eyes only."""
     paths = guide_documents.list_private_markdown_basenames()
@@ -624,11 +692,11 @@ async def admin_private_md_paths(
 @router.get("/private-documentation/md")
 async def admin_private_md_html(
     path: str = Query(..., min_length=1, max_length=512, description="Path relative to docs-private/ (*.md only)"),
-    _: None = Depends(require_strict_notification_api_key),
+    _: None = Depends(require_admin_operator),
 ) -> dict[str, str]:
     """
     Return sanitized HTML fragment rendered from Markdown (docs-private/).
-    Intended for embedding in `/admin/dashboard` after `NOTIFICATION_API_KEY` unlock.
+    Intended for embedding in `/admin/dashboard` after operator authentication (session cookie or API key).
     """
     full = guide_documents.safe_markdown_under(guide_documents.PRIVATE_MARKDOWN_ROOT, path)
     if full is None:
@@ -637,3 +705,95 @@ async def admin_private_md_html(
     title = guide_documents.derive_title(raw, fallback=full.stem.replace("_", " "))
     fragment = guide_documents.markdown_to_html_fragment(raw)
     return {"path": path, "title": title, "html_fragment": fragment}
+
+
+class OutcomeAnchorIn(BaseModel):
+    """Operator-initiated outcome row (maps to ``BlockchainLogger.log_outcome`` when Polygon logging is on)."""
+
+    facility_id: str = Field(..., min_length=1, max_length=256)
+    facility_display_name: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="Human-readable facility / site name for audit rows only (blockchain still uses facility_id).",
+    )
+    day: str = Field(..., min_length=8, max_length=32, description="YYYY-MM-DD")
+    respiratory_cases: int = Field(..., ge=0, le=1_000_000)
+    severe_cases: int = Field(..., ge=0, le=1_000_000)
+
+
+@router.post("/blockchain/smoke-touch")
+async def admin_blockchain_smoke_touch(
+    _: None = Depends(require_admin_operator),
+) -> dict[str, Any]:
+    """
+    Submit one minimal on-chain action (``log_action``) to verify the live signer + RPC.
+    Costs **gas** on the effective network — confirm Amoy before using mainnet (real POL).
+    """
+    db = db_state.require_mongo_db()
+    net_label, _, _, _ = effective_polygon_bundle()
+    result = await onchain_hooks.anchor_admin_smoke_touch(db)
+    return {
+        "success": True,
+        "network": net_label,
+        "is_mainnet": net_label == "mainnet",
+        "blockchain": result,
+        "note": (
+            "Check Admin → Load recent anchors for event_type SMOKE_TEST; "
+            "explorer link appears when a tx was sent."
+        ),
+    }
+
+
+@router.get("/blockchain/anchors")
+async def admin_list_onchain_anchors(
+    limit: int = Query(50, ge=1, le=200),
+    event_type: Optional[str] = Query(
+        None,
+        description="Filter: ALERT, ACTION, OUTCOME, HEAT_ALERT, SMOKE_TEST",
+    ),
+    _: None = Depends(require_admin_operator),
+) -> dict[str, Any]:
+    """Recent anchored events (Mongo audit + optional tx hashes) — operators only."""
+    db = db_state.require_mongo_db()
+    q: dict[str, Any] = {}
+    if event_type and str(event_type).strip():
+        q["event_type"] = str(event_type).strip().upper()
+    cur = db.onchain_anchor_log.find(q).sort("timestamp", -1).limit(limit)
+    rows = await cur.to_list(length=limit)
+    out: list[dict[str, Any]] = []
+    for r in rows:
+        d = dict(r)
+        oid = d.pop("_id", None)
+        d["_id"] = str(oid) if oid is not None else ""
+        ts = d.get("timestamp")
+        if isinstance(ts, datetime):
+            d["timestamp"] = ts.isoformat() + "Z"
+        out.append(d)
+    return {"count": len(out), "anchors": out}
+
+
+@router.post("/blockchain/log-outcome")
+async def admin_log_outcome_anchor(
+    body: OutcomeAnchorIn,
+    _: None = Depends(require_admin_operator),
+) -> dict[str, Any]:
+    """
+    Record an outcome measurement on-chain (when enabled) and in ``onchain_anchor_log``.
+    """
+    db = db_state.require_mongo_db()
+    day = body.day.strip()
+    disp = (body.facility_display_name or "").strip() or None
+    r = await onchain_hooks.anchor_outcome_measurement(
+        db,
+        facility_id=body.facility_id.strip(),
+        day=day,
+        respiratory_cases=body.respiratory_cases,
+        severe_cases=body.severe_cases,
+        source="admin_console",
+        facility_display_name=disp,
+    )
+    return {
+        "success": True,
+        "blockchain": r,
+        "note": "Rows always appear in /api/admin/blockchain/anchors; tx fields exist when POLYGON_ONCHAIN_LOG is active.",
+    }
