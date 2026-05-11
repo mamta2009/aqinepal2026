@@ -28,4 +28,8 @@ python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 
 Then open **`http://127.0.0.1:8000/`**, **`http://127.0.0.1:8000/guides`**, **`http://127.0.0.1:8000/registration`**, **`http://127.0.0.1:8000/admin/dashboard`**. Older **`/documentation`** URLs redirect to **`/guides`**; **`/guides/md/…`** renders individual Markdown files from **`docs/guides/`**.
 
+## Vercel (production frontend)
+
+Static hosting + rewrites to a separate FastAPI deployment (e.g. Render): see **[`early-warning-system/docs/guides/VERCEL_PRODUCTION.md`](early-warning-system/docs/guides/VERCEL_PRODUCTION.md)**. Root [`vercel.json`](vercel.json) uses a placeholder **`YOUR_FASTAPI_BACKEND_HOST`** — replace it (or run `node scripts/patch-vercel-backend.js`) before production.
+
 Secrets: **`backend/.env`** is ignored — never commit it.

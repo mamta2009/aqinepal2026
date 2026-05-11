@@ -1,0 +1,88 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/documentation",
+      "destination": "/guides",
+      "permanent": false
+    },
+    {
+      "source": "/guides/",
+      "destination": "/guides",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/early-warning-system/landing/landing.html"
+    },
+    {
+      "source": "/guides",
+      "destination": "/early-warning-system/landing/guides.html"
+    },
+    {
+      "source": "/users",
+      "destination": "/early-warning-system/landing/users.html"
+    },
+    {
+      "source": "/admin/dashboard",
+      "destination": "/early-warning-system/landing/admin_dashboard.html"
+    },
+    {
+      "source": "/registration",
+      "destination": "/early-warning-system/landing/registration_portal.html"
+    },
+    {
+      "source": "/favicon.ico",
+      "destination": "/early-warning-system/landing/assets/intelladapt-logo.png"
+    },
+    {
+      "source": "/landing-assets/:path*",
+      "destination": "/early-warning-system/landing/assets/:path*"
+    },
+    {
+      "source": "/frontend/:path*",
+      "destination": "/early-warning-system/frontend/:path*"
+    },
+    {
+      "source": "/guides/media/tech/:path*",
+      "destination": "/early-warning-system/docs/tech/:path*"
+    },
+    {
+      "source": "/guides/md/:path*",
+      "destination": "https://YOUR_FASTAPI_BACKEND_HOST/guides/md/:path*"
+    },
+    {
+      "source": "/registration/contacts-directory",
+      "destination": "https://YOUR_FASTAPI_BACKEND_HOST/registration/contacts-directory"
+    },
+    {
+      "source": "/docs",
+      "destination": "https://YOUR_FASTAPI_BACKEND_HOST/docs"
+    },
+    {
+      "source": "/openapi.json",
+      "destination": "https://YOUR_FASTAPI_BACKEND_HOST/openapi.json"
+    },
+    {
+      "source": "/redoc",
+      "destination": "https://YOUR_FASTAPI_BACKEND_HOST/redoc"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "https://YOUR_FASTAPI_BACKEND_HOST/api/:path*"
+    }
+  ]
+}
