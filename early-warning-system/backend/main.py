@@ -35,6 +35,7 @@ import external_integrations
 import guide_documents
 import onchain_hooks
 from cities_config import CITIES_CONFIG
+from facility_presets import FACILITY_PRESETS_BY_CITY
 from facility_auth import FacilityCaller, load_facility_caller
 from health_data_generator import HealthDataGenerator
 from notification_auth import notification_api_key_configured, operator_session_ttl_hours
@@ -1381,8 +1382,14 @@ async def get_cities():
             }
             for name, data in CITIES_CONFIG.items()
         ],
+        "facility_presets_by_city": {
+            k: v for k, v in FACILITY_PRESETS_BY_CITY.items() if k in CITIES_CONFIG
+        },
         "total_population": sum(c["population"] for c in CITIES_CONFIG.values()),
         "total_hospitals": sum(c["hospitals"] for c in CITIES_CONFIG.values()),
+        "facility_suggestions_note": (
+            "Illustrative names only for onboarding — not an official directory."
+        ),
     }
 
 

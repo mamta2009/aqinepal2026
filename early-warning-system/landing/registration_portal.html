@@ -612,6 +612,45 @@
             border: 1px solid #e24b4a;
             color: #a32d2d;
         }
+
+        .facility-preset-panel {
+            margin-top: 12px;
+            padding: 12px 14px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+        }
+
+        .facility-preset-panel[hidden] {
+            display: none !important;
+        }
+
+        .preset-chip-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        button.preset-chip {
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid #94a3b8;
+            background: #fff;
+            color: #1e293b;
+            cursor: pointer;
+            font-family: inherit;
+            line-height: 1.35;
+            text-align: left;
+            max-width: 100%;
+        }
+
+        button.preset-chip:hover {
+            border-color: #185fa5;
+            background: #e0f2fe;
+            color: #0c447c;
+        }
     </style>
 </head>
 <body>
@@ -714,6 +753,11 @@
                         <label for="facilityName">Facility name(s)</label>
                         <textarea id="facilityName" name="facilityName" placeholder="Enter one facility per line (optional for some roles)" rows="3"></textarea>
                         <div class="inline-help">Multiple sites or hospitals: enter each name on its own line.</div>
+                        <div id="facilityPresetPanel" class="facility-preset-panel" hidden>
+                            <span class="label-block" style="font-weight:600;color:#375a71;font-size:13px;">Name ideas from your selected municipalities</span>
+                            <p class="inline-help" style="margin-top:6px;margin-bottom:0;">Illustrative only — tap a chip to append a line. You can edit or replace any text.</p>
+                            <div id="facilityPresetChips" class="preset-chip-wrap" role="group" aria-label="Suggested facility names"></div>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -956,6 +1000,88 @@
                 verifyEmailInput.value = savedEm;
             }
         } catch (e) { /* ignore */ }
+
+        (function wireFacilityPresetSuggestions() {
+            const byCity = Object.create(null);
+            let loaded = false;
+            const panel = document.getElementById('facilityPresetPanel');
+            const wrap = document.getElementById('facilityPresetChips');
+            const ta = document.getElementById('facilityName');
+
+            function selectedCities() {
+                return Array.from(document.querySelectorAll('input[name="coverageCity"]:checked')).map(
+                    function (cb) {
+                        return cb.value;
+                    },
+                );
+            }
+
+            function appendFacilityLine(line) {
+                if (!ta || !line) return;
+                var cur = ta.value.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+                if (cur.indexOf(line) !== -1) return;
+                ta.value = cur.length ? cur.join('\n') + '\n' + line : line;
+                ta.focus();
+            }
+
+            function refresh() {
+                if (!panel || !wrap || !loaded) return;
+                var cities = selectedCities();
+                wrap.innerHTML = '';
+                if (!cities.length) {
+                    panel.hidden = true;
+                    return;
+                }
+                var seen = Object.create(null);
+                var names = [];
+                cities.forEach(function (c) {
+                    var list = byCity[c];
+                    if (!Array.isArray(list)) return;
+                    list.forEach(function (n) {
+                        var t = String(n).trim();
+                        if (!t || seen[t]) return;
+                        seen[t] = true;
+                        names.push(t);
+                    });
+                });
+                if (!names.length) {
+                    panel.hidden = true;
+                    return;
+                }
+                panel.hidden = false;
+                names.forEach(function (n) {
+                    var b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = 'preset-chip';
+                    b.textContent = n;
+                    b.title = 'Add this name as a line';
+                    b.addEventListener('click', function () {
+                        appendFacilityLine(n);
+                    });
+                    wrap.appendChild(b);
+                });
+            }
+
+            document.querySelectorAll('input[name="coverageCity"]').forEach(function (cb) {
+                cb.addEventListener('change', refresh);
+            });
+
+            fetch('/api/cities')
+                .then(function (r) {
+                    return r.ok ? r.json() : {};
+                })
+                .then(function (j) {
+                    var map = j.facility_presets_by_city || {};
+                    Object.keys(map).forEach(function (k) {
+                        byCity[k] = map[k];
+                    });
+                    loaded = true;
+                    refresh();
+                })
+                .catch(function () {
+                    loaded = true;
+                });
+        })();
 
         verifySubmitBtn?.addEventListener('click', async () => {
             if (!verifyCodeMsg) return;
