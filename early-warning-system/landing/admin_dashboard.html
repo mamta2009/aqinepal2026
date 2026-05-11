@@ -758,7 +758,15 @@
                 body: JSON.stringify({ pin: pinEl.value })
             });
             if (!r.ok) {
-                errEl.textContent = 'Incorrect PIN — try again.';
+                var j = await r.json().catch(function () { return {}; });
+                var det = typeof j.detail === 'string' ? j.detail : (Array.isArray(j.detail) ? JSON.stringify(j.detail) : '');
+                if (r.status === 401) {
+                    errEl.textContent = 'Incorrect PIN — try again.';
+                } else if (r.status === 503 || (det && det.indexOf('MongoDB') !== -1)) {
+                    errEl.textContent = det || 'MongoDB not available — unlock needs MongoDB for the operator session. Set MONGODB_URL on Render and redeploy.';
+                } else {
+                    errEl.textContent = det || ('Could not unlock (HTTP ' + r.status + ').');
+                }
                 pinEl.value = '';
                 pinEl.focus();
                 return;
