@@ -117,7 +117,17 @@ async def _connect_mongo() -> tuple[Any | None, Any | None]:
         os.getenv("MONGODB_URL", "").strip()
         or os.getenv("DATABASE_URL", "").strip()
     )
+    if not url:
+        db_state.set_mongo_last_connect_error(
+            "environment variable `MONGODB_URL` or `DATABASE_URL` is not set on this service."
+        )
+        logger.info("MongoDB: skipped (empty MONGODB_URL / DATABASE_URL)")
+        return None, None
     if not _mongo_url_usable(url):
+        db_state.set_mongo_last_connect_error(
+            "connection string looks like a template (e.g. literal `username:password@` or `your_…`). "
+            "Replace it with the full Atlas SRV URI from Cluster → Connect."
+        )
         logger.info("MongoDB: skipped (empty or placeholder MONGODB_URL / DATABASE_URL)")
         return None, None
     try:
@@ -129,8 +139,11 @@ async def _connect_mongo() -> tuple[Any | None, Any | None]:
         if db is None:
             db = client["early_warning"]
         reports = db["respiratory_daily_reports"]
+        db_state.set_mongo_last_connect_error(None)
         return reports, db
     except Exception as exc:  # noqa: BLE001
+        err = str(exc).strip()[:500]
+        db_state.set_mongo_last_connect_error(err or repr(exc))
         logger.warning("MongoDB unavailable: %s", exc)
         return None, None
 
@@ -203,7 +216,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from admin_panel import ensure_operator_console_session_indexes, router as admin_panel_router  # noqa: E402
+from admin_panel import (  # noqa: E402
+    admin_console_pin_env_nonempty,
+    ensure_operator_console_session_indexes,
+    operator_console_pin_source,
+    router as admin_panel_router,
+)
 from notifications_api import (  # noqa: E402
     eligible_broadcast_contact_clause,
     public_resend_email_ready,
@@ -1329,6 +1347,135 @@ async def health_check():
     return {
         **payload,
         "verification": blockchain_integration.build_verification(envelope=envelope),
+    }
+
+
+async def _probe_weather_upstream_live() -> dict[str, Any]:
+    """
+    Lightweight Kathmandu probe: same provider order as ``/api/weather/current`` headline path.
+    """
+    lat, lon = 27.7172, 85.3240
+    if external_integrations.integrations_weatherapi_com_configured():
+        try:
+            await external_integrations.weatherapi_com_current(
+                lat=lat, lon=lon, timeout_s=10.0
+            )
+            return {
+                "ok": True,
+                "configured": True,
+                "mode": "weatherapi_com",
+                "detail": None,
+            }
+        except Exception as exc:  # noqa: BLE001
+            return {
+                "ok": False,
+                "configured": True,
+                "mode": "weatherapi_com",
+                "detail": str(exc)[:220],
+            }
+    k_weather, host_weather, _ = external_integrations.rapidapi_weather_credentials()
+    if k_weather and host_weather:
+        try:
+            await external_integrations.rapidapi_weather_current(
+                lat=lat, lon=lon, timeout_s=12.0
+            )
+            return {
+                "ok": True,
+                "configured": True,
+                "mode": "rapidapi_weather",
+                "detail": None,
+            }
+        except Exception as exc:  # noqa: BLE001
+            return {
+                "ok": False,
+                "configured": True,
+                "mode": "rapidapi_weather",
+                "detail": str(exc)[:220],
+            }
+    if external_integrations.integrations_openweathermap_configured():
+        try:
+            await external_integrations.openweathermap_current_weather(
+                lat=lat, lon=lon, timeout_s=10.0
+            )
+            return {
+                "ok": True,
+                "configured": True,
+                "mode": "openweathermap_current",
+                "detail": None,
+            }
+        except Exception as exc:  # noqa: BLE001
+            return {
+                "ok": False,
+                "configured": True,
+                "mode": "openweathermap_current",
+                "detail": str(exc)[:220],
+            }
+    return {
+        "ok": False,
+        "configured": False,
+        "mode": "none",
+        "detail": "No WeatherAPI.com, RapidAPI weather, or OpenWeather key configured",
+    }
+
+
+@app.get("/api/public/connection-status")
+async def public_connection_status() -> dict[str, Any]:
+    """
+    Unauthenticated integration probe for the admin dashboard footer (Mongo ping, weather probe, PIN resolution hints).
+    Does not reveal secrets or the effective PIN.
+    """
+    raw_url = (os.getenv("MONGODB_URL") or os.getenv("DATABASE_URL") or "").strip()
+    template_or_invalid_url = bool(raw_url) and not _mongo_url_usable(raw_url)
+
+    mongo_block: dict[str, Any]
+    if template_or_invalid_url:
+        mongo_block = {
+            "ok": False,
+            "configured": False,
+            "client_attached": False,
+            "url_looks_like_template": True,
+            "last_error": db_state.mongo_last_connect_error,
+            "detail": "MONGODB_URL / DATABASE_URL looks like a placeholder or template — replace with your Atlas URI.",
+        }
+    elif db_state.mongo_db is not None:
+        mongo_block = {
+            "ok": False,
+            "configured": True,
+            "client_attached": True,
+            "url_looks_like_template": False,
+            "last_error": None,
+            "detail": None,
+        }
+        try:
+            await db_state.mongo_db.admin.command("ping")
+            mongo_block["ok"] = True
+        except Exception as exc:  # noqa: BLE001
+            mongo_block["detail"] = str(exc)[:400]
+    else:
+        mongo_block = {
+            "ok": False,
+            "configured": bool(raw_url),
+            "client_attached": False,
+            "url_looks_like_template": False,
+            "last_error": db_state.mongo_last_connect_error,
+            "detail": (
+                "MongoDB client did not start — check startup logs and Atlas URI/network"
+                if raw_url
+                else "MONGODB_URL / DATABASE_URL not set"
+            ),
+        }
+
+    weather_block = await _probe_weather_upstream_live()
+
+    return {
+        "type": "public_connection_status_v1",
+        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "mongodb": mongo_block,
+        "weather": weather_block,
+        "operator_pin": {
+            "resolution": operator_console_pin_source(),
+            "admin_console_pin_env_nonempty": admin_console_pin_env_nonempty(),
+        },
     }
 
 

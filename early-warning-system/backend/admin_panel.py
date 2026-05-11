@@ -54,10 +54,29 @@ def _strip_pin_or_secret(raw: str | None) -> str:
     return s.strip('"').strip("'")
 
 
+def operator_console_pin_source() -> Literal["admin_console_pin", "registration_directory_secret", "default_dev"]:
+    """Which env value supplies the operator UI PIN (for diagnostics only; never the PIN itself)."""
+    p = _strip_pin_or_secret(os.getenv("ADMIN_CONSOLE_PIN"))
+    if p:
+        return "admin_console_pin"
+    p2 = _strip_pin_or_secret(os.getenv("REGISTRATION_DIRECTORY_SECRET"))
+    if p2:
+        return "registration_directory_secret"
+    return "default_dev"
+
+
+def admin_console_pin_env_nonempty() -> bool:
+    """True when ``ADMIN_CONSOLE_PIN`` is non-empty after trim (may still differ from effective PIN if ignored)."""
+    return bool(_strip_pin_or_secret(os.getenv("ADMIN_CONSOLE_PIN")))
+
+
 def _expected_console_pin() -> str:
     """
     Operator UI gate. Prefer ``ADMIN_CONSOLE_PIN``; else ``REGISTRATION_DIRECTORY_SECRET``;
     else dev default ``2026!`` (change in production).
+
+    If ``ADMIN_CONSOLE_PIN`` is set-but-empty or whitespace-only, it is treated as unset and the
+    chain falls through — set a non-empty value in the deployment environment.
     """
     p = _strip_pin_or_secret(os.getenv("ADMIN_CONSOLE_PIN"))
     if p:
@@ -87,6 +106,11 @@ async def admin_console_unlock_pin(
     """
     await asyncio.sleep(0.06)
     got = _strip_pin_or_secret(body.pin)
+    if not got:
+        raise HTTPException(
+            status_code=422,
+            detail="PIN is empty after trimming — check for spaces-only input or paste errors.",
+        )
     exp = _expected_console_pin()
     if not hmac.compare_digest(_pin_digest(got), _pin_digest(exp)):
         await asyncio.sleep(0.28)
