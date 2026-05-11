@@ -178,6 +178,7 @@ def _env_hints() -> dict[str, bool]:
     keys = [
         "MONGODB_URL",
         "DATABASE_URL",
+        "MONGODB_URI",
         "NOTIFICATION_API_KEY",
         "SENDGRID_API_KEY",
         "SENDGRID_FROM_EMAIL",
@@ -209,7 +210,7 @@ async def admin_system_status(
 ) -> dict[str, Any]:
     mongo_block: dict[str, Any] = {"configured": False, "ping_ok": False, "detail": None}
     try:
-        mongo_url = bool((os.getenv("MONGODB_URL") or os.getenv("DATABASE_URL") or "").strip())
+        mongo_url = bool(db_state.mongo_env_connection_string())
         mongo_block["configured"] = mongo_url
         if mongo_url:
             db = db_state.require_mongo_db()

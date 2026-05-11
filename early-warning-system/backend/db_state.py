@@ -2,12 +2,25 @@
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 mongo_db: Any | None = None
 
 # Set at startup when the Motor client fails or the URI is missing / invalid (for 503 detail text).
 mongo_last_connect_error: str | None = None
+
+
+def mongo_env_connection_string() -> str:
+    """
+    Resolved connection URI from env. Order: ``MONGODB_URL``, ``DATABASE_URL``, ``MONGODB_URI``
+    (Render / docs often use the last name; this app accepts all three).
+    """
+    return (
+        os.getenv("MONGODB_URL", "").strip()
+        or os.getenv("DATABASE_URL", "").strip()
+        or os.getenv("MONGODB_URI", "").strip()
+    )
 
 
 def set_mongo_database(db: Any | None) -> None:
@@ -26,7 +39,7 @@ def require_mongo_db() -> Any:
     if mongo_db is None:
         base = (
             "MongoDB is not available — admin unlock needs a working database session. "
-            "Set `MONGODB_URL` (or `DATABASE_URL`) on Render to your Atlas URI and redeploy; check Render logs if it still fails."
+            "Set `MONGODB_URL`, `DATABASE_URL`, or `MONGODB_URI` on Render to your Atlas URI and redeploy; check Render logs if it still fails."
         )
         if mongo_last_connect_error:
             base = "MongoDB did not connect at startup — " + mongo_last_connect_error
