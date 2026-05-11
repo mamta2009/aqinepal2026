@@ -28,4 +28,8 @@ python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 
 Then open **`http://127.0.0.1:8000/`**, **`http://127.0.0.1:8000/guides`**, **`http://127.0.0.1:8000/registration`**, **`http://127.0.0.1:8000/admin/dashboard`**. Older **`/documentation`** URLs redirect to **`/guides`**; **`/guides/md/…`** renders individual Markdown files from **`docs/guides/`**.
 
+## Production (Render)
+
+Deploy **FastAPI + uvicorn** from **`early-warning-system/backend`** using the blueprint **[`early-warning-system/render.yaml`](early-warning-system/render.yaml)**. Configure secrets and integration keys in the Render dashboard (`MONGODB_URL` / `DATABASE_URL`, WAQI, Twilio, etc.). One service URL serves **API routes, HTML pages (`/`, `/guides`, `/users`, …), and static** mounts (`/frontend`, `/landing-assets`, …).
+
 Secrets: **`backend/.env`** is ignored — never commit it.
