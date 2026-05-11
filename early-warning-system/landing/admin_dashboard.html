@@ -77,6 +77,25 @@
             margin: 0 2px;
         }
         .admin-global-footer a:hover { text-decoration: underline; color: #bae6fd; }
+        .admin-footer-powered {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px 12px;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(51, 65, 85, 0.55);
+            color: #94a3b8;
+            font-size: 12px;
+        }
+        .admin-footer-powered img {
+            height: 28px;
+            width: auto;
+            flex-shrink: 0;
+            vertical-align: middle;
+        }
+        .admin-footer-powered strong { color: #cbd5e1; font-weight: 700; }
         /* Private Markdown preview (trusted server-rendered Markdown) */
         #privateDocCanvas table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
         #privateDocCanvas th, #privateDocCanvas td { border: 1px solid #475569; padding: 8px 10px; vertical-align: top; }
@@ -595,6 +614,10 @@
         <a href="/docs" target="_blank" rel="noopener noreferrer">API docs (Swagger)</a>
         <br/><span style="display:inline-block;margin-top:10px;color:#64748b;">Early warning operator console — Nepal / UNICEF demonstration platform</span>
     </p>
+    <div class="admin-footer-powered">
+        <img src="/landing-assets/intelladapt-powered-mark.png" alt="" width="36" height="28" loading="lazy" />
+        <span>Powered by <strong>intellADAPT</strong>, an Edwise Tech Company</span>
+    </div>
 </footer>
 
 <script>
