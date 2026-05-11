@@ -2,6 +2,10 @@
 # Set env in the Render dashboard: MONGODB_URL (or DATABASE_URL), WAQI_TOKEN, RapidAPI keys, etc.
 #
 # Repo layout: clone this repo, then Render uses ``rootDir: early-warning-system/backend``.
+#
+# Python: Render defaults to 3.14.x for new services; ``scikit-learn`` may fail to build from
+# source there. This blueprint pins 3.12.x. Manual services: set PYTHON_VERSION=3.12.11 or add
+# ``.python-version`` at repo root and under ``early-warning-system/backend/``.
 services:
   - type: web
     name: early-warning-nepal-api
@@ -11,7 +15,7 @@ services:
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
-        value: "3.12.3"
+        value: "3.12.11"
       - key: ENVIRONMENT
         value: production
       # Copy from dashboard secret store — do not commit real values.
