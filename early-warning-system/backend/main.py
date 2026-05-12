@@ -30,6 +30,7 @@ from pydantic import BaseModel, Field
 import ai_models
 import aq_snapshot_sync
 import blockchain_integration
+import dashboard_settings_store
 import db_state
 import external_integrations
 import guide_documents
@@ -173,6 +174,7 @@ async def lifespan(app: FastAPI):
 
         await ensure_notification_indexes(mdb)
         await ensure_operator_console_session_indexes(mdb)
+        await dashboard_settings_store.ensure_dashboard_settings_indexes(mdb)
         await aq_snapshot_sync.ensure_operational_data_indexes(mdb)
         if aq_snapshot_sync.aq_snapshot_sync_enabled():
             from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -200,6 +202,12 @@ async def lifespan(app: FastAPI):
     logger.info(
         "Browser URLs: landing http://127.0.0.1:8000/ — do NOT use http://0.0.0.0:8000 (often blank)."
     )
+    try:
+        import aqi_help as _aqi_help_boot
+
+        asyncio.create_task(asyncio.to_thread(_aqi_help_boot.warm_corpus_sync))
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("aqiHelp corpus warmup: %s", exc)
     yield
     if aq_scheduler is not None:
         try:
@@ -230,6 +238,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from aqi_help import router as aqi_help_router  # noqa: E402
 from admin_panel import (  # noqa: E402
     admin_console_pin_env_nonempty,
     ensure_operator_console_session_indexes,
@@ -244,6 +253,7 @@ from notifications_api import (  # noqa: E402
 
 app.include_router(notifications_router)
 app.include_router(admin_panel_router)
+app.include_router(aqi_help_router)
 
 _air_qual_coord_cache: dict[str, tuple[float, str, dict[str, Any]]] = {}
 _air_qual_coord_locks: dict[str, asyncio.Lock] = {}
@@ -352,9 +362,27 @@ async def runtime_config():
     prefix = (os.getenv("API_PATH_PREFIX") or "/api").strip()
     if not prefix.startswith("/"):
         prefix = "/" + prefix
+
+    dashboard_thr = dashboard_settings_store.DEFAULT_PM25_ALERT_THRESHOLD
+    mongo_attached = db_state.mongo_db is not None
+    if mongo_attached:
+        try:
+            dashboard_thr = await dashboard_settings_store.get_dashboard_pm25_alert_threshold(
+                db_state.mongo_db
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("runtime-config: dashboard threshold read fallback: %s", exc)
+
     return {
         "public_api_origin": public or None,
         "api_path_prefix": prefix,
+        "dashboard": {
+            "pm25_alert_threshold_ugm3": dashboard_thr,
+            "storage": ("mongodb_app_dashboard_settings" if mongo_attached else "server_default_only"),
+            "note": (
+                "Main dashboard compares live PM2.5 to this value (operator-editable via PATCH /api/admin/dashboard-settings)."
+            ),
+        },
         "facility_actions": {
             "auth_required": True,
             "dashboard_login_endpoint": "/api/auth/login",
@@ -1868,6 +1896,7 @@ _landing_html = os.path.join(_landing_root, "landing.html")
 _guides_hub_html = os.path.join(_landing_root, "guides.html")
 _admin_dashboard_html = os.path.join(_landing_root, "admin_dashboard.html")
 _users_html = os.path.join(_landing_root, "users.html")
+_aqi_help_html = os.path.join(_landing_root, "aqi_help.html")
 _intelladapt_logo_path = Path(_landing_root) / "assets" / "intelladapt-logo.png"
 _docs_root = os.path.normpath(os.path.join(_backend_root, "..", "docs"))
 _docs_technology_dir = os.path.join(_docs_root, "tech")
@@ -1914,6 +1943,9 @@ def _system_discovery_payload() -> dict:
             "risk_score_legacy": "/api/risk-score/{city}",
             "forecast_respiratory_legacy": "/api/forecast/respiratory/{facility_id}",
             "ai_openrouter": "POST /api/ai/openrouter",
+            "aqi_help_meta": "GET /api/help/aqi/meta",
+            "aqi_help_chat": "POST /api/help/aqi/chat",
+            "aqi_help_page": "/help/aqi-help",
             "dhis2": "/api/dhis2/system-check",
             "daily_report": "POST /api/health/cases/daily-report",
             "registration_portal": "/registration",
@@ -2025,6 +2057,18 @@ async def users_account_page():
         except OSError:
             logger.exception("Could not read %s", path)
     raise HTTPException(status_code=404, detail="users.html missing")
+
+
+@app.get("/help/aqi-help", response_class=HTMLResponse)
+async def aqi_help_page():
+    """Interactive aqiHelp chat (guides-grounded LLM via OpenRouter)."""
+    path = Path(_aqi_help_html)
+    if path.is_file():
+        try:
+            return HTMLResponse(content=path.read_text(encoding="utf-8"))
+        except OSError:
+            logger.exception("Could not read %s", path)
+    raise HTTPException(status_code=404, detail="aqi_help.html missing")
 
 
 @app.get("/favicon.ico", include_in_schema=False)
