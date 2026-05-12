@@ -1402,6 +1402,8 @@
             <span class="nav-sep" aria-hidden="true">·</span>
             <a href="/guides">Guides</a>
             <span class="nav-sep" aria-hidden="true">·</span>
+            <a href="/help/aqi-help">aqiHelp</a>
+            <span class="nav-sep" aria-hidden="true">·</span>
             <a href="/registration">Register alerts</a>
             <span class="nav-sep" aria-hidden="true">·</span>
             <a href="/users">Users</a>
@@ -1431,6 +1433,7 @@
                     </div>
                     <a href="/registration" class="btn secondary">Register for alerts</a>
                     <a href="/guides" class="btn secondary">📚 Guides</a>
+                    <a href="/help/aqi-help" class="btn secondary" title="How the platform works — from our guides">💬 aqiHelp</a>
                     <button class="btn secondary" onclick="refreshAllData()">⟳ REFRESH</button>
                     <button class="btn" onclick="downloadData()">⬇ EXPORT</button>
                 </div>
@@ -1728,6 +1731,8 @@
         // ===== CONFIGURATION (PUBLIC_API_ORIGIN / API_PATH_PREFIX from server env) =====
         let API_ROOT = '';
         let API_BASE = '/api';
+        /** Public dashboard PM2.5 line — from Mongo via /api/runtime-config (admin sets PATCH /api/admin/dashboard-settings). */
+        let dashboardPm25ThresholdUgm3 = 150;
 
         async function initRuntimeConfig() {
             const fileMode = window.location.protocol === 'file:';
@@ -1743,6 +1748,12 @@
                 if (!prefix.startsWith('/')) prefix = '/' + prefix;
                 API_ROOT = originCfg;
                 API_BASE = `${originCfg}${prefix}`;
+                const dj = j.dashboard;
+                const rawThr = dj && dj.pm25_alert_threshold_ugm3;
+                const nt = typeof rawThr === 'number' ? rawThr : parseFloat(String(rawThr), 10);
+                if (!Number.isNaN(nt) && nt >= 5 && nt <= 600) {
+                    dashboardPm25ThresholdUgm3 = nt;
+                }
             } catch {
                 API_ROOT = defaultOrigin;
                 API_BASE = `${defaultOrigin}/api`;
@@ -2463,6 +2474,7 @@
         }
 
         async function refreshAirCompare() {
+            await reloadDashboardPm25ThresholdFromServer();
             const tbody = document.getElementById('aqCompareTbody');
             const statusEl = document.getElementById('aqCompareStatus');
             if (!tbody || !statusEl) return;
@@ -2580,9 +2592,25 @@
             updateAqCompareChartFromRows(settled, thr);
         }
 
+        async function reloadDashboardPm25ThresholdFromServer() {
+            try {
+                const r = await fetch(`${API_BASE}/runtime-config`);
+                const j = await r.json();
+                const dj = j.dashboard;
+                const raw = dj && dj.pm25_alert_threshold_ugm3;
+                const num = typeof raw === 'number' ? raw : parseFloat(String(raw), 10);
+                if (!Number.isNaN(num) && num >= 5 && num <= 600) {
+                    dashboardPm25ThresholdUgm3 = num;
+                }
+            } catch {
+                /* keep previous value */
+            }
+        }
+
         // ===== DATA FETCHING =====
         async function refreshAllData() {
             try {
+                await reloadDashboardPm25ThresholdFromServer();
                 const caseUrl = `${API_BASE}/cases/week/${encodeURIComponent(currentCity)}`;
                 const aqUrl = `${API_BASE}/air-quality/current?city=${encodeURIComponent(currentCity)}`;
                 const heatUrl = `${API_BASE}/heat/current?city=${encodeURIComponent(currentCity)}`;
@@ -2924,10 +2952,7 @@
 
         // ===== ALERTS =====
         function readPm25Threshold() {
-            const raw = localStorage.getItem('pm25_alert_threshold');
-            const n = parseInt(String(raw), 10);
-            if (!Number.isNaN(n) && n >= 1) return n;
-            return 150;
+            return dashboardPm25ThresholdUgm3;
         }
 
         function displayAlerts(pm25) {
@@ -2980,7 +3005,7 @@
                 {
                     level: 'INFO',
                     time: 'Reference',
-                    message: `Default PM2.5 alert threshold: ${thr} µg/m³ (change in Admin → Settings).`,
+                    message: `PM2.5 alert line (${thr} µg/m³): set by operator and stored on the server; users’ facility thresholds are separate.`,
                     cls: 'low',
                 },
             );
@@ -3206,5 +3231,6 @@
         window.addEventListener('offline', checkOnlineStatus);
         window.addEventListener('offline', checkOnlineStatus);
     </script>
+<script defer src="/landing-assets/aqi-help-widget.js"></script>
 </body>
 </html>

@@ -15,6 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, Field
 
 import db_state
+import dashboard_settings_store
 import external_integrations
 import registrant_auth
 import guide_documents
@@ -207,6 +208,24 @@ def _env_hints() -> dict[str, bool]:
         "DHIS2_URL",
     ]
     return {k: _env_set(k) for k in keys}
+
+
+class AdminDashboardSettingsPatch(BaseModel):
+    """Global SPA dashboard threshold (µg/m³); stored in MongoDB ``app_dashboard_settings``."""
+
+    pm25_alert_threshold_ugm3: float = Field(..., ge=5.0, le=600.0)
+
+
+@router.patch("/dashboard-settings")
+async def admin_patch_dashboard_settings(
+    body: AdminDashboardSettingsPatch,
+    _: None = Depends(require_admin_operator),
+) -> dict[str, Any]:
+    db = db_state.require_mongo_db()
+    applied = await dashboard_settings_store.set_dashboard_pm25_alert_threshold(
+        db, body.pm25_alert_threshold_ugm3
+    )
+    return {"success": True, "pm25_alert_threshold_ugm3": applied}
 
 
 @router.get("/system-status")
