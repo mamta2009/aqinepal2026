@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Early Warning System - Respiratory Health Nepal</title>
-    <link rel="icon" type="image/png" href="/landing-assets/intelladapt-logo.png">
-    <link rel="apple-touch-icon" href="/landing-assets/intelladapt-logo.png">
+    <link rel="icon" type="image/png" href="/landing-assets/favicon.ico">
+    <link rel="apple-touch-icon" href="/landing-assets/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -555,7 +558,8 @@
                 flex-direction: column;
             }
 
-            .btn-primary, .btn-secondary {
+            .btn-primary,
+            .btn-secondary {
                 width: 100%;
             }
         }
@@ -566,6 +570,7 @@
                 opacity: 0;
                 transform: translateY(30px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -581,16 +586,25 @@
             animation-fill-mode: both;
         }
 
-        .feature-card:nth-child(1) { animation-delay: 0.1s; }
-        .feature-card:nth-child(2) { animation-delay: 0.2s; }
-        .feature-card:nth-child(3) { animation-delay: 0.3s; }
+        .feature-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .feature-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .feature-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
     </style>
 </head>
+
 <body>
     <!-- Navigation -->
     <nav>
         <a href="/" class="logo">
-            <img src="/landing-assets/intelladapt-logo.png" alt="intellADAPT" class="logo-mark" width="36" height="36" />
+            <img src="/landing-assets/favicon.ico" alt="intellADAPT" class="logo-mark" width="36" height="36" />
             Early Warning System
         </a>
         <ul class="nav-links">
@@ -603,7 +617,8 @@
             <li><a href="#cta">Get Started</a></li>
             <li><a href="/docs" target="_blank" rel="noopener">API Docs</a></li>
         </ul>
-        <div class="nav-alert" id="navAlert" aria-live="polite" title="Latest system broadcast (when MongoDB has history)">
+        <div class="nav-alert" id="navAlert" aria-live="polite"
+            title="Latest system broadcast (when MongoDB has history)">
             <span class="nav-alert-label">Alerts</span>
             <span class="nav-alert-text" id="navAlertText">Loading…</span>
         </div>
@@ -615,14 +630,18 @@
         <div class="hero-content">
             <div class="hero-tag">Prototype • AI &amp; verification hooks</div>
             <h1>Better preparedness through early situational awareness</h1>
-            <p><strong>A vision, not a guarantee.</strong> We hope that—with partner data and responsible governance—tools like this could help planners see respiratory pressure building earlier so facilities can rehearse readiness. Today there is no validated forecast for Nepal tied to operational facility data here; the dashboard illustrates the idea with synthetic patterns only.</p>
-            
+            <p><strong>A vision, not a guarantee.</strong> We hope that—with partner data and responsible
+                governance—tools like this could help planners see respiratory pressure building earlier so facilities
+                can rehearse readiness. Today there is no validated forecast for Nepal tied to operational facility data
+                here; the dashboard illustrates the idea with synthetic patterns only.</p>
+
             <div class="hero-buttons">
                 <a href="/frontend/index.html" class="btn-primary">🎯 Enter Dashboard</a>
                 <a href="#impact" class="btn-secondary">Learn More</a>
             </div>
 
-            <div style="margin-top: 3rem; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; color: #64748b; font-size: 0.9rem;">
+            <div
+                style="margin-top: 3rem; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; color: #64748b; font-size: 0.9rem;">
                 <div>✅ Open-source (MIT)</div>
                 <div>✅ Verification hooks (demo)</div>
                 <div>✅ Model pipeline (not clinically validated)</div>
@@ -637,32 +656,41 @@
             <div class="feature-card">
                 <div class="feature-icon">📊</div>
                 <h3>Data-Ready</h3>
-                <p>The platform is structured for DHIS2 and facility reporting. The live demo uses scientifically grounded synthetic respiratory patterns across eight Bagmati Province cities—not ministerial cohort counts tied to verified facilities.</p>
+                <p>The platform is structured for DHIS2 and facility reporting. The live demo uses scientifically
+                    grounded synthetic respiratory patterns across eight Bagmati Province cities—not ministerial cohort
+                    counts tied to verified facilities.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🤖</div>
                 <h3>Models (future validation)</h3>
-                <p>Forecasting would need training, evaluation, and sign-off on real partner data. The demo includes a simple illustrative trend helper only—it is <strong>not</strong> a certified clinical or public-health decision tool.</p>
+                <p>Forecasting would need training, evaluation, and sign-off on real partner data. The demo includes a
+                    simple illustrative trend helper only—it is <strong>not</strong> a certified clinical or
+                    public-health decision tool.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">⛓️</div>
                 <h3>Integrity &amp; audit trails</h3>
-                <p>We explore cryptographic anchoring and optional signing so that, when real reporting exists, exports can be reviewed for tampering. Nothing on this site constitutes a legal warranty or on-chain guarantee of health outcomes.</p>
+                <p>We explore cryptographic anchoring and optional signing so that, when real reporting exists, exports
+                    can be reviewed for tampering. Nothing on this site constitutes a legal warranty or on-chain
+                    guarantee of health outcomes.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">📱</div>
                 <h3>Accessible UI</h3>
-                <p>The dashboard is responsive. SMS or offline workflows would be part of a future phased rollout—not claimed as live here.</p>
+                <p>The dashboard is responsive. SMS or offline workflows would be part of a future phased rollout—not
+                    claimed as live here.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🏥</div>
                 <h3>Integration intent</h3>
-                <p>We aim to align with common health information exchange patterns (e.g. DHIS2-style APIs). Any live linkage requires partner agreements, security review, and data agreements.</p>
+                <p>We aim to align with common health information exchange patterns (e.g. DHIS2-style APIs). Any live
+                    linkage requires partner agreements, security review, and data agreements.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🌍</div>
                 <h3>Phased expansion (roadmap language)</h3>
-                <p>Architecture conversations include initial deployment → wider geography → national readiness. Timelines and numbers are aspirations until funded, governed projects exist.</p>
+                <p>Architecture conversations include initial deployment → wider geography → national readiness.
+                    Timelines and numbers are aspirations until funded, governed projects exist.</p>
             </div>
         </div>
     </section>
@@ -672,19 +700,27 @@
         <div class="stats-grid">
             <div class="stat-item">
                 <div class="stat-number">TBD</div>
-                <div class="stat-label">Model performance<br><span style="font-size:0.75rem;font-weight:400;color:#94a3b8;">To be measured with real data &amp; agreed metrics</span></div>
+                <div class="stat-label">Model performance<br><span
+                        style="font-size:0.75rem;font-weight:400;color:#94a3b8;">To be measured with real data &amp;
+                        agreed metrics</span></div>
             </div>
             <div class="stat-item">
                 <div class="stat-number">?</div>
-                <div class="stat-label">Lead time (if any)<br><span style="font-size:0.75rem;font-weight:400;color:#94a3b8;">An aspirational research question—not a promise</span></div>
+                <div class="stat-label">Lead time (if any)<br><span
+                        style="font-size:0.75rem;font-weight:400;color:#94a3b8;">An aspirational research question—not a
+                        promise</span></div>
             </div>
             <div class="stat-item">
                 <div class="stat-number">8</div>
-                <div class="stat-label">Cities in demo config<br><span style="font-size:0.75rem;font-weight:400;color:#94a3b8;">Regional geography TBD with partners</span></div>
+                <div class="stat-label">Cities in demo config<br><span
+                        style="font-size:0.75rem;font-weight:400;color:#94a3b8;">Regional geography TBD with
+                        partners</span></div>
             </div>
             <div class="stat-item">
                 <div class="stat-number">—</div>
-                <div class="stat-label">Population &amp; facilities<br><span style="font-size:0.75rem;font-weight:400;color:#94a3b8;">Not published until a DHIS2-aligned baseline exists</span></div>
+                <div class="stat-label">Population &amp; facilities<br><span
+                        style="font-size:0.75rem;font-weight:400;color:#94a3b8;">Not published until a DHIS2-aligned
+                        baseline exists</span></div>
             </div>
         </div>
     </section>
@@ -695,35 +731,55 @@
         <div class="impact-content">
             <div class="impact-text">
                 <h3>From reacting after the spike to noticing pressure earlier</h3>
-                <p>Surges strain services worldwide. Earlier <em>situational</em> awareness—when trustworthy data exists—can in principle give planners time to coordinate supplies and staffing. <strong>We are not asserting that burden here or that outcomes change without rigorous evaluation.</strong></p>
-                <p><strong>Hopes</strong> (not commitments): With partner data under proper oversight, shared signals might support coordination so facilities face surges less blind. Whether that materially reduces harm must be demonstrated; we intend to pursue that responsibly.</p>
+                <p>Surges strain services worldwide. Earlier <em>situational</em> awareness—when trustworthy data
+                    exists—can in principle give planners time to coordinate supplies and staffing. <strong>We are not
+                        asserting that burden here or that outcomes change without rigorous evaluation.</strong></p>
+                <p><strong>Hopes</strong> (not commitments): With partner data under proper oversight, shared signals
+                    might support coordination so facilities face surges less blind. Whether that materially reduces
+                    harm must be demonstrated; we intend to pursue that responsibly.</p>
                 <ul class="impact-metrics">
-                    <li>Earlier <em>possible</em> awareness for planners—only after secure reporting pipelines and agreed thresholds exist</li>
-                    <li>Room to rehearse preparedness (oxygen, surge spaces, staffing) if warnings prove reliable—<em>hypothesis, not outcome</em></li>
-                    <li>Reduced severe caseload—<strong>unproven</strong> here and would need trial design and ethics review</li>
+                    <li>Earlier <em>possible</em> awareness for planners—only after secure reporting pipelines and
+                        agreed thresholds exist</li>
+                    <li>Room to rehearse preparedness (oxygen, surge spaces, staffing) if warnings prove
+                        reliable—<em>hypothesis, not outcome</em></li>
+                    <li>Reduced severe caseload—<strong>unproven</strong> here and would need trial design and ethics
+                        review</li>
                     <li>Clearer information flow across levels—an implementation goal, not an automatic effect</li>
-                    <li>Measurable impact—only after a defined rollout, approved indicators, and independent where possible</li>
+                    <li>Measurable impact—only after a defined rollout, approved indicators, and independent where
+                        possible</li>
                 </ul>
             </div>
             <div class="impact-visual">
                 <div class="impact-visual-icon">🔬</div>
                 <h3>What the demo shows today</h3>
-                <p style="color: #94a3b8; margin: 1rem 0;">The dashboard exercises the product: API, verification hooks, and charts using realistic synthetic weekly loads. It does <strong>not</strong> claim an approved facility list, population denominator, or ministry-validated deployment footprint.</p>
-                <p style="color: #10b981; font-weight: 600;">8 cities &mdash; configuration for Bagmati-style demo only</p>
-                <p style="color: #94a3b8; font-weight: 500;">Population covered &mdash; to be set with partners when DHIS2 (or equivalent) scope is agreed</p>
-                <p style="color: #94a3b8; font-weight: 500;">Health facilities in scope &mdash; to be enumerated from that same agreement</p>
-                <p style="color: #94a3b8; margin-top: 1rem; font-size: 0.9rem;">Roadmap: phased rollout → expansion → national readiness (subject to governance and data access)</p>
+                <p style="color: #94a3b8; margin: 1rem 0;">The dashboard exercises the product: API, verification hooks,
+                    and charts using realistic synthetic weekly loads. It does <strong>not</strong> claim an approved
+                    facility list, population denominator, or ministry-validated deployment footprint.</p>
+                <p style="color: #10b981; font-weight: 600;">8 cities &mdash; configuration for Bagmati-style demo only
+                </p>
+                <p style="color: #94a3b8; font-weight: 500;">Population covered &mdash; to be set with partners when
+                    DHIS2 (or equivalent) scope is agreed</p>
+                <p style="color: #94a3b8; font-weight: 500;">Health facilities in scope &mdash; to be enumerated from
+                    that same agreement</p>
+                <p style="color: #94a3b8; margin-top: 1rem; font-size: 0.9rem;">Roadmap: phased rollout → expansion →
+                    national readiness (subject to governance and data access)</p>
             </div>
         </div>
         <div class="disclaimer-box" role="note">
-            <strong>No warranty; not medical advice.</strong> This website and demo are illustrative. They do not provide clinical guidance, regulatory clearance, or guarantees of accuracy, timeliness, completeness, or effectiveness. Any discussion of health outcomes is speculative until tested with partner data and appropriate study design. <strong>The authors, contributors, funders, and hosts do not accept liability</strong> for decisions or damages arising from use of this material. Use at your own risk. We hope—with partners—to move from prototype to evidence responsibly.
+            <strong>No warranty; not medical advice.</strong> This website and demo are illustrative. They do not
+            provide clinical guidance, regulatory clearance, or guarantees of accuracy, timeliness, completeness, or
+            effectiveness. Any discussion of health outcomes is speculative until tested with partner data and
+            appropriate study design. <strong>The authors, contributors, funders, and hosts do not accept
+                liability</strong> for decisions or damages arising from use of this material. Use at your own risk. We
+            hope—with partners—to move from prototype to evidence responsibly.
         </div>
     </section>
 
     <!-- CTA Section -->
     <section class="cta-section" id="cta">
         <h2>Get Started</h2>
-        <p>Open the dashboard to inspect synthetic (WHO-pattern-style) loads and software only. Nothing here replaces professional judgment, epidemiology, or ministry processes.</p>
+        <p>Open the dashboard to inspect synthetic (WHO-pattern-style) loads and software only. Nothing here replaces
+            professional judgment, epidemiology, or ministry processes.</p>
         <a href="/frontend/index.html" class="btn-primary" style="font-size: 1.1rem; padding: 1.25rem 2.5rem;">
             🎯 Open Dashboard Now
         </a>
@@ -747,11 +803,15 @@
                 <p>Early Warning System for Respiratory Health • Nepal • Open-Source MIT License</p>
                 <div class="footer-powered">
                     <span>Powered by</span>
-                    <img src="/landing-assets/intelladapt-powered-mark.png" alt="" width="40" height="34" loading="lazy" class="footer-logo-powered" />
+                    <img src="/landing-assets/intelladapt-logo.png" alt="" width="40" height="34" loading="lazy"
+                        class="footer-logo-powered" />
                     <span><strong>intellADAPT</strong>, an Edwise Tech Company</span>
                 </div>
                 <p class="footer-copyright">© 2026 intellADAPT and Edwise Tech Company</p>
-                <p class="footer-disclaimer"><strong>Disclaimer:</strong> This site is an as-is demonstration. Unless separately published in writing, nothing here is an endorsement, certification, efficacy claim, or warranty by any funder or partner. Not medical or public-health advice. No liability for decisions based on this content.</p>
+                <p class="footer-disclaimer"><strong>Disclaimer:</strong> This site is an as-is demonstration. Unless
+                    separately published in writing, nothing here is an endorsement, certification, efficacy claim, or
+                    warranty by any funder or partner. Not medical or public-health advice. No liability for decisions
+                    based on this content.</p>
             </div>
         </div>
     </footer>
@@ -808,7 +868,7 @@
         });
 
         // Add scroll effect to nav
-        window.addEventListener('scroll', function() {
+        window.addEventListener('scroll', function () {
             const nav = document.querySelector('nav');
             if (window.scrollY > 50) {
                 nav.style.boxShadow = '0 10px 30px rgba(16, 185, 129, 0.1)';
@@ -817,6 +877,7 @@
             }
         });
     </script>
-<script defer src="/landing-assets/aqi-help-widget.js"></script>
+    <script defer src="/landing-assets/aqi-help-widget.js"></script>
 </body>
+
 </html>

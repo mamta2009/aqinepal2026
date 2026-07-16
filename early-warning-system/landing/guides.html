@@ -1,16 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guides — Early Warning System</title>
-    <link rel="icon" type="image/png" href="/landing-assets/intelladapt-logo.png">
+    <link rel="icon" type="image/png" href="/landing-assets/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             font-family: 'Outfit', sans-serif;
             background: #0f172a;
@@ -18,6 +29,7 @@
             line-height: 1.65;
             min-height: 100vh;
         }
+
         /* ——— Top bar ——— */
         .topnav {
             position: sticky;
@@ -33,6 +45,7 @@
             gap: 0.75rem;
             border-bottom: 1px solid rgba(71, 85, 105, 0.4);
         }
+
         .logo {
             display: flex;
             align-items: center;
@@ -42,10 +55,29 @@
             text-decoration: none;
             font-size: 1.05rem;
         }
-        .logo img { width: 30px; height: auto; }
-        .nav-links { display: flex; gap: 1rem; list-style: none; flex-wrap: wrap; }
-        .nav-links a { color: #cbd5e1; text-decoration: none; font-size: 0.88rem; }
-        .nav-links a:hover { color: #10b981; }
+
+        .logo img {
+            width: 30px;
+            height: auto;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            list-style: none;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 0.88rem;
+        }
+
+        .nav-links a:hover {
+            color: #10b981;
+        }
+
         .nav-alert {
             flex: 1 1 200px;
             min-width: 0;
@@ -59,6 +91,7 @@
             align-items: center;
             gap: 0.4rem;
         }
+
         .nav-alert-label {
             font-weight: 700;
             color: #10b981;
@@ -67,12 +100,14 @@
             font-size: 0.68rem;
             flex-shrink: 0;
         }
+
         .nav-alert-text {
             color: #cbd5e1;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
         /* ——— Docs shell: sidebar + main ——— */
         .docs-wrap {
             display: grid;
@@ -80,6 +115,7 @@
             align-items: start;
             min-height: calc(100vh - 56px);
         }
+
         .docs-sidebar {
             position: sticky;
             top: 56px;
@@ -91,7 +127,11 @@
             scrollbar-width: thin;
             scrollbar-color: rgba(100, 116, 139, 0.5) transparent;
         }
-        .docs-sidebar-inner { padding: 1.35rem 1rem 2rem 1.25rem; }
+
+        .docs-sidebar-inner {
+            padding: 1.35rem 1rem 2rem 1.25rem;
+        }
+
         .docs-sidebar-title {
             font-size: 0.72rem;
             text-transform: uppercase;
@@ -102,6 +142,7 @@
             padding-bottom: 0.5rem;
             border-bottom: 1px solid rgba(71, 85, 105, 0.35);
         }
+
         .docs-nav-label {
             display: block;
             font-size: 0.68rem;
@@ -111,7 +152,11 @@
             margin: 1.15rem 0 0.45rem;
             font-weight: 600;
         }
-        .docs-nav-label:first-of-type { margin-top: 0; }
+
+        .docs-nav-label:first-of-type {
+            margin-top: 0;
+        }
+
         .docs-nav-link {
             display: block;
             padding: 0.38rem 0.5rem 0.38rem 0.65rem;
@@ -124,19 +169,29 @@
             margin-left: -2px;
             transition: background 0.12s, color 0.12s, border-color 0.12s;
         }
-        .docs-nav-link:hover { color: #e2e8f0; background: rgba(30, 41, 59, 0.6); }
+
+        .docs-nav-link:hover {
+            color: #e2e8f0;
+            background: rgba(30, 41, 59, 0.6);
+        }
+
         .docs-nav-link.active {
             color: #10b981;
             background: rgba(16, 185, 129, 0.12);
             border-left-color: #10b981;
             font-weight: 500;
         }
+
         .docs-nav-link.sub {
             font-size: 0.84rem;
             padding-left: 1.1rem;
             color: #7c8c9f;
         }
-        .docs-nav-link.sub.active { color: #34d399; }
+
+        .docs-nav-link.sub.active {
+            color: #34d399;
+        }
+
         .docs-mobile-toggle {
             display: none;
             margin: 0 1rem 0;
@@ -151,16 +206,24 @@
             width: calc(100% - 2rem);
             text-align: left;
         }
-        .docs-mobile-toggle span { float: right; color: #64748b; font-size: 0.8rem; }
+
+        .docs-mobile-toggle span {
+            float: right;
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+
         .docs-main {
             background: linear-gradient(165deg, #0f172a 0%, #111c32 45%, #0f172a 100%);
             min-width: 0;
         }
+
         .docs-main-inner {
             max-width: 1080px;
             margin: 0 auto;
             padding: 2rem 1.75rem 4rem;
         }
+
         h1 {
             font-size: 1.85rem;
             margin-bottom: 0.5rem;
@@ -170,11 +233,19 @@
             background-clip: text;
             scroll-margin-top: 5.5rem;
         }
-        .lede { color: #94a3b8; margin-bottom: 2rem; max-width: 58ch; font-size: 1.02rem; }
+
+        .lede {
+            color: #94a3b8;
+            margin-bottom: 2rem;
+            max-width: 58ch;
+            font-size: 1.02rem;
+        }
+
         section {
             margin-bottom: 3rem;
             scroll-margin-top: 5.5rem;
         }
+
         section h2 {
             font-size: 1.32rem;
             color: #f1f5f9;
@@ -182,16 +253,32 @@
             padding-bottom: 0.45rem;
             border-bottom: 1px solid rgba(16, 185, 129, 0.28);
         }
+
         section h3 {
             font-size: 1.06rem;
             color: #cbd5e1;
             margin: 1.35rem 0 0.55rem;
             scroll-margin-top: 5.5rem;
         }
-        p { margin-bottom: 0.85rem; color: #cbd5e1; }
-        ul { margin: 0.5rem 0 1rem 1.25rem; color: #cbd5e1; }
-        li { margin: 0.35rem 0; }
-        a { color: #34d399; }
+
+        p {
+            margin-bottom: 0.85rem;
+            color: #cbd5e1;
+        }
+
+        ul {
+            margin: 0.5rem 0 1rem 1.25rem;
+            color: #cbd5e1;
+        }
+
+        li {
+            margin: 0.35rem 0;
+        }
+
+        a {
+            color: #34d399;
+        }
+
         .callout {
             background: rgba(16, 185, 129, 0.08);
             border-left: 4px solid #10b981;
@@ -199,11 +286,14 @@
             border-radius: 0 8px 8px 0;
             margin: 1rem 0;
         }
+
         .callout.warn {
             background: rgba(245, 158, 11, 0.08);
             border-left-color: #f59e0b;
         }
-        code, .mono {
+
+        code,
+        .mono {
             font-family: 'Space Mono', monospace;
             font-size: 0.85em;
             background: rgba(15, 23, 42, 0.85);
@@ -211,6 +301,7 @@
             border-radius: 4px;
             color: #a5f3fc;
         }
+
         pre {
             background: #0f172a;
             border: 1px solid rgba(71, 85, 105, 0.5);
@@ -220,6 +311,7 @@
             font-size: 0.8rem;
             margin: 0.75rem 0;
         }
+
         figure.doc-figure {
             margin: 1.25rem 0;
             background: rgba(250, 249, 245, 0.96);
@@ -228,18 +320,28 @@
             overflow: hidden;
             border: 1px solid rgba(71, 85, 105, 0.25);
         }
-        figure.doc-figure img, figure.doc-figure object {
+
+        figure.doc-figure img,
+        figure.doc-figure object {
             display: block;
             width: 100%;
             height: auto;
         }
+
         figcaption {
             font-size: 0.85rem;
             color: #475569;
             margin-top: 0.75rem;
             text-align: center;
         }
-        .btn-row { display: flex; flex-wrap: wrap; gap: 0.65rem; margin-top: 0.75rem; }
+
+        .btn-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+            margin-top: 0.75rem;
+        }
+
         .btn {
             display: inline-block;
             background: linear-gradient(135deg, #10b981, #06b6d4);
@@ -250,11 +352,13 @@
             font-weight: 600;
             font-size: 0.9rem;
         }
+
         .btn.outline {
             background: transparent;
             border: 2px solid #10b981;
             color: #10b981 !important;
         }
+
         footer {
             padding: 2rem 1.25rem;
             text-align: center;
@@ -263,6 +367,7 @@
             border-top: 1px solid rgba(71, 85, 105, 0.3);
             background: #0f172a;
         }
+
         .footer-powered-by {
             display: flex;
             align-items: center;
@@ -276,15 +381,18 @@
             font-size: 0.88rem;
             line-height: 1.5;
         }
+
         .footer-powered-by img {
             height: 34px;
             width: auto;
             flex-shrink: 0;
         }
+
         @media (max-width: 900px) {
             .docs-wrap {
                 grid-template-columns: 1fr;
             }
+
             .docs-sidebar {
                 position: relative;
                 top: 0;
@@ -293,13 +401,27 @@
                 border-bottom: 1px solid rgba(71, 85, 105, 0.45);
                 display: none;
             }
-            .docs-sidebar.open { display: block; }
-            .docs-mobile-toggle { display: block; margin-top: 0.75rem; }
-            .docs-main-inner { padding: 1.25rem 1.1rem 3rem; }
-            h1 { font-size: 1.55rem; }
+
+            .docs-sidebar.open {
+                display: block;
+            }
+
+            .docs-mobile-toggle {
+                display: block;
+                margin-top: 0.75rem;
+            }
+
+            .docs-main-inner {
+                padding: 1.25rem 1.1rem 3rem;
+            }
+
+            h1 {
+                font-size: 1.55rem;
+            }
         }
     </style>
 </head>
+
 <body>
     <nav class="topnav">
         <a href="/" class="logo">
@@ -320,7 +442,8 @@
         </div>
     </nav>
 
-    <button type="button" class="docs-mobile-toggle" id="docsMobileToggle" aria-expanded="false" aria-controls="docsSidebar">
+    <button type="button" class="docs-mobile-toggle" id="docsMobileToggle" aria-expanded="false"
+        aria-controls="docsSidebar">
         Documentation menu <span id="docsMobileChevron">▼</span>
     </button>
 
@@ -338,9 +461,11 @@
                     <span class="docs-nav-label">Architecture</span>
                     <a class="docs-nav-link" href="#architecture" data-doc-spy>Diagrams hub</a>
                     <a class="docs-nav-link sub" href="#architecture-platform" data-doc-spy>End-to-end platform</a>
-                    <a class="docs-nav-link sub" href="#architecture-backend-render" data-doc-spy>FastAPI · MongoDB · Render</a>
+                    <a class="docs-nav-link sub" href="#architecture-backend-render" data-doc-spy>FastAPI · MongoDB ·
+                        Render</a>
                     <a class="docs-nav-link sub" href="#architecture-frontend-tiers" data-doc-spy>Frontend tiers</a>
-                    <a class="docs-nav-link sub" href="#architecture-notification-flow" data-doc-spy>Notification &amp; alerts</a>
+                    <a class="docs-nav-link sub" href="#architecture-notification-flow" data-doc-spy>Notification &amp;
+                        alerts</a>
 
                     <span class="docs-nav-label">More</span>
                     <a class="docs-nav-link" href="#concepts" data-doc-spy>Concept graphics</a>
@@ -355,12 +480,16 @@
             <div class="docs-main-inner">
                 <h1 id="intro">Guides &amp; technical diagrams</h1>
                 <p class="lede">
-                    Written guides (Markdown) plus architecture diagrams (<span class="mono">docs/tech/</span>) for the Nepal respiratory early-warning stack. Older bookmark <span class="mono">/documentation</span> redirects here; partner-internal Markdown lives under <strong>Admin → Private documentation</strong>.
+                    Written guides (Markdown) plus architecture diagrams (<span class="mono">docs/tech/</span>) for the
+                    Nepal respiratory early-warning stack. Older bookmark <span class="mono">/documentation</span>
+                    redirects here; partner-internal Markdown lives under <strong>Admin → Private
+                        documentation</strong>.
                 </p>
 
                 <section id="markdown-guides">
                     <h2>Public markdown guides</h2>
-                    <p>Open in the browser while the API is running (rendered HTML). Sources live under <span class="mono">docs/guides/</span> — all non-private Markdown is stored there.</p>
+                    <p>Open in the browser while the API is running (rendered HTML). Sources live under <span
+                            class="mono">docs/guides/</span> — all non-private Markdown is stored there.</p>
                     <div class="btn-row" style="margin-bottom:1rem;">
                         <a class="btn outline" href="/guides/md/APPLICATION_OVERVIEW.md">Overview &amp; quick start</a>
                         <a class="btn outline" href="/guides/md/IMPLEMENTATION_SNAPSHOT.md">Implementation snapshot</a>
@@ -372,37 +501,58 @@
                         <a class="btn outline" href="/guides/md/LANDING_PAGE_GUIDE.md">Landing page guide</a>
                         <a class="btn outline" href="/guides/md/README.md">Guides folder index</a>
                         <a class="btn outline" href="/guides/md/blockchain-ai/README.md">Blockchain README</a>
-                        <a class="btn outline" href="/guides/md/blockchain-ai/INTEGRATION_GUIDE.md">Blockchain integration notes</a>
+                        <a class="btn outline" href="/guides/md/blockchain-ai/INTEGRATION_GUIDE.md">Blockchain
+                            integration notes</a>
                     </div>
-                    <div class="callout warn" style="margin-top:1rem;"><p style="margin:0;"><strong>Note:</strong> Restricted UNICEF/strategy drafts stay in <span class="mono">docs-private/</span> — they are <strong>not</strong> linked here; operators open them from <strong>Admin → Private documentation</strong> after unlocking the dashboard.</p></div>
+                    <div class="callout warn" style="margin-top:1rem;">
+                        <p style="margin:0;"><strong>Note:</strong> Restricted UNICEF/strategy drafts stay in <span
+                                class="mono">docs-private/</span> — they are <strong>not</strong> linked here; operators
+                            open them from <strong>Admin → Private documentation</strong> after unlocking the dashboard.
+                        </p>
+                    </div>
                 </section>
 
                 <section id="architecture">
                     <h2>Architecture</h2>
-                    <p>Tech diagrams live in <span class="mono">docs/tech/</span> on disk and are exposed at <span class="mono">/guides/media/tech/…</span>. Concept framing SVGs ship under <span class="mono">landing/assets/diagrams/</span> (<span class="mono">/landing-assets/diagrams/…</span>).</p>
+                    <p>Tech diagrams live in <span class="mono">docs/tech/</span> on disk and are exposed at <span
+                            class="mono">/guides/media/tech/…</span>. Concept framing SVGs ship under <span
+                            class="mono">landing/assets/diagrams/</span> (<span
+                            class="mono">/landing-assets/diagrams/…</span>).</p>
 
                     <h3 id="architecture-platform">End-to-end platform</h3>
                     <figure class="doc-figure">
-                        <img src="/guides/media/tech/early_warning_platform_architecture.svg" alt="Early warning platform architecture diagram" loading="lazy" width="960">
+                        <img src="/guides/media/tech/early_warning_platform_architecture.svg"
+                            alt="Early warning platform architecture diagram" loading="lazy" width="960">
                         <figcaption>High-level platform architecture (sources, APIs, dashboard, alerting).</figcaption>
                     </figure>
 
                     <h3 id="architecture-backend-render">Backend &amp; hosted stack (FastAPI, MongoDB, Render)</h3>
                     <figure class="doc-figure">
-                        <img src="/guides/media/tech/fastapi_mongodb_render_architecture.svg" alt="FastAPI MongoDB and Render deployment architecture" loading="lazy" width="960">
-                        <figcaption>How the API, document database (e.g. MongoDB Atlas), and a host such as Render fit together.</figcaption>
+                        <img src="/guides/media/tech/fastapi_mongodb_render_architecture.svg"
+                            alt="FastAPI MongoDB and Render deployment architecture" loading="lazy" width="960">
+                        <figcaption>How the API, document database (e.g. MongoDB Atlas), and a host such as Render fit
+                            together.</figcaption>
                     </figure>
 
                     <h3 id="architecture-frontend-tiers">Frontend tiers</h3>
                     <figure class="doc-figure">
-                        <img src="/guides/media/tech/simple_frontend_architecture.svg" alt="Three-tier frontend architecture" loading="lazy" width="680">
+                        <img src="/guides/media/tech/simple_frontend_architecture.svg"
+                            alt="Three-tier frontend architecture" loading="lazy" width="680">
                         <figcaption>Suggested frontend tiers: SMS → web dashboard → optional mobile.</figcaption>
                     </figure>
                     <h3 id="architecture-notification-flow">Notification &amp; alert flow</h3>
-                    <p>This matches the running backend: <span class="mono">notifications_api.py</span>, <span class="mono">twilio_notify.py</span>, <span class="mono">db_state.py</span>, and MongoDB (<span class="mono">early_warning</span>). Outbound SMS/WhatsApp use Twilio; email uses SendGrid when configured. There is <strong>no</strong> built-in timer from air quality to broadcast—an external job or operator calls <span class="mono">POST /api/alerts/broadcast</span> when you want automated escalation.</p>
+                    <p>This matches the running backend: <span class="mono">notifications_api.py</span>, <span
+                            class="mono">twilio_notify.py</span>, <span class="mono">db_state.py</span>, and MongoDB
+                        (<span class="mono">early_warning</span>). Outbound SMS/WhatsApp use Twilio; email uses SendGrid
+                        when configured. There is <strong>no</strong> built-in timer from air quality to broadcast—an
+                        external job or operator calls <span class="mono">POST /api/alerts/broadcast</span> when you
+                        want automated escalation.</p>
                     <figure class="doc-figure">
-                        <img src="/guides/media/tech/NOTIFICATION_FLOW_DIAGRAM.svg" alt="Notification flow: FastAPI, MongoDB, Twilio, SendGrid, webhooks" loading="lazy" width="1000">
-                        <figcaption>Implementation flow (not a clinical timeline): registration, persistence, outbound channels, and Twilio webhook return paths.</figcaption>
+                        <img src="/guides/media/tech/NOTIFICATION_FLOW_DIAGRAM.svg"
+                            alt="Notification flow: FastAPI, MongoDB, Twilio, SendGrid, webhooks" loading="lazy"
+                            width="1000">
+                        <figcaption>Implementation flow (not a clinical timeline): registration, persistence, outbound
+                            channels, and Twilio webhook return paths.</figcaption>
                     </figure>
                 </section>
 
@@ -410,12 +560,14 @@
                     <h2>Concept graphics</h2>
 
                     <figure class="doc-figure">
-                        <img src="/landing-assets/diagrams/nepal_respiratory_early_warning.svg" alt="Nepal respiratory early warning concept" loading="lazy" width="960">
+                        <img src="/landing-assets/diagrams/nepal_respiratory_early_warning.svg"
+                            alt="Nepal respiratory early warning concept" loading="lazy" width="960">
                         <figcaption>Respiratory early warning framing (Nepal).</figcaption>
                     </figure>
 
                     <figure class="doc-figure">
-                        <img src="/landing-assets/diagrams/early_warning_action_framework.svg" alt="Early warning action framework" loading="lazy" width="960">
+                        <img src="/landing-assets/diagrams/early_warning_action_framework.svg"
+                            alt="Early warning action framework" loading="lazy" width="960">
                         <figcaption>Action / readiness framework.</figcaption>
                     </figure>
                 </section>
@@ -424,43 +576,77 @@
                     <h2>Blockchain &amp; verification</h2>
                     <p><strong>Two layers</strong> are implemented in this codebase:</p>
                     <ul>
-                        <li><strong>Cryptographic anchoring (always safe):</strong> payload digests and optional EIP-191-style signing in <span class="mono">blockchain_integration.py</span>. Shown on API responses as <span class="mono">verification</span> so exports can be checked for tampering.</li>
-                        <li><strong>Optional Polygon transactions (off by default):</strong> hashed “alert / action / outcome” events are written via <span class="mono">onchain_logger.py</span> when <span class="mono">POLYGON_ONCHAIN_LOG=true</span>. The bridge module <span class="mono">onchain_hooks.py</span> calls these APIs from real product flows (air/heat broadcasts, facility <span class="mono">POST /api/action-log</span>) and records every attempt in MongoDB <span class="mono">onchain_anchor_log</span>. Each successful write costs testnet or mainnet gas.</li>
+                        <li><strong>Cryptographic anchoring (always safe):</strong> payload digests and optional
+                            EIP-191-style signing in <span class="mono">blockchain_integration.py</span>. Shown on API
+                            responses as <span class="mono">verification</span> so exports can be checked for tampering.
+                        </li>
+                        <li><strong>Optional Polygon transactions (off by default):</strong> hashed “alert / action /
+                            outcome” events are written via <span class="mono">onchain_logger.py</span> when <span
+                                class="mono">POLYGON_ONCHAIN_LOG=true</span>. The bridge module <span
+                                class="mono">onchain_hooks.py</span> calls these APIs from real product flows (air/heat
+                            broadcasts, facility <span class="mono">POST /api/action-log</span>) and records every
+                            attempt in MongoDB <span class="mono">onchain_anchor_log</span>. Each successful write costs
+                            testnet or mainnet gas.</li>
                     </ul>
-                    <p><strong>Operator verification (not on the public users page):</strong> open <a href="/admin/dashboard"><span class="mono">GET /admin/dashboard</span></a> → Polygon section → <strong>Refresh blockchain overview</strong>, <strong>Load recent anchors</strong>, and <strong>Send test on-chain touch</strong> (one minimal on-chain transaction to prove signer + RPC). On <strong>mainnet</strong>, that smoke test spends <strong>real POL</strong>; use <strong>Amoy</strong> first.</p>
+                    <p><strong>Operator verification (not on the public users page):</strong> open <a
+                            href="/admin/dashboard"><span class="mono">GET /admin/dashboard</span></a> → Polygon section
+                        → <strong>Refresh blockchain overview</strong>, <strong>Load recent anchors</strong>, and
+                        <strong>Send test on-chain touch</strong> (one minimal on-chain transaction to prove signer +
+                        RPC). On <strong>mainnet</strong>, that smoke test spends <strong>real POL</strong>; use
+                        <strong>Amoy</strong> first.
+                    </p>
                     <div class="btn-row">
-                        <a class="btn" href="/api/blockchain/status" target="_blank" rel="noopener">GET /api/blockchain/status</a>
-                        <a class="btn outline" href="/api/blockchain/integration" target="_blank" rel="noopener">GET /api/blockchain/integration</a>
+                        <a class="btn" href="/api/blockchain/status" target="_blank" rel="noopener">GET
+                            /api/blockchain/status</a>
+                        <a class="btn outline" href="/api/blockchain/integration" target="_blank" rel="noopener">GET
+                            /api/blockchain/integration</a>
                     </div>
                     <h3>Environment variables (on-chain path)</h3>
                     <ul>
-                        <li><span class="mono">POLYGON_ONCHAIN_LOG=true</span> — turn on the optional transaction logger at API startup.</li>
-                        <li><span class="mono">POLYGON_PRIVATE_KEY</span> — funded wallet key (never commit; use secrets in production).</li>
-                        <li><span class="mono">BLOCKCHAIN_ONCHAIN_NETWORK=amoy</span> (recommended testnet), <span class="mono">mumbai</span> (deprecated), or <span class="mono">mainnet</span> (live ledger — real POL).</li>
+                        <li><span class="mono">POLYGON_ONCHAIN_LOG=true</span> — turn on the optional transaction logger
+                            at API startup.</li>
+                        <li><span class="mono">POLYGON_PRIVATE_KEY</span> — funded wallet key (never commit; use secrets
+                            in production).</li>
+                        <li><span class="mono">BLOCKCHAIN_ONCHAIN_NETWORK=amoy</span> (recommended testnet), <span
+                                class="mono">mumbai</span> (deprecated), or <span class="mono">mainnet</span> (live
+                            ledger — real POL).</li>
                     </ul>
-                    <p style="color:#94a3b8;font-size:0.95rem;">Full operator route list: <span class="mono">docs/guides/IMPLEMENTATION_SNAPSHOT.md</span> → <strong>Operator admin</strong> → Polygon / <span class="mono">/api/admin/blockchain/*</span>.</p>
+                    <p style="color:#94a3b8;font-size:0.95rem;">Full operator route list: <span
+                            class="mono">docs/guides/IMPLEMENTATION_SNAPSHOT.md</span> → <strong>Operator admin</strong>
+                        → Polygon / <span class="mono">/api/admin/blockchain/*</span>.</p>
                     <div class="callout warn">
-                        <strong>Testnets change.</strong> Polygon has been transitioning away from Mumbai; your deployment should prefer <strong>Amoy</strong> (chain 80002) and current RPC URLs. Check Polygon documentation before production.
+                        <strong>Testnets change.</strong> Polygon has been transitioning away from Mumbai; your
+                        deployment should prefer <strong>Amoy</strong> (chain 80002) and current RPC URLs. Check Polygon
+                        documentation before production.
                     </div>
                 </section>
 
                 <section id="polygon-test">
                     <h2>Free test “coins” on Polygon</h2>
-                    <p>On <strong>testnets</strong>, tokens are worthless play money used to pay gas while you experiment. They are minted by <strong>faucets</strong>, not purchased.</p>
+                    <p>On <strong>testnets</strong>, tokens are worthless play money used to pay gas while you
+                        experiment. They are minted by <strong>faucets</strong>, not purchased.</p>
                     <ol style="margin-left: 1.25rem; color: #cbd5e1;">
-                        <li style="margin: 0.5rem 0;">Install a wallet (e.g. MetaMask) and create a <strong>dedicated developer wallet</strong>—never reuse a main wallet loaded with real funds.</li>
-                        <li style="margin: 0.5rem 0;">Add the correct <strong>test network</strong> to your wallet (historically Mumbai 80001; increasingly <strong>Amoy</strong> 80002).</li>
-                        <li style="margin: 0.5rem 0;">Visit an official/community faucet, connect the wallet, and request test MATIC.</li>
-                        <li style="margin: 0.5rem 0;">Wait for the transaction to arrive, then retry your API with <span class="mono">POLYGON_ONCHAIN_LOG=true</span>.</li>
+                        <li style="margin: 0.5rem 0;">Install a wallet (e.g. MetaMask) and create a <strong>dedicated
+                                developer wallet</strong>—never reuse a main wallet loaded with real funds.</li>
+                        <li style="margin: 0.5rem 0;">Add the correct <strong>test network</strong> to your wallet
+                            (historically Mumbai 80001; increasingly <strong>Amoy</strong> 80002).</li>
+                        <li style="margin: 0.5rem 0;">Visit an official/community faucet, connect the wallet, and
+                            request test MATIC.</li>
+                        <li style="margin: 0.5rem 0;">Wait for the transaction to arrive, then retry your API with <span
+                                class="mono">POLYGON_ONCHAIN_LOG=true</span>.</li>
                     </ol>
                     <p>Examples of faucet entry points (verify current URLs with Polygon documentation):</p>
                     <ul>
-                        <li><a href="https://faucet.polygon.technology/" target="_blank" rel="noopener">Polygon faucet hub (faucet.polygon.technology)</a></li>
-                        <li><a href="https://mumbai.polygonscan.com/" target="_blank" rel="noopener">Mumbai Polygonscan</a> (explorer for legacy Mumbai txs—if still supported)</li>
-                        <li><a href="https://polygonscan.com/" target="_blank" rel="noopener">Polygonscan</a> (explorers and network tools)</li>
+                        <li><a href="https://faucet.polygon.technology/" target="_blank" rel="noopener">Polygon faucet
+                                hub (faucet.polygon.technology)</a></li>
+                        <li><a href="https://mumbai.polygonscan.com/" target="_blank" rel="noopener">Mumbai
+                                Polygonscan</a> (explorer for legacy Mumbai txs—if still supported)</li>
+                        <li><a href="https://polygonscan.com/" target="_blank" rel="noopener">Polygonscan</a> (explorers
+                            and network tools)</li>
                     </ul>
                     <div class="callout">
-                        <strong>Mainnet MATIC costs real money.</strong> Until you consciously choose mainnet + accept cost and key custody risk, stay on testnets for development.
+                        <strong>Mainnet MATIC costs real money.</strong> Until you consciously choose mainnet + accept
+                        cost and key custody risk, stay on testnets for development.
                     </div>
                 </section>
 
@@ -468,12 +654,17 @@
                     <h2>APIs &amp; operations</h2>
                     <div class="btn-row">
                         <a class="btn" href="/docs" target="_blank" rel="noopener">Interactive API docs (Swagger UI)</a>
-                        <a class="btn outline" href="/api/system-discovery" target="_blank" rel="noopener">GET /api/system-discovery</a>
+                        <a class="btn outline" href="/api/system-discovery" target="_blank" rel="noopener">GET
+                            /api/system-discovery</a>
                     </div>
                     <h3>Operational checks</h3>
                     <ul>
-                        <li><span class="mono">GET /api/health</span> — API up; <span class="mono">mongodb_persistence</span> when MongoDB is wired; <span class="mono">notification_registry</span> when the full DB handle is active for contacts/alerts.</li>
-                        <li><span class="mono">GET /api/runtime-config</span> — public config + integration flags (including Twilio / email provider readiness where implemented).</li>
+                        <li><span class="mono">GET /api/health</span> — API up; <span
+                                class="mono">mongodb_persistence</span> when MongoDB is wired; <span
+                                class="mono">notification_registry</span> when the full DB handle is active for
+                            contacts/alerts.</li>
+                        <li><span class="mono">GET /api/runtime-config</span> — public config + integration flags
+                            (including Twilio / email provider readiness where implemented).</li>
                     </ul>
                     <p>Weather and optional LLM proxies are documented in Swagger once your server is running.</p>
                 </section>
@@ -489,10 +680,11 @@
             <a href="/registration">Register alerts</a> ·
             <a href="/admin/dashboard">Admin console</a> ·
             <a href="/docs" target="_blank" rel="noopener">API docs</a>
-            · Early Warning System — guides hub (<span class="mono">/guides</span>; legacy <span class="mono">/documentation</span> redirects)
+            · Early Warning System — guides hub (<span class="mono">/guides</span>; legacy <span
+                class="mono">/documentation</span> redirects)
         </p>
         <div class="footer-powered-by">
-            <img src="/landing-assets/intelladapt-powered-mark.png" alt="" width="40" height="34" loading="lazy" />
+            <img src="/landing-assets/intelladapt-logo.png" alt="" width="40" height="34" loading="lazy" />
             <span>Powered by <strong>intellADAPT</strong>, an Edwise Tech Company</span>
         </div>
     </footer>
@@ -622,6 +814,7 @@
             highlightTop();
         })();
     </script>
-<script defer src="/landing-assets/aqi-help-widget.js"></script>
+    <script defer src="/landing-assets/aqi-help-widget.js"></script>
 </body>
+
 </html>

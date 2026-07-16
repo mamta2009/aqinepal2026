@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Users — Early Warning System</title>
-    <link rel="icon" type="image/png" href="/landing-assets/intelladapt-logo.png">
-    <link rel="apple-touch-icon" href="/landing-assets/intelladapt-logo.png">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="/landing-assets/favicon.ico">
+    <link rel="apple-touch-icon" href="/landing-assets/favicon.ico">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;600;700&display=swap"
+        rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -28,7 +31,7 @@
             --ai: #06b6d4;
             --phase1: #10b981;
             --phase2: #f59e0b;
-            
+
             /* Neutrals */
             --bg-dark: #0f1419;
             --bg-surface: #1a1f26;
@@ -37,7 +40,7 @@
             --text-secondary: #b0b8c1;
             --text-tertiary: #8a9199;
             --border: #333842;
-            
+
             /* Semantic */
             --high: #d32f2f;
             --moderate: #f57c00;
@@ -84,9 +87,9 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: 
-                linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+            background-image:
+                linear-gradient(rgba(255, 255, 255, .02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, .02) 1px, transparent 1px);
             background-size: 50px 50px;
             pointer-events: none;
             z-index: -1;
@@ -493,8 +496,13 @@
         }
 
         @keyframes slideDown {
-            from { transform: translateY(-100%); }
-            to { transform: translateY(0); }
+            from {
+                transform: translateY(-100%);
+            }
+
+            to {
+                transform: translateY(0);
+            }
         }
 
         /* ===== STATUS CARDS ===== */
@@ -517,14 +525,33 @@
             animation-fill-mode: both;
         }
 
-        .status-card:nth-child(1) { animation-delay: 0.1s; }
-        .status-card:nth-child(2) { animation-delay: 0.2s; }
-        .status-card:nth-child(3) { animation-delay: 0.3s; }
-        .status-card:nth-child(4) { animation-delay: 0.4s; }
-        .status-card:nth-child(5) { animation-delay: 0.5s; }
+        .status-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
 
-        #heat-card.heat-hot::before { background: var(--high); }
-        #heat-card.heat-mod::before { background: var(--moderate); }
+        .status-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .status-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .status-card:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        .status-card:nth-child(5) {
+            animation-delay: 0.5s;
+        }
+
+        #heat-card.heat-hot::before {
+            background: var(--high);
+        }
+
+        #heat-card.heat-mod::before {
+            background: var(--moderate);
+        }
 
         .status-card::before {
             content: '';
@@ -537,8 +564,13 @@
             transition: background 0.3s ease;
         }
 
-        .status-card.high::before { background: var(--high); }
-        .status-card.moderate::before { background: var(--moderate); }
+        .status-card.high::before {
+            background: var(--high);
+        }
+
+        .status-card.moderate::before {
+            background: var(--moderate);
+        }
 
         .status-card:hover {
             border-color: var(--primary-light);
@@ -989,9 +1021,17 @@
             transform: translateX(4px);
         }
 
-        .alert-item.high { border-left-color: var(--high); }
-        .alert-item.moderate { border-left-color: var(--moderate); }
-        .alert-item.low { border-left-color: var(--low); }
+        .alert-item.high {
+            border-left-color: var(--high);
+        }
+
+        .alert-item.moderate {
+            border-left-color: var(--moderate);
+        }
+
+        .alert-item.low {
+            border-left-color: var(--low);
+        }
 
         .alert-time {
             font-size: 0.75rem;
@@ -1025,9 +1065,20 @@
             color: var(--text-secondary);
         }
 
-        .alert-badge.high { background: rgba(211, 47, 47, 0.2); color: var(--high); }
-        .alert-badge.moderate { background: rgba(245, 124, 0, 0.2); color: var(--moderate); }
-        .alert-badge.low { background: rgba(46, 125, 50, 0.2); color: var(--low); }
+        .alert-badge.high {
+            background: rgba(211, 47, 47, 0.2);
+            color: var(--high);
+        }
+
+        .alert-badge.moderate {
+            background: rgba(245, 124, 0, 0.2);
+            color: var(--moderate);
+        }
+
+        .alert-badge.low {
+            background: rgba(46, 125, 50, 0.2);
+            color: var(--low);
+        }
 
         /* ===== ACTION LOG ===== */
         .action-buttons {
@@ -1256,8 +1307,15 @@
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
 
         /* ===== ANIMATIONS ===== */
@@ -1266,6 +1324,7 @@
                 opacity: 0;
                 transform: translateY(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -1277,6 +1336,7 @@
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -1288,6 +1348,7 @@
                 opacity: 0;
                 transform: translateX(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateX(0);
@@ -1350,11 +1411,13 @@
                 margin-top: 8px;
             }
         }
+
         .tbl.compact td,
         .tbl.compact th {
             padding: 6px 8px;
             border-bottom: 1px solid var(--border);
         }
+
         #facilitiesRoot.reporting-locked .fac-action-btn,
         #facilitiesRoot.reporting-locked .fac-threshold-in {
             opacity: 0.42;
@@ -1362,6 +1425,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="offline-banner" id="offlineBanner">
         📡 You are offline - displaying cached data
@@ -1379,259 +1443,334 @@
             <span class="nav-sep" aria-hidden="true">·</span>
             <a href="/admin/dashboard">Admin</a>
             <span class="nav-sep" aria-hidden="true">·</span>
-</head>
-<body>
-    <div class="offline-banner" id="offlineBanner">📡 You are offline</div>
-    <div class="container">
-        <nav class="site-nav-global" aria-label="Site pages">
-            <a href="/">Home</a>
-            <span class="nav-sep" aria-hidden="true">·</span>
-            <a href="/frontend/index.html">Dashboard</a>
-            <span class="nav-sep" aria-hidden="true">·</span>
-            <a href="/guides">Guides</a>
-            <span class="nav-sep" aria-hidden="true">·</span>
-            <a href="/registration">Register alerts</a>
-            <span class="nav-sep" aria-hidden="true">·</span>
-            <a href="/users" aria-current="page">Users</a>
-            <span class="nav-sep" aria-hidden="true">·</span>
-            <a href="/admin/dashboard">Admin</a>
-            <span class="nav-sep" aria-hidden="true">·</span>
-            <a href="/docs" target="_blank" rel="noopener">API docs</a>
-            <span class="site-nav-meta">Account, registration, and workplace tools.</span>
-        </nav>
-        <header>
-            <div class="header-content">
-                <div class="logo-section">
-                    <h1>👤 Users</h1>
-                    <p>Sign in, enrolment profile, facility actions</p>
-                </div>
-                <div class="header-controls">
-                    <a href="/frontend/index.html" class="btn secondary">← Dashboard</a>
-                    <a href="/registration" class="btn secondary">Register</a>
-                </div>
-            </div>
-        </header>
-        <p style="font-size:0.8rem;color:var(--text-secondary);margin:0 0 16px;line-height:1.45;">
-            Use the same email and password (or OTP) as in the main app. Preparedness buttons write to the facility audit when your account is approved and linked to a site.
-        </p>
-        <div class="main-grid">
-            <!-- Action Log -->
-            <div class="panel">
-                <div class="panel-header">
-                    <span class="panel-title">Facility Actions</span>
-                    <div class="panel-icon">✓</div>
-                </div>
-                <div class="facility-auth-box">
-                    <strong>Registrant sign-in:</strong> use the same <strong>email + password</strong> you chose at registration,
-                    or tap <em>Send OTP</em> for a one-time code (SMS / email / WhatsApp).
-                    <p style="margin:10px 0 0;font-size:0.78rem;line-height:1.45;color:var(--text-secondary);">
-                        <strong>Preparedness buttons (O₂, Staff, …):</strong> require a <em>verified</em> account that is <strong>operator-approved</strong> with a <strong>facility / site</strong> linked (admin console). Password sign-in can succeed sooner — the banner below explains when actions stay disabled. <strong>OTP</strong> is only sent when those reporting requirements are met.
+            </head>
+
+            <body>
+                <div class="offline-banner" id="offlineBanner">📡 You are offline</div>
+                <div class="container">
+                    <nav class="site-nav-global" aria-label="Site pages">
+                        <a href="/">Home</a>
+                        <span class="nav-sep" aria-hidden="true">·</span>
+                        <a href="/frontend/index.html">Dashboard</a>
+                        <span class="nav-sep" aria-hidden="true">·</span>
+                        <a href="/guides">Guides</a>
+                        <span class="nav-sep" aria-hidden="true">·</span>
+                        <a href="/registration">Register alerts</a>
+                        <span class="nav-sep" aria-hidden="true">·</span>
+                        <a href="/users" aria-current="page">Users</a>
+                        <span class="nav-sep" aria-hidden="true">·</span>
+                        <a href="/admin/dashboard">Admin</a>
+                        <span class="nav-sep" aria-hidden="true">·</span>
+                        <a href="/docs" target="_blank" rel="noopener">API docs</a>
+                        <span class="site-nav-meta">Account, registration, and workplace tools.</span>
+                    </nav>
+                    <header>
+                        <div class="header-content">
+                            <div class="logo-section">
+                                <h1>👤 Users</h1>
+                                <p>Sign in, enrolment profile, facility actions</p>
+                            </div>
+                            <div class="header-controls">
+                                <a href="/frontend/index.html" class="btn secondary">← Dashboard</a>
+                                <a href="/registration" class="btn secondary">Register</a>
+                            </div>
+                        </div>
+                    </header>
+                    <p style="font-size:0.8rem;color:var(--text-secondary);margin:0 0 16px;line-height:1.45;">
+                        Use the same email and password (or OTP) as in the main app. Preparedness buttons write to the
+                        facility audit when your account is approved and linked to a site.
                     </p>
-                    <p style="margin:10px 0 0;font-size:0.78rem;line-height:1.45;color:var(--text-secondary);">
-                        <strong>First time:</strong> after registering you receive a <em>verification</em> code (email/SMS).
-                        Enter it in the box below <em>or</em> on the <a href="/registration" style="color:var(--accent);">registration page</a> before password sign-in will succeed.
-                    </p>
-                    <div id="firstTimeVerifyPanel" style="display:none;margin-top:12px;padding:12px;border:1px dashed var(--border);border-radius:10px;background:rgba(24,95,165,0.12);">
-                        <strong style="font-size:0.78rem;display:block;margin-bottom:6px;">Finish signup — enter the verification code</strong>
-                        <p style="font-size:0.74rem;color:var(--text-secondary);margin:0 0 8px;line-height:1.45;">Use the code from registration (not the facility OTP field below). Same email as above.</p>
-                        <div class="facility-auth-row" style="flex-wrap:wrap;">
-                            <input type="text" id="regSignupCodeInput" placeholder="Verification code from email / SMS" maxlength="16" autocomplete="one-time-code" aria-label="Registration verification code" style="min-width:180px;flex:1;" />
-                            <button type="button" class="mini-btn primary" id="regSignupVerifyBtn">Submit code</button>
+                    <div class="main-grid">
+                        <!-- Action Log -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <span class="panel-title">Facility Actions</span>
+                                <div class="panel-icon">✓</div>
+                            </div>
+                            <div class="facility-auth-box">
+                                <strong>Registrant sign-in:</strong> use the same <strong>email + password</strong> you
+                                chose at registration,
+                                or tap <em>Send OTP</em> for a one-time code (SMS / email / WhatsApp).
+                                <p
+                                    style="margin:10px 0 0;font-size:0.78rem;line-height:1.45;color:var(--text-secondary);">
+                                    <strong>Preparedness buttons (O₂, Staff, …):</strong> require a <em>verified</em>
+                                    account that is <strong>operator-approved</strong> with a <strong>facility /
+                                        site</strong> linked (admin console). Password sign-in can succeed sooner — the
+                                    banner below explains when actions stay disabled. <strong>OTP</strong> is only sent
+                                    when those reporting requirements are met.
+                                </p>
+                                <p
+                                    style="margin:10px 0 0;font-size:0.78rem;line-height:1.45;color:var(--text-secondary);">
+                                    <strong>First time:</strong> after registering you receive a <em>verification</em>
+                                    code (email/SMS).
+                                    Enter it in the box below <em>or</em> on the <a href="/registration"
+                                        style="color:var(--accent);">registration page</a> before password sign-in will
+                                    succeed.
+                                </p>
+                                <div id="firstTimeVerifyPanel"
+                                    style="display:none;margin-top:12px;padding:12px;border:1px dashed var(--border);border-radius:10px;background:rgba(24,95,165,0.12);">
+                                    <strong style="font-size:0.78rem;display:block;margin-bottom:6px;">Finish signup —
+                                        enter the verification code</strong>
+                                    <p
+                                        style="font-size:0.74rem;color:var(--text-secondary);margin:0 0 8px;line-height:1.45;">
+                                        Use the code from registration (not the facility OTP field below). Same email as
+                                        above.</p>
+                                    <div class="facility-auth-row" style="flex-wrap:wrap;">
+                                        <input type="text" id="regSignupCodeInput"
+                                            placeholder="Verification code from email / SMS" maxlength="16"
+                                            autocomplete="one-time-code" aria-label="Registration verification code"
+                                            style="min-width:180px;flex:1;" />
+                                        <button type="button" class="mini-btn primary" id="regSignupVerifyBtn">Submit
+                                            code</button>
+                                    </div>
+                                    <p id="regSignupVerifyMsg"
+                                        style="font-size:0.72rem;margin-top:8px;min-height:1.2em;"></p>
+                                </div>
+                                <div id="facilityAuthLoginBlock">
+                                    <div class="facility-auth-row" style="flex-wrap:wrap;gap:8px;">
+                                        <input type="email" id="facilityAuthEmail" placeholder="registration email"
+                                            autocomplete="email" aria-label="Registration email"
+                                            style="min-width:200px;flex:1;">
+                                        <input type="password" id="facilityAuthPassword"
+                                            placeholder="dashboard password" autocomplete="current-password"
+                                            aria-label="Dashboard password" style="min-width:160px;flex:1;">
+                                        <button type="button" class="mini-btn primary"
+                                            id="facilityPasswordLoginBtn">Sign in</button>
+                                    </div>
+                                    <div class="facility-auth-row" style="margin-top:8px;">
+                                        <button type="button" class="mini-btn" id="facilitySendCodeBtn">Send OTP
+                                            instead</button>
+                                    </div>
+                                    <div class="facility-auth-row" id="facilityAuthExchangeRow" style="margin-top:8px;">
+                                        <input type="text" id="facilityAuthCode"
+                                            placeholder="OTP from SMS / email / WhatsApp" maxlength="16"
+                                            autocomplete="one-time-code" aria-label="One-time login code">
+                                        <button type="button" class="mini-btn primary" id="facilityExchangeBtn">Exchange
+                                            OTP</button>
+                                    </div>
+                                </div>
+                                <div class="facility-auth-row" style="margin-top:8px;">
+                                    <button type="button" class="mini-btn" id="facilityLogoutBtn" hidden>Sign
+                                        out</button>
+                                </div>
+                                <div class="facility-auth-banner" id="facilityAuthBanner">Not signed in — actions stay
+                                    disabled.</div>
+                            </div>
+                            <p style="margin:12px 0 6px;font-size:0.8rem;color:var(--text-secondary);">
+                                <strong>Sites you cover:</strong> add each facility or site name (your enrolment), set a
+                                PM2.5 alert threshold per site, then log preparedness actions for that site.
+                            </p>
+                            <div class="facility-auth-row" style="flex-wrap:wrap;gap:8px;">
+                                <input type="text" id="addFacilityNameInput" placeholder="Add facility / site name"
+                                    style="min-width:200px;flex:1;" maxlength="200" autocomplete="organization" />
+                                <button type="button" class="mini-btn primary" id="addFacilityBtn">Add facility</button>
+                            </div>
+                            <p id="addFacilityMsg" style="font-size:0.72rem;margin-top:6px;min-height:1.1em;"></p>
+                            <div id="sitesYouCoverStrip" style="margin-top:4px;"></div>
+                            <div id="facilitiesRoot" class="reporting-locked"></div>
+                            <button type="button" class="mini-btn" id="saveThresholdsBtn"
+                                style="margin-top:10px;display:none;">Save PM2.5 thresholds</button>
+                            <div class="action-log-list" id="action-log" style="margin-top:14px;">
+                                <div style="padding: 16px; text-align: center; color: var(--text-secondary);">
+                                    Facility action history loads after sign-in (Mongo-backed audit).
+                                </div>
+                            </div>
                         </div>
-                        <p id="regSignupVerifyMsg" style="font-size:0.72rem;margin-top:8px;min-height:1.2em;"></p>
-                    </div>
-                    <div id="facilityAuthLoginBlock">
-                        <div class="facility-auth-row" style="flex-wrap:wrap;gap:8px;">
-                            <input type="email" id="facilityAuthEmail" placeholder="registration email" autocomplete="email" aria-label="Registration email" style="min-width:200px;flex:1;">
-                            <input type="password" id="facilityAuthPassword" placeholder="dashboard password" autocomplete="current-password" aria-label="Dashboard password" style="min-width:160px;flex:1;">
-                            <button type="button" class="mini-btn primary" id="facilityPasswordLoginBtn">Sign in</button>
+
+                        <!-- Notifications history -->
+                        <div class="panel" id="notificationInboxPanel">
+                            <div class="panel-header">
+                                <span class="panel-title">Notifications sent to you</span>
+                                <div class="panel-icon">📬</div>
+                            </div>
+                            <p style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;margin:0 0 10px;">
+                                SMS, WhatsApp, and email attempts logged by the server (including alert broadcasts).
+                                Full text when available.
+                            </p>
+                            <button type="button" class="mini-btn" id="notificationInboxRefreshBtn">Refresh
+                                list</button>
+                            <div id="notificationInboxBody"
+                                style="margin-top:12px;font-size:0.78rem;line-height:1.45;min-height:2em;color:var(--text-secondary);">
+                                Sign in to load notifications.
+                            </div>
                         </div>
-                        <div class="facility-auth-row" style="margin-top:8px;">
-                            <button type="button" class="mini-btn" id="facilitySendCodeBtn">Send OTP instead</button>
+
+                        <!-- Friends & family (user-initiated SMS / email / WhatsApp) -->
+                        <div class="panel" id="sharedContactsPanel">
+                            <div class="panel-header">
+                                <span class="panel-title">Friends &amp; family alerts</span>
+                                <div class="panel-icon">👪</div>
+                            </div>
+                            <p style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;margin:0 0 10px;">
+                                Save people you may message in an emergency — <strong>SMS</strong>,
+                                <strong>WhatsApp</strong>, or <strong>email</strong>.
+                                They must agree before you contact them; sending is rate-limited per day.
+                            </p>
+                            <p id="sharedContactsLimitsMsg"
+                                style="font-size:0.72rem;color:var(--text-tertiary);margin:0 0 8px;">Sign in to manage
+                                your list.</p>
+                            <div
+                                style="font-size:0.8rem;margin-bottom:12px;padding:10px;border:1px solid var(--border);border-radius:10px;background:rgba(0,0,0,0.12);">
+                                <div style="font-weight:600;margin-bottom:8px;color:var(--accent);">Add or edit a
+                                    contact</div>
+                                <input type="hidden" id="sharedContactEditId" value="" />
+                                <div class="facility-auth-row" style="flex-wrap:wrap;gap:8px;align-items:center;">
+                                    <input type="text" id="sharedContactDisplayName" placeholder="Name or label"
+                                        maxlength="120"
+                                        style="min-width:140px;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-dark);color:var(--text);" />
+                                    <select id="sharedContactChannel" aria-label="Channel"
+                                        style="padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-dark);color:var(--text);">
+                                        <option value="sms">SMS</option>
+                                        <option value="whatsapp">WhatsApp</option>
+                                        <option value="email">Email</option>
+                                    </select>
+                                </div>
+                                <div class="facility-auth-row"
+                                    style="flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center;">
+                                    <input type="text" id="sharedContactPhone" placeholder="Phone E.164 (+country…)"
+                                        autocomplete="tel"
+                                        style="min-width:200px;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-dark);color:var(--text);" />
+                                    <input type="email" id="sharedContactEmail" placeholder="Email address"
+                                        autocomplete="email"
+                                        style="min-width:200px;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-dark);color:var(--text);display:none;" />
+                                </div>
+                                <div class="facility-auth-row" style="margin-top:8px;gap:8px;flex-wrap:wrap;">
+                                    <button type="button" class="mini-btn primary" id="sharedContactSubmitBtn">Add
+                                        contact</button>
+                                    <button type="button" class="mini-btn" id="sharedContactCancelEditBtn"
+                                        style="display:none;">Cancel edit</button>
+                                </div>
+                                <p id="sharedContactsFormMsg"
+                                    style="font-size:0.72rem;margin-top:8px;min-height:1.1em;"></p>
+                            </div>
+                            <div style="overflow-x:auto;">
+                                <table class="tbl" id="sharedContactsTable"
+                                    style="font-size:0.76rem;width:100%;border-collapse:collapse;display:none;">
+                                    <thead>
+                                        <tr>
+                                            <th style="text-align:left">Pick</th>
+                                            <th style="text-align:left">Name</th>
+                                            <th>Channel</th>
+                                            <th style="text-align:left">To</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="sharedContactsTableBody"></tbody>
+                                </table>
+                            </div>
+                            <p id="sharedContactsEmpty"
+                                style="font-size:0.78rem;color:var(--text-tertiary);display:none;">No saved contacts —
+                                add one above.</p>
+                            <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">
+                                <div style="font-weight:600;margin-bottom:6px;font-size:0.82rem;color:var(--accent);">
+                                    Send a message now</div>
+                                <textarea id="sharedNotifyBody" rows="3" maxlength="1200"
+                                    placeholder="Short message to include with your name (e.g. drill reminder or air-quality heads-up)."
+                                    style="width:100%;box-sizing:border-box;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-dark);color:var(--text);font-size:0.8rem;"></textarea>
+                                <label
+                                    style="display:block;margin-top:8px;font-size:0.74rem;line-height:1.4;color:var(--text-secondary);">
+                                    <input type="checkbox" id="sharedNotifyConsent" /> I confirm each selected person
+                                    agreed to receive this one-off message from me via this app.
+                                </label>
+                                <div class="facility-auth-row" style="margin-top:10px;gap:8px;">
+                                    <button type="button" class="mini-btn primary" id="sharedNotifySendBtn">Send to
+                                        selected</button>
+                                </div>
+                                <p id="sharedNotifyMsg" style="font-size:0.72rem;margin-top:8px;min-height:1.1em;"></p>
+                            </div>
                         </div>
-                        <div class="facility-auth-row" id="facilityAuthExchangeRow" style="margin-top:8px;">
-                            <input type="text" id="facilityAuthCode" placeholder="OTP from SMS / email / WhatsApp" maxlength="16" autocomplete="one-time-code" aria-label="One-time login code">
-                            <button type="button" class="mini-btn primary" id="facilityExchangeBtn">Exchange OTP</button>
+
+                        <!-- Channel preferences -->
+                        <div class="panel" id="channelPrefsPanel">
+                            <div class="panel-header">
+                                <span class="panel-title">Notification channels</span>
+                                <div class="panel-icon">📣</div>
+                            </div>
+                            <p style="font-size:0.8rem;color:var(--text-secondary);margin:0 0 10px;">
+                                Choose how we may reach you for alerts (matches your registration — save to update).
+                            </p>
+                            <div id="channelPrefsForm" style="display:none;font-size:0.85rem;line-height:2;">
+                                <label><input type="checkbox" id="prefSms" value="sms" /> SMS</label><br />
+                                <label><input type="checkbox" id="prefWhatsapp" value="whatsapp" />
+                                    WhatsApp</label><br />
+                                <label><input type="checkbox" id="prefEmail" value="email" /> Email</label><br />
+                                <button type="button" class="mini-btn primary" id="channelPrefsSaveBtn"
+                                    style="margin-top:10px;">Save channels</button>
+                                <p id="channelPrefsMsg" style="font-size:0.72rem;margin-top:8px;"></p>
+                            </div>
+                            <p id="channelPrefsSignin" style="font-size:0.8rem;color:var(--text-tertiary);">Sign in to
+                                edit channels.</p>
+                        </div>
+
+                        <!-- My registration (enrollee profile) -->
+                        <div class="panel" id="userProfilePanel">
+                            <div class="panel-header">
+                                <span class="panel-title">My registration</span>
+                                <div class="panel-icon">👤</div>
+                            </div>
+                            <p
+                                style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; margin: 0 0 12px;">
+                                After you sign in under <strong>Facility Actions</strong> (password or one-time code),
+                                your saved enrolment
+                                details load here — cities, channels, verification, and facility linkage. Update
+                                preferences through your administrator if something is wrong.
+                            </p>
+                            <div id="userProfileBody" class="user-profile-body">
+                                <div class="user-profile-empty">Not signed in — authenticate above to view your record.
+                                </div>
+                            </div>
+                            <button type="button" class="mini-btn" id="userProfileRefreshBtn">Refresh my
+                                details</button>
+                        </div>
+
+                        <!-- System info (prefs: Admin → Settings) -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <span class="panel-title">System</span>
+                                <div class="panel-icon">ℹ️</div>
+                            </div>
+                            <p style="font-size:0.78rem;color:var(--text-secondary);line-height:1.5;margin:0 0 10px;">
+                                <strong>Theme, PM2.5 alert threshold, and auto-refresh</strong> are set in the
+                                <a href="/admin/dashboard" style="color:var(--accent);">Admin → Settings</a> panel (this
+                                browser).
+                            </p>
+                            <div class="setting-group">
+                                <span class="setting-label">Features</span>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.8;">
+                                    ✓ Open-Source (MIT License)<br>
+                                    ✓ Blockchain Verified (Polygon)<br>
+                                    ✓ AI Forecasting (78% accuracy)<br>
+                                    ✓ Offline Mode Enabled<br>
+                                    ✓ Geographic Scalability<br>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="facility-auth-row" style="margin-top:8px;">
-                        <button type="button" class="mini-btn" id="facilityLogoutBtn" hidden>Sign out</button>
-                    </div>
-                    <div class="facility-auth-banner" id="facilityAuthBanner">Not signed in — actions stay disabled.</div>
+                    <footer>
+                        <p style="color:var(--text-tertiary);font-size:0.85rem;">Early Warning System · Users</p>
+                        <div class="footer-powered-by">
+                            <img src="/landing-assets/intelladapt-logo.png" alt="" width="40" height="34"
+                                loading="lazy" />
+                            <span>Powered by <strong>intellADAPT</strong>, an Edwise Tech Company</span>
+                        </div>
+                    </footer>
                 </div>
-                <p style="margin:12px 0 6px;font-size:0.8rem;color:var(--text-secondary);">
-                    <strong>Sites you cover:</strong> add each facility or site name (your enrolment), set a PM2.5 alert threshold per site, then log preparedness actions for that site.
-                </p>
-                <div class="facility-auth-row" style="flex-wrap:wrap;gap:8px;">
-                    <input type="text" id="addFacilityNameInput" placeholder="Add facility / site name" style="min-width:200px;flex:1;" maxlength="200" autocomplete="organization" />
-                    <button type="button" class="mini-btn primary" id="addFacilityBtn">Add facility</button>
-                </div>
-                <p id="addFacilityMsg" style="font-size:0.72rem;margin-top:6px;min-height:1.1em;"></p>
-                <div id="sitesYouCoverStrip" style="margin-top:4px;"></div>
-                <div id="facilitiesRoot" class="reporting-locked"></div>
-                <button type="button" class="mini-btn" id="saveThresholdsBtn" style="margin-top:10px;display:none;">Save PM2.5 thresholds</button>
-                <div class="action-log-list" id="action-log" style="margin-top:14px;">
-                    <div style="padding: 16px; text-align: center; color: var(--text-secondary);">
-                        Facility action history loads after sign-in (Mongo-backed audit).
-                    </div>
-                </div>
-            </div>
+                <script>
+                    window.addEventListener('online', () => {
+                        const b = document.getElementById('offlineBanner');
+                        if (b) b.classList.remove('show');
+                    });
+                    window.addEventListener('offline', () => {
+                        const b = document.getElementById('offlineBanner');
+                        if (b) b.classList.add('show');
+                    });
+                    if (!navigator.onLine) {
+                        const b = document.getElementById('offlineBanner');
+                        if (b) b.classList.add('show');
+                    }
+                </script>
+                <script src="/frontend/user-account.js" defer></script>
+                <script defer src="/landing-assets/aqi-help-widget.js"></script>
+            </body>
 
-            <!-- Notifications history -->
-            <div class="panel" id="notificationInboxPanel">
-                <div class="panel-header">
-                    <span class="panel-title">Notifications sent to you</span>
-                    <div class="panel-icon">📬</div>
-                </div>
-                <p style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;margin:0 0 10px;">
-                    SMS, WhatsApp, and email attempts logged by the server (including alert broadcasts). Full text when available.
-                </p>
-                <button type="button" class="mini-btn" id="notificationInboxRefreshBtn">Refresh list</button>
-                <div id="notificationInboxBody" style="margin-top:12px;font-size:0.78rem;line-height:1.45;min-height:2em;color:var(--text-secondary);">
-                    Sign in to load notifications.
-                </div>
-            </div>
-
-            <!-- Friends & family (user-initiated SMS / email / WhatsApp) -->
-            <div class="panel" id="sharedContactsPanel">
-                <div class="panel-header">
-                    <span class="panel-title">Friends &amp; family alerts</span>
-                    <div class="panel-icon">👪</div>
-                </div>
-                <p style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;margin:0 0 10px;">
-                    Save people you may message in an emergency — <strong>SMS</strong>, <strong>WhatsApp</strong>, or <strong>email</strong>.
-                    They must agree before you contact them; sending is rate-limited per day.
-                </p>
-                <p id="sharedContactsLimitsMsg" style="font-size:0.72rem;color:var(--text-tertiary);margin:0 0 8px;">Sign in to manage your list.</p>
-                <div style="font-size:0.8rem;margin-bottom:12px;padding:10px;border:1px solid var(--border);border-radius:10px;background:rgba(0,0,0,0.12);">
-                    <div style="font-weight:600;margin-bottom:8px;color:var(--accent);">Add or edit a contact</div>
-                    <input type="hidden" id="sharedContactEditId" value="" />
-                    <div class="facility-auth-row" style="flex-wrap:wrap;gap:8px;align-items:center;">
-                        <input type="text" id="sharedContactDisplayName" placeholder="Name or label" maxlength="120" style="min-width:140px;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-dark);color:var(--text);" />
-                        <select id="sharedContactChannel" aria-label="Channel" style="padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-dark);color:var(--text);">
-                            <option value="sms">SMS</option>
-                            <option value="whatsapp">WhatsApp</option>
-                            <option value="email">Email</option>
-                        </select>
-                    </div>
-                    <div class="facility-auth-row" style="flex-wrap:wrap;gap:8px;margin-top:8px;align-items:center;">
-                        <input type="text" id="sharedContactPhone" placeholder="Phone E.164 (+country…)" autocomplete="tel" style="min-width:200px;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-dark);color:var(--text);" />
-                        <input type="email" id="sharedContactEmail" placeholder="Email address" autocomplete="email" style="min-width:200px;flex:1;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-dark);color:var(--text);display:none;" />
-                    </div>
-                    <div class="facility-auth-row" style="margin-top:8px;gap:8px;flex-wrap:wrap;">
-                        <button type="button" class="mini-btn primary" id="sharedContactSubmitBtn">Add contact</button>
-                        <button type="button" class="mini-btn" id="sharedContactCancelEditBtn" style="display:none;">Cancel edit</button>
-                    </div>
-                    <p id="sharedContactsFormMsg" style="font-size:0.72rem;margin-top:8px;min-height:1.1em;"></p>
-                </div>
-                <div style="overflow-x:auto;">
-                    <table class="tbl" id="sharedContactsTable" style="font-size:0.76rem;width:100%;border-collapse:collapse;display:none;">
-                        <thead>
-                            <tr>
-                                <th style="text-align:left">Pick</th>
-                                <th style="text-align:left">Name</th>
-                                <th>Channel</th>
-                                <th style="text-align:left">To</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="sharedContactsTableBody"></tbody>
-                    </table>
-                </div>
-                <p id="sharedContactsEmpty" style="font-size:0.78rem;color:var(--text-tertiary);display:none;">No saved contacts — add one above.</p>
-                <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);">
-                    <div style="font-weight:600;margin-bottom:6px;font-size:0.82rem;color:var(--accent);">Send a message now</div>
-                    <textarea id="sharedNotifyBody" rows="3" maxlength="1200" placeholder="Short message to include with your name (e.g. drill reminder or air-quality heads-up)." style="width:100%;box-sizing:border-box;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--bg-dark);color:var(--text);font-size:0.8rem;"></textarea>
-                    <label style="display:block;margin-top:8px;font-size:0.74rem;line-height:1.4;color:var(--text-secondary);">
-                        <input type="checkbox" id="sharedNotifyConsent" /> I confirm each selected person agreed to receive this one-off message from me via this app.
-                    </label>
-                    <div class="facility-auth-row" style="margin-top:10px;gap:8px;">
-                        <button type="button" class="mini-btn primary" id="sharedNotifySendBtn">Send to selected</button>
-                    </div>
-                    <p id="sharedNotifyMsg" style="font-size:0.72rem;margin-top:8px;min-height:1.1em;"></p>
-                </div>
-            </div>
-
-            <!-- Channel preferences -->
-            <div class="panel" id="channelPrefsPanel">
-                <div class="panel-header">
-                    <span class="panel-title">Notification channels</span>
-                    <div class="panel-icon">📣</div>
-                </div>
-                <p style="font-size:0.8rem;color:var(--text-secondary);margin:0 0 10px;">
-                    Choose how we may reach you for alerts (matches your registration — save to update).
-                </p>
-                <div id="channelPrefsForm" style="display:none;font-size:0.85rem;line-height:2;">
-                    <label><input type="checkbox" id="prefSms" value="sms" /> SMS</label><br />
-                    <label><input type="checkbox" id="prefWhatsapp" value="whatsapp" /> WhatsApp</label><br />
-                    <label><input type="checkbox" id="prefEmail" value="email" /> Email</label><br />
-                    <button type="button" class="mini-btn primary" id="channelPrefsSaveBtn" style="margin-top:10px;">Save channels</button>
-                    <p id="channelPrefsMsg" style="font-size:0.72rem;margin-top:8px;"></p>
-                </div>
-                <p id="channelPrefsSignin" style="font-size:0.8rem;color:var(--text-tertiary);">Sign in to edit channels.</p>
-            </div>
-
-            <!-- My registration (enrollee profile) -->
-            <div class="panel" id="userProfilePanel">
-                <div class="panel-header">
-                    <span class="panel-title">My registration</span>
-                    <div class="panel-icon">👤</div>
-                </div>
-                <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; margin: 0 0 12px;">
-                    After you sign in under <strong>Facility Actions</strong> (password or one-time code), your saved enrolment
-                    details load here — cities, channels, verification, and facility linkage. Update preferences through your administrator if something is wrong.
-                </p>
-                <div id="userProfileBody" class="user-profile-body">
-                    <div class="user-profile-empty">Not signed in — authenticate above to view your record.</div>
-                </div>
-                <button type="button" class="mini-btn" id="userProfileRefreshBtn">Refresh my details</button>
-            </div>
-
-            <!-- System info (prefs: Admin → Settings) -->
-            <div class="panel">
-                <div class="panel-header">
-                    <span class="panel-title">System</span>
-                    <div class="panel-icon">ℹ️</div>
-                </div>
-                <p style="font-size:0.78rem;color:var(--text-secondary);line-height:1.5;margin:0 0 10px;">
-                    <strong>Theme, PM2.5 alert threshold, and auto-refresh</strong> are set in the
-                    <a href="/admin/dashboard" style="color:var(--accent);">Admin → Settings</a> panel (this browser).
-                </p>
-                <div class="setting-group">
-                    <span class="setting-label">Features</span>
-                    <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.8;">
-                        ✓ Open-Source (MIT License)<br>
-                        ✓ Blockchain Verified (Polygon)<br>
-                        ✓ AI Forecasting (78% accuracy)<br>
-                        ✓ Offline Mode Enabled<br>
-                        ✓ Geographic Scalability<br>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <footer>
-            <p style="color:var(--text-tertiary);font-size:0.85rem;">Early Warning System · Users</p>
-            <div class="footer-powered-by">
-                <img src="/landing-assets/intelladapt-powered-mark.png" alt="" width="40" height="34" loading="lazy" />
-                <span>Powered by <strong>intellADAPT</strong>, an Edwise Tech Company</span>
-            </div>
-        </footer>
-    </div>
-    <script>
-        window.addEventListener('online', () => {
-            const b = document.getElementById('offlineBanner');
-            if (b) b.classList.remove('show');
-        });
-        window.addEventListener('offline', () => {
-            const b = document.getElementById('offlineBanner');
-            if (b) b.classList.add('show');
-        });
-        if (!navigator.onLine) {
-            const b = document.getElementById('offlineBanner');
-            if (b) b.classList.add('show');
-        }
-    </script>
-    <script src="/frontend/user-account.js" defer></script>
-<script defer src="/landing-assets/aqi-help-widget.js"></script>
-</body>
 </html>

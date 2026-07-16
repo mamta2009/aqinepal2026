@@ -2074,7 +2074,7 @@ async def aqi_help_page():
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon_legacy_path():
     """Browsers probe ``/favicon.ico`` automatically; reuse the PNG logo mounted under landing-assets."""
-    return RedirectResponse("/landing-assets/intelladapt-logo.png", status_code=302)
+    return RedirectResponse("/landing-assets/favicon.ico", status_code=302)
 
 
 @app.get("/intelladapt-logo.png")

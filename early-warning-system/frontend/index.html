@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Early Warning System - Nepal Respiratory Health</title>
-    <link rel="icon" type="image/png" href="/landing-assets/intelladapt-logo.png">
-    <link rel="apple-touch-icon" href="/landing-assets/intelladapt-logo.png">
+    <link rel="icon" type="image/png" href="/landing-assets/favicon.ico">
+    <link rel="apple-touch-icon" href="/landing-assets/favicon.ico">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;600;700&display=swap"
+        rel="stylesheet">
+
     <style>
         * {
             margin: 0;
@@ -30,7 +33,7 @@
             --ai: #06b6d4;
             --phase1: #10b981;
             --phase2: #f59e0b;
-            
+
             /* Neutrals */
             --bg-dark: #0f1419;
             --bg-surface: #1a1f26;
@@ -39,7 +42,7 @@
             --text-secondary: #b0b8c1;
             --text-tertiary: #8a9199;
             --border: #333842;
-            
+
             /* Semantic */
             --high: #d32f2f;
             --moderate: #f57c00;
@@ -86,9 +89,9 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: 
-                linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+            background-image:
+                linear-gradient(rgba(255, 255, 255, .02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, .02) 1px, transparent 1px);
             background-size: 50px 50px;
             pointer-events: none;
             z-index: -1;
@@ -495,8 +498,13 @@
         }
 
         @keyframes slideDown {
-            from { transform: translateY(-100%); }
-            to { transform: translateY(0); }
+            from {
+                transform: translateY(-100%);
+            }
+
+            to {
+                transform: translateY(0);
+            }
         }
 
         /* ===== STATUS CARDS ===== */
@@ -519,14 +527,33 @@
             animation-fill-mode: both;
         }
 
-        .status-card:nth-child(1) { animation-delay: 0.1s; }
-        .status-card:nth-child(2) { animation-delay: 0.2s; }
-        .status-card:nth-child(3) { animation-delay: 0.3s; }
-        .status-card:nth-child(4) { animation-delay: 0.4s; }
-        .status-card:nth-child(5) { animation-delay: 0.5s; }
+        .status-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
 
-        #heat-card.heat-hot::before { background: var(--high); }
-        #heat-card.heat-mod::before { background: var(--moderate); }
+        .status-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .status-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .status-card:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        .status-card:nth-child(5) {
+            animation-delay: 0.5s;
+        }
+
+        #heat-card.heat-hot::before {
+            background: var(--high);
+        }
+
+        #heat-card.heat-mod::before {
+            background: var(--moderate);
+        }
 
         .status-card::before {
             content: '';
@@ -539,8 +566,13 @@
             transition: background 0.3s ease;
         }
 
-        .status-card.high::before { background: var(--high); }
-        .status-card.moderate::before { background: var(--moderate); }
+        .status-card.high::before {
+            background: var(--high);
+        }
+
+        .status-card.moderate::before {
+            background: var(--moderate);
+        }
 
         .status-card:hover {
             border-color: var(--primary-light);
@@ -1026,9 +1058,17 @@
             transform: translateX(4px);
         }
 
-        .alert-item.high { border-left-color: var(--high); }
-        .alert-item.moderate { border-left-color: var(--moderate); }
-        .alert-item.low { border-left-color: var(--low); }
+        .alert-item.high {
+            border-left-color: var(--high);
+        }
+
+        .alert-item.moderate {
+            border-left-color: var(--moderate);
+        }
+
+        .alert-item.low {
+            border-left-color: var(--low);
+        }
 
         .alert-time {
             font-size: 0.75rem;
@@ -1062,9 +1102,20 @@
             color: var(--text-secondary);
         }
 
-        .alert-badge.high { background: rgba(211, 47, 47, 0.2); color: var(--high); }
-        .alert-badge.moderate { background: rgba(245, 124, 0, 0.2); color: var(--moderate); }
-        .alert-badge.low { background: rgba(46, 125, 50, 0.2); color: var(--low); }
+        .alert-badge.high {
+            background: rgba(211, 47, 47, 0.2);
+            color: var(--high);
+        }
+
+        .alert-badge.moderate {
+            background: rgba(245, 124, 0, 0.2);
+            color: var(--moderate);
+        }
+
+        .alert-badge.low {
+            background: rgba(46, 125, 50, 0.2);
+            color: var(--low);
+        }
 
         /* ===== ACTION LOG ===== */
         .action-buttons {
@@ -1293,8 +1344,15 @@
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
 
         /* ===== ANIMATIONS ===== */
@@ -1303,6 +1361,7 @@
                 opacity: 0;
                 transform: translateY(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -1314,6 +1373,7 @@
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -1325,6 +1385,7 @@
                 opacity: 0;
                 transform: translateX(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateX(0);
@@ -1389,6 +1450,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="offline-banner" id="offlineBanner">
         📡 You are offline - displaying cached data
@@ -1433,7 +1495,8 @@
                     </div>
                     <a href="/registration" class="btn secondary">Register for alerts</a>
                     <a href="/guides" class="btn secondary">📚 Guides</a>
-                    <a href="/help/aqi-help" class="btn secondary" title="How the platform works — from our guides">💬 aqiHelp</a>
+                    <a href="/help/aqi-help" class="btn secondary" title="How the platform works — from our guides">💬
+                        aqiHelp</a>
                     <button class="btn secondary" onclick="refreshAllData()">⟳ REFRESH</button>
                     <button class="btn" onclick="downloadData()">⬇ EXPORT</button>
                 </div>
@@ -1445,8 +1508,10 @@
             <div class="selector-header">
                 <span class="selector-title">📍 Geographic Mode & City Selection</span>
                 <div class="mode-buttons">
-                    <button class="mode-btn active" id="regionalBtn" onclick="switchMode('regional')">🎯 Regional (8 Cities)</button>
-                    <button class="mode-btn" id="nationalBtn" onclick="switchMode('national')">🇳🇵 National Scale</button>
+                    <button class="mode-btn active" id="regionalBtn" onclick="switchMode('regional')">🎯 Regional (8
+                        Cities)</button>
+                    <button class="mode-btn" id="nationalBtn" onclick="switchMode('national')">🇳🇵 National
+                        Scale</button>
                 </div>
             </div>
 
@@ -1535,12 +1600,15 @@
             </div>
         </div>
 
-        <p id="compound-environment-note" style="font-size:0.8rem;color:var(--text-secondary);margin:0 0 16px;display:none;line-height:1.45;">
+        <p id="compound-environment-note"
+            style="font-size:0.8rem;color:var(--text-secondary);margin:0 0 16px;display:none;line-height:1.45;">
         </p>
 
         <p style="font-size:0.75rem;color:var(--text-tertiary);margin:0 0 16px;line-height:1.45;">
-            <strong>Air + heat data paths:</strong> PM2.5 / index resolve via <code>/api/air-quality/current</code>; effective °C (+ feels-like tier) uses <code>/api/heat/current</code>.
-            Thresholds mirror <code>POST /api/alerts/evaluate</code> and <code>/api/alerts/evaluate-heat</code> defaults (adjust with env vars).
+            <strong>Air + heat data paths:</strong> PM2.5 / index resolve via <code>/api/air-quality/current</code>;
+            effective °C (+ feels-like tier) uses <code>/api/heat/current</code>.
+            Thresholds mirror <code>POST /api/alerts/evaluate</code> and <code>/api/alerts/evaluate-heat</code> defaults
+            (adjust with env vars).
         </p>
 
         <!-- MAIN CONTENT -->
@@ -1551,7 +1619,8 @@
                     <span class="panel-title">Air Quality 24H</span>
                     <div class="panel-icon">📊</div>
                 </div>
-                <p id="aq-chart-note" style="font-size:0.75rem;color:var(--text-tertiary);margin:0 0 10px 0;line-height:1.4;">
+                <p id="aq-chart-note"
+                    style="font-size:0.75rem;color:var(--text-tertiary);margin:0 0 10px 0;line-height:1.4;">
                     —
                 </p>
                 <div class="chart-container">
@@ -1603,14 +1672,17 @@
             <div class="panel scenario-sim-panel" id="scenarioSimPanel">
                 <div class="panel-header">
                     <span class="panel-title">Scenario A · Stress sandbox</span>
-                    <button type="button" class="scenario-reset-btn" id="scenarioResetLive" title="Set sliders from latest dashboard readings">
+                    <button type="button" class="scenario-reset-btn" id="scenarioResetLive"
+                        title="Set sliders from latest dashboard readings">
                         Use live readings
                     </button>
                 </div>
                 <p class="scenario-sim-intro">
-                    Move the sliders to explore <strong>illustrative</strong> respiratory load if pollution and heat stayed at the values you dial in.
+                    Move the sliders to explore <strong>illustrative</strong> respiratory load if pollution and heat
+                    stayed at the values you dial in.
                     The baseline comes from this week&apos;s <em>synthetic</em> case curve (until DHIS2 is connected).
-                    Numbers are a simple multiplied scenario for discussion — not validated forecasting and not a substitute for local surveillance.
+                    Numbers are a simple multiplied scenario for discussion — not validated forecasting and not a
+                    substitute for local surveillance.
                 </p>
                 <div class="scenario-slider-row">
                     <label for="simPm25">
@@ -1642,13 +1714,15 @@
                         <div class="scenario-val" style="font-size:1rem;line-height:1.35;margin-top:2px;">
                             Pollution <span id="simSandboxAirMul">—</span> · Heat <span id="simSandboxHeatMul">—</span>
                         </div>
-                        <div class="scenario-sub">Combined × <strong id="simSandboxCombinedMul" style="font-weight:800;color:var(--ai);">—</strong> applied to baseline daily avg.</div>
+                        <div class="scenario-sub">Combined × <strong id="simSandboxCombinedMul"
+                                style="font-weight:800;color:var(--ai);">—</strong> applied to baseline daily avg.</div>
                     </div>
                     <div class="scenario-out-card">
                         <div class="scenario-kicker">Rough scenario daily / week</div>
                         <div class="scenario-val" id="simSandboxDaily">—</div>
                         <div class="scenario-sub">
-                            Week scale ≈ <span id="simSandboxWeek">—</span><br /><span id="simSandboxDelta" style="display:inline-block;margin-top:4px;">—</span>
+                            Week scale ≈ <span id="simSandboxWeek">—</span><br /><span id="simSandboxDelta"
+                                style="display:inline-block;margin-top:4px;">—</span>
                         </div>
                     </div>
                 </div>
@@ -1661,7 +1735,8 @@
                     <div class="panel-icon">👤</div>
                 </div>
                 <p style="font-size:0.88rem;color:var(--text-secondary);line-height:1.55;margin:0 0 14px;">
-                    Facility sign-in, your registration profile, and workplace preparedness buttons are on the <strong>Users</strong> page so this dashboard stays focused on environmental and case data.
+                    Facility sign-in, your registration profile, and workplace preparedness buttons are on the
+                    <strong>Users</strong> page so this dashboard stays focused on environmental and case data.
                 </p>
                 <a href="/users" class="btn" style="display:inline-block;text-decoration:none;">Open Users page →</a>
                 <p style="font-size:0.76rem;color:var(--text-tertiary);margin:14px 0 0;line-height:1.45;">
@@ -1675,13 +1750,18 @@
                 <span class="panel-title">Compare cities · air snapshot</span>
             </div>
             <p class="aq-compare-hint">
-                <strong>Select cities below</strong> to load side-by-side air readings (nothing is fetched until at least one box is checked). Checking many cities at once can hit RapidAPI rate limits (HTTP 429); keep selections small, or ensure
-                <code>WEATHERAPI_COM_API_KEY</code> is set so the server prefers paid WeatherAPI before WAQI/Rapid. Compare runs <strong>one city at a time</strong> (~0.65s apart) after you check a city or tap Refresh.
+                <strong>Select cities below</strong> to load side-by-side air readings (nothing is fetched until at
+                least one box is checked). Checking many cities at once can hit RapidAPI rate limits (HTTP 429); keep
+                selections small, or ensure
+                <code>WEATHERAPI_COM_API_KEY</code> is set so the server prefers paid WeatherAPI before WAQI/Rapid.
+                Compare runs <strong>one city at a time</strong> (~0.65s apart) after you check a city or tap Refresh.
             </p>
             <div class="aq-compare-checks" id="aqCompareChecks" aria-label="Cities to include in comparison"></div>
             <div class="aq-compare-viz" id="aqCompareVizWrap" aria-label="PM2.5 comparison chart">
                 <p class="aq-compare-viz-caption" id="aqCompareVizCaption">
-                    <strong>Snapshot chart:</strong> PM2.5 (µg/m³) for each selected city. Bars are coloured by the same alert tiers as the table; the dashed line is your stored PM2.5 threshold (<span id="aqCompareThrLabel">150</span> µg/m³).
+                    <strong>Snapshot chart:</strong> PM2.5 (µg/m³) for each selected city. Bars are coloured by the same
+                    alert tiers as the table; the dashed line is your stored PM2.5 threshold (<span
+                        id="aqCompareThrLabel">150</span> µg/m³).
                 </p>
                 <div id="aqCompareChartPlaceholder" class="aq-compare-viz-placeholder">
                     Select one or more cities above — the chart loads with the table.
@@ -1702,7 +1782,10 @@
                         </tr>
                     </thead>
                     <tbody id="aqCompareTbody">
-                        <tr><td colspan="5" class="aq-compare-placeholder">Select one or more cities above to compare.</td></tr>
+                        <tr>
+                            <td colspan="5" class="aq-compare-placeholder">Select one or more cities above to compare.
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -1713,15 +1796,16 @@
         <footer>
             <p>
                 <span class="status-indicator" id="statusIndicator"></span>
-                Last updated: <span id="updated-at">--</span> | 
+                Last updated: <span id="updated-at">--</span> |
                 <span id="dataStatus">Connecting...</span>
                 | <span id="chainVerification" title="Blockchain verification metadata from API">Chain: checking…</span>
             </p>
             <p style="margin-top: 12px; color: var(--text-tertiary);">
-                Early Warning System v3.0 | Open-Source + Blockchain + AI-Powered | Bagmati Province + National Scale Ready
+                Early Warning System v3.0 | Open-Source + Blockchain + AI-Powered | Bagmati Province + National Scale
+                Ready
             </p>
             <div class="footer-powered-by">
-                <img src="/landing-assets/intelladapt-powered-mark.png" alt="" width="40" height="34" loading="lazy" />
+                <img src="/landing-assets/intelladapt-logo.png" alt="" width="40" height="34" loading="lazy" />
                 <span>Powered by <strong>intellADAPT</strong>, an Edwise Tech Company</span>
             </div>
         </footer>
@@ -1794,7 +1878,7 @@
                 el.textContent = 'Alerts unavailable';
             }
         }
-        
+
         // Cities configuration
         const CITIES_CONFIG = {
             "Kathmandu": {
@@ -1893,7 +1977,7 @@
             // Update button states
             document.getElementById('regionalBtn').classList.toggle('active', mode === 'regional');
             document.getElementById('nationalBtn').classList.toggle('active', mode === 'national');
-            
+
             if (mode === 'national') {
                 document.getElementById('nationalBtn').classList.add('active', 'phase2');
                 document.getElementById('regionalBtn').classList.remove('active');
@@ -1901,7 +1985,7 @@
                 document.getElementById('regionalBtn').classList.add('active');
                 document.getElementById('nationalBtn').classList.remove('active', 'phase2');
             }
-            
+
             // Reset to first city in mode
             currentCity = Object.keys(CITIES_CONFIG)[0];
             document.getElementById('citySelector').value = currentCity;
@@ -2398,10 +2482,10 @@
                 aqSource === 'waqi'
                     ? 'WAQI'
                     : aqSource === 'rapidapi_weather_air_quality'
-                      ? 'RapidAPI / WeatherAPI (proxy)'
-                      : aqSource === 'weatherapi_com'
-                        ? 'WeatherAPI.com (direct)'
-                        : 'API';
+                        ? 'RapidAPI / WeatherAPI (proxy)'
+                        : aqSource === 'weatherapi_com'
+                            ? 'WeatherAPI.com (direct)'
+                            : 'API';
             const sta =
                 typeof stationName === 'string' && stationName.trim()
                     ? ` · ${stationName.trim()}`
@@ -2522,10 +2606,10 @@
                         aq: j ? j.air_quality : null,
                         errDetail: !r.ok
                             ? (detail ||
-                                  (txt && txt.trim() ? txt.slice(0, 280) : `HTTP ${r.status}`)).slice(
-                                  0,
-                                  560,
-                              )
+                                (txt && txt.trim() ? txt.slice(0, 280) : `HTTP ${r.status}`)).slice(
+                                    0,
+                                    560,
+                                )
                             : '',
                     });
                 } catch (e) {
@@ -2571,8 +2655,8 @@
                         row.source === 'waqi' ? `WAQI ${idxRaw}` : idxRaw === '—' ? '—' : idxRaw;
                     const tier =
                         row.provenance &&
-                        row.provenance.confidence &&
-                        typeof row.provenance.confidence.tier === 'string'
+                            row.provenance.confidence &&
+                            typeof row.provenance.confidence.tier === 'string'
                             ? row.provenance.confidence.tier
                             : '';
                     const srcCell =
@@ -2639,8 +2723,8 @@
                             typeof det === 'string'
                                 ? det
                                 : det != null
-                                  ? JSON.stringify(det).slice(0, 600)
-                                  : `HTTP ${aqRes.status}`;
+                                    ? JSON.stringify(det).slice(0, 600)
+                                    : `HTTP ${aqRes.status}`;
                     }
                 } catch (jq) {
                     if (!aqRes.ok) {
@@ -2731,10 +2815,10 @@
                     heatRes.ok && heatLevelStr !== '--'
                         ? 'Tier · ' + heatLevelStr + ' · current snapshot'
                         : heatRes.ok
-                          ? '—'
-                          : (typeof heatBody.detail === 'string'
-                              ? 'Heat unavailable — ' + heatBody.detail.slice(0, 90)
-                              : 'Heat unavailable — HTTP ' + heatRes.status);
+                            ? '—'
+                            : (typeof heatBody.detail === 'string'
+                                ? 'Heat unavailable — ' + heatBody.detail.slice(0, 90)
+                                : 'Heat unavailable — HTTP ' + heatRes.status);
 
                 if (heatRes.ok) {
                     updateRoutingConfidenceUI(
@@ -2799,8 +2883,8 @@
                 const stationName = aqPayload && aqPayload.station_name ? aqPayload.station_name : '';
                 const aqTier =
                     aqProvenance &&
-                    aqProvenance.confidence &&
-                    typeof aqProvenance.confidence.tier === 'string'
+                        aqProvenance.confidence &&
+                        typeof aqProvenance.confidence.tier === 'string'
                         ? aqProvenance.confidence.tier
                         : '';
                 let airPhrase;
@@ -3068,8 +3152,8 @@
                 typeof casesJson.total === 'number' && !Number.isNaN(casesJson.total)
                     ? Math.round(casesJson.total)
                     : avg != null
-                      ? Math.round(avg * 7)
-                      : null;
+                        ? Math.round(avg * 7)
+                        : null;
         }
 
         function syncScenarioSlidersFromLive() {
@@ -3183,7 +3267,7 @@
         }
 
         function generateMockData(count, min, max) {
-            return Array.from({length: count}, () => 
+            return Array.from({ length: count }, () =>
                 Math.floor(Math.random() * (max - min + 1)) + min
             );
         }
@@ -3231,6 +3315,7 @@
         window.addEventListener('offline', checkOnlineStatus);
         window.addEventListener('offline', checkOnlineStatus);
     </script>
-<script defer src="/landing-assets/aqi-help-widget.js"></script>
+    <script defer src="/landing-assets/aqi-help-widget.js"></script>
 </body>
+
 </html>

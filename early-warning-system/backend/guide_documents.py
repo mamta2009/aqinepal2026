@@ -45,7 +45,7 @@ _SHELL = """<!DOCTYPE html>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>{title}</title>
-<link rel="icon" type="image/png" href="/landing-assets/intelladapt-logo.png"/>
+<link rel="icon" type="image/png" href="/landing-assets/favicon.ico"/>
 <style>
 :root {{ font-family: system-ui, Segoe UI, sans-serif; color: #0f172a; background:#f8fafc; }}
 body {{ margin:0; }}
