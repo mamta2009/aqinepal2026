@@ -9,8 +9,10 @@ Architecture diagram (on-disk; embedded on **`/guides`**):
 from __future__ import annotations
 
 import hashlib
+import html
 import logging
 import os
+import re
 import secrets
 import asyncio
 from datetime import datetime, timedelta
@@ -49,6 +51,25 @@ _REGISTRATION_HTML = _BACKEND_ROOT.parent / "landing" / "registration_portal.htm
 _CONTACTS_DIR_HTML = _BACKEND_ROOT.parent / "landing" / "contacts_directory.html"
 
 SENDGRID_MAIL_API_URL = "https://api.sendgrid.com/v3/mail/send"
+
+_EMOJI_RE = re.compile(
+    "["
+    "\U0001F300-\U0001FAFF"
+    "\U00002700-\U000027BF"
+    "\U0001F600-\U0001F64F"
+    "\U00002600-\U000026FF"
+    "\U0000FE00-\U0000FE0F"
+    "\U0001F1E0-\U0001F1FF"
+    "]+",
+    flags=re.UNICODE,
+)
+
+_ALERT_LEVEL_COLORS = {
+    "LOW": "#1b7a3d",
+    "MODERATE": "#b8860b",
+    "HIGH": "#c2410c",
+    "SEVERE": "#9b1c1c",
+}
 
 
 # ---------------------------------------------------------------------------
@@ -689,7 +710,193 @@ async def send_whatsapp(whatsapp_number: str, message: str) -> dict[str, Any]:
     return _twilio_legacy(r)
 
 
-async def send_email(to_email: str, subject: str, html_content: str) -> dict[str, Any]:
+def _notification_dashboard_url() -> str:
+    return (
+        os.getenv("NOTIFICATION_DASHBOARD_URL") or "https://your-app.com/dashboard"
+    ).strip()
+
+
+def _strip_emoji(text: str) -> str:
+    return _EMOJI_RE.sub("", text or "").strip()
+
+
+def _email_shell(
+    *,
+    title: str,
+    accent: str,
+    body_html: str,
+    footer_note: str = "You received this because you subscribed to Early Warning alerts.",
+) -> str:
+    """Table-based HTML shell with inline styles for email clients."""
+    safe_title = html.escape(title)
+    safe_footer = html.escape(footer_note)
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{safe_title}</title></head>
+<body style="margin:0;padding:0;background:#eef1f4;font-family:Georgia,'Times New Roman',serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef1f4;padding:28px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #d7dde5;">
+        <tr>
+          <td style="background:{accent};padding:18px 24px;">
+            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.85);">AQI Nepal · Early Warning</p>
+            <h1 style="margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:20px;line-height:1.3;font-weight:700;color:#ffffff;">{safe_title}</h1>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:24px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#1f2933;">
+            {body_html}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:14px 24px 20px;border-top:1px solid #e5e9ef;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.45;color:#6b7280;">
+            {safe_footer}
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
+
+
+def _parse_plain_alert_message(plain_message: str) -> tuple[list[tuple[str, str]], list[str], str | None, str | None]:
+    """Extract detail rows, action bullets, advisory note, and dashboard URL from SMS-style text."""
+    details: list[tuple[str, str]] = []
+    actions: list[str] = []
+    advisory: str | None = None
+    dashboard: str | None = None
+    in_actions = False
+
+    for raw in (plain_message or "").splitlines():
+        line = _strip_emoji(raw)
+        if not line:
+            continue
+        lower = line.lower()
+        if lower.startswith("dashboard:"):
+            dashboard = line.split(":", 1)[1].strip()
+            in_actions = False
+            continue
+        if "recommended actions" in lower or lower.startswith("guidance"):
+            in_actions = True
+            continue
+        if line.startswith("•") or line.startswith("-") or line.startswith("*"):
+            actions.append(line.lstrip("•-* ").strip())
+            in_actions = True
+            continue
+        if in_actions:
+            actions.append(line)
+            continue
+        if ":" in line and not lower.startswith("stay informed"):
+            key, val = line.split(":", 1)
+            key, val = key.strip(), val.strip()
+            if key and val and len(key) <= 48:
+                details.append((key, val))
+                continue
+        if lower.startswith("stay informed"):
+            continue
+        if advisory is None and len(line) > 24:
+            advisory = line
+
+    return details, actions, advisory, dashboard
+
+
+def _render_alert_email_html(
+    *,
+    city: str,
+    hazard_type: str,
+    level_label: str,
+    headline: str,
+    plain_message: str,
+) -> str:
+    haz = (hazard_type or "air").strip().lower()
+    level = (level_label or "").strip().upper() or "ALERT"
+    accent = _ALERT_LEVEL_COLORS.get(level, "#0f4c5c")
+
+    if haz == "heat":
+        title = "Heat Readiness Alert"
+    elif haz == "respiratory_surge":
+        title = "Respiratory Surge Alert"
+    else:
+        title = "Air Quality Alert"
+
+    details, actions, advisory, dashboard_from_msg = _parse_plain_alert_message(plain_message)
+    dashboard = dashboard_from_msg or _notification_dashboard_url()
+
+    # Ensure core fields are present even if message_override is free-form.
+    known_keys = {k.lower() for k, _ in details}
+    if "location" not in known_keys and city:
+        details.insert(0, ("Location", city))
+    if "level" not in known_keys and level:
+        details.insert(1 if details else 0, ("Level", level))
+    if (
+        haz == "air"
+        and headline
+        and str(headline).strip().upper() != level
+        and not any("aqi" in k.lower() or "index" in k.lower() for k, _ in details)
+    ):
+        details.append(("Index", str(headline)))
+
+    rows_html = "".join(
+        f"""<tr>
+          <td style="padding:8px 0;border-bottom:1px solid #eef1f4;font-size:13px;color:#6b7280;width:38%;vertical-align:top;">{html.escape(k)}</td>
+          <td style="padding:8px 0;border-bottom:1px solid #eef1f4;font-size:14px;color:#111827;font-weight:600;">{html.escape(v)}</td>
+        </tr>"""
+        for k, v in details
+    )
+
+    actions_html = ""
+    if actions:
+        items = "".join(f"<li style='margin:0 0 8px;'>{html.escape(a)}</li>" for a in actions)
+        actions_html = f"""
+        <p style="margin:22px 0 8px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#6b7280;font-weight:700;">Recommended actions</p>
+        <ul style="margin:0;padding-left:18px;color:#1f2933;">{items}</ul>
+        """
+
+    advisory_html = ""
+    if advisory:
+        advisory_html = (
+            f"<p style='margin:16px 0 0;padding:12px 14px;background:#f7f9fb;"
+            f"border-left:3px solid {accent};color:#374151;font-size:14px;'>"
+            f"{html.escape(advisory)}</p>"
+        )
+
+    cta_html = ""
+    if dashboard and "your-app.com" not in dashboard:
+        safe_url = html.escape(dashboard, quote=True)
+        cta_html = f"""
+        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0 8px;">
+          <tr><td style="background:{accent};border-radius:4px;">
+            <a href="{safe_url}" style="display:inline-block;padding:12px 20px;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;">Open dashboard</a>
+          </td></tr>
+        </table>
+        <p style="margin:0;font-size:12px;color:#6b7280;word-break:break-all;">{html.escape(dashboard)}</p>
+        """
+    elif dashboard:
+        cta_html = f"<p style='margin:20px 0 0;font-size:13px;color:#6b7280;'>Dashboard: {html.escape(dashboard)}</p>"
+
+    body = f"""
+      <p style="margin:0 0 16px;font-size:15px;color:#374151;">
+        An environmental alert has been issued for <strong>{html.escape(city)}</strong>.
+      </p>
+      <p style="margin:0 0 18px;">
+        <span style="display:inline-block;padding:6px 12px;background:{accent};color:#ffffff;font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-radius:3px;">{html.escape(level)}</span>
+      </p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">{rows_html}</table>
+      {advisory_html}
+      {actions_html}
+      {cta_html}
+    """
+    return _email_shell(title=title, accent=accent, body_html=body)
+
+
+async def send_email(
+    to_email: str,
+    subject: str,
+    html_content: str,
+    plain_text: str | None = None,
+) -> dict[str, Any]:
     key = _sendgrid_api_key_effective()
     from_email = _sendgrid_from_effective()
     if not key:
@@ -698,11 +905,15 @@ async def send_email(to_email: str, subject: str, html_content: str) -> dict[str
             "status": "failed",
             "error": "sendgrid_not_configured",
         }
+    content: list[dict[str, str]] = []
+    if plain_text:
+        content.append({"type": "text/plain", "value": plain_text})
+    content.append({"type": "text/html", "value": html_content})
     payload = {
         "personalizations": [{"to": [{"email": to_email}]}],
-        "from": {"email": from_email},
+        "from": {"email": from_email, "name": "AQI Nepal Early Warning"},
         "subject": subject,
-        "content": [{"type": "text/html", "value": html_content}],
+        "content": content,
     }
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -741,17 +952,30 @@ async def _dispatch_verification_email(
     name: str,
     code: str,
 ) -> dict[str, Any]:
-    html_content = f"""
-    <h2>Early Warning System</h2>
-    <p>Hi {name},</p>
-    <p>Your verification code:</p>
-    <h1 style="font-size: 32px; letter-spacing: 5px;">{code}</h1>
-    <p style="color: #666; font-size: 12px;">Expires in 24 hours. If you don't see this message, check spam/junk.</p>
+    safe_name = html.escape(name or "there")
+    safe_code = html.escape(code)
+    body = f"""
+      <p style="margin:0 0 12px;">Hi {safe_name},</p>
+      <p style="margin:0 0 18px;color:#374151;">Use this code to verify your Early Warning registration:</p>
+      <p style="margin:0 0 18px;text-align:center;font-family:Consolas,Monaco,monospace;font-size:32px;letter-spacing:0.28em;font-weight:700;color:#0f4c5c;">{safe_code}</p>
+      <p style="margin:0;font-size:13px;color:#6b7280;">This code expires in 24 hours. If you did not request registration, you can ignore this email.</p>
     """
+    html_content = _email_shell(
+        title="Verify your registration",
+        accent="#0f4c5c",
+        body_html=body,
+        footer_note="AQI Nepal Early Warning System",
+    )
+    plain = (
+        f"Hi {name},\n\n"
+        f"Your Early Warning verification code is: {code}\n\n"
+        f"This code expires in 24 hours.\n"
+    )
     result = await send_email(
         email,
         "Verify your Early Warning registration",
         html_content,
+        plain_text=plain,
     )
     if result.get("success"):
         await db.notification_logs.insert_one(
@@ -2880,16 +3104,23 @@ async def broadcast_to_recipients(
 
     def _subject() -> str:
         if haz == "heat":
-            return f"HEAT ALERT — {level_label}"
+            return f"Heat Alert — {level_label} · {city}"
         if haz == "respiratory_surge":
-            return f"RESPIRATORY SURGE — {level_label}"
-        return f"AIR QUALITY ALERT — {level_label}"
+            return f"Respiratory Surge — {level_label} · {city}"
+        return f"Air Quality Alert — {level_label} · {city}"
 
     results: dict[str, dict[str, int]] = {
         "sms": {"sent": 0, "failed": 0},
         "whatsapp": {"sent": 0, "failed": 0},
         "email": {"sent": 0, "failed": 0},
     }
+    email_html = _render_alert_email_html(
+        city=city,
+        hazard_type=haz,
+        level_label=level_label,
+        headline=str(head),
+        plain_message=message,
+    )
 
     for recipient in recipients:
         for channel in recipient.get("preferred_channels", []):
@@ -2904,7 +3135,8 @@ async def broadcast_to_recipients(
                 result = await send_email(
                     recipient["email"],
                     _subject(),
-                    f"<p><strong>{city}</strong> — {haz.upper()} · {head}</p><pre>{message}</pre>",
+                    email_html,
+                    plain_text=_strip_emoji(message),
                 )
                 results["email"]["sent" if result["success"] else "failed"] += 1
             if result:
@@ -2961,9 +3193,7 @@ async def broadcast_alert(
         "SEVERE": "🔴🔴",
     }
     emoji = emoji_map.get(alert.aqi_level.value, "⚠️")
-    dashboard = (
-        os.getenv("NOTIFICATION_DASHBOARD_URL") or "https://your-app.com/dashboard"
-    ).strip()
+    dashboard = _notification_dashboard_url()
 
     message = alert.message_override or (
         f"""{emoji} AIR QUALITY ALERT
@@ -3110,9 +3340,7 @@ async def evaluate_air_alert(
         "SEVERE": "🔴🔴",
     }
     emoji = emoji_map.get(level.value, "⚠️")
-    dashboard = (
-        os.getenv("NOTIFICATION_DASHBOARD_URL") or "https://your-app.com/dashboard"
-    ).strip()
+    dashboard = _notification_dashboard_url()
 
     message = (
         f"""{emoji} AIR QUALITY ALERT
@@ -3244,9 +3472,7 @@ async def evaluate_heat_alert(
         "SEVERE": "🔴🔴",
     }
     emoji = emoji_map.get(level.value, "⚠️")
-    dashboard = (
-        os.getenv("NOTIFICATION_DASHBOARD_URL") or "https://your-app.com/dashboard"
-    ).strip()
+    dashboard = _notification_dashboard_url()
     hdr = blob.get("advisory_basis") or "Current snapshot—not a daily-max forecast."
     feels = blob.get("feelslike_c")
     feels_line = ""
