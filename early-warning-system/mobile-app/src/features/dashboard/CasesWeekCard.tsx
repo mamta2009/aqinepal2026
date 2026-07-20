@@ -1,0 +1,67 @@
+import { useMemo } from 'react';
+import { ActivityIndicator, Text, View, useColorScheme } from 'react-native';
+import { BarChart } from 'react-native-gifted-charts';
+
+import { BrandColors } from '@/constants/brand';
+
+import type { CasesWeekResponse } from '@/types/cases';
+
+interface CasesWeekCardProps {
+  data: CasesWeekResponse | undefined;
+  isLoading: boolean;
+}
+
+const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/** Recreates the "Cases This Week" bar chart from `frontend/index.html` (synthetic WHO-pattern data). */
+export function CasesWeekCard({ data, isLoading }: CasesWeekCardProps) {
+  const scheme = useColorScheme();
+  const isDark = scheme === 'dark';
+
+  const bars = useMemo(() => {
+    if (!data) return [];
+    return data.data.map((day) => ({
+      value: day.cases,
+      label: WEEKDAY_LABELS[new Date(day.date).getDay()],
+      frontColor: BrandColors.secondary,
+    }));
+  }, [data]);
+
+  return (
+    <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <View className="mb-3 flex-row items-baseline justify-between">
+        <Text className="text-sm font-semibold text-neutral-900 dark:text-white">
+          Respiratory cases — this week
+        </Text>
+        {data ? (
+          <Text className="font-mono text-sm text-neutral-500 dark:text-neutral-400">
+            {data.total} total
+          </Text>
+        ) : null}
+      </View>
+
+      {isLoading ? (
+        <ActivityIndicator className="h-[160px] self-center" />
+      ) : bars.length > 0 ? (
+        <BarChart
+          data={bars}
+          height={140}
+          barWidth={20}
+          barBorderRadius={4}
+          spacing={18}
+          hideRules
+          yAxisTextStyle={{ color: isDark ? '#a3a3a3' : '#737373', fontSize: 10 }}
+          xAxisLabelTextStyle={{ color: isDark ? '#a3a3a3' : '#737373', fontSize: 10 }}
+          yAxisColor={isDark ? '#404040' : '#d4d4d4'}
+          xAxisColor={isDark ? '#404040' : '#d4d4d4'}
+        />
+      ) : (
+        <Text className="text-sm text-neutral-500 dark:text-neutral-400">No case data yet.</Text>
+      )}
+
+      <Text className="mt-3 text-xs text-neutral-500 dark:text-neutral-400">
+        {data?.note ?? 'Synthetic demo data — transitions to real DHIS2 data when connected.'}
+      </Text>
+    </View>
+  );
+}
