@@ -6,6 +6,7 @@ export { FiveDayForecastCard } from "./FiveDayForecastCard";
 export { CasesWeekCard } from "./CasesWeekCard";
 export { RecentAlertsCard } from "./RecentAlertsCard";
 export { AlertRow } from "./AlertRow";
+export { StressSandboxCard } from "./StressSandboxCard";
 export {
   DashboardActionsSidebar,
   DashboardMenuButton,

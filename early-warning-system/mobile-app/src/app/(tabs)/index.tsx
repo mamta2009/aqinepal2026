@@ -12,6 +12,7 @@ import {
   FiveDayForecastCard,
   RecentAlertsCard,
   StatusCards,
+  StressSandboxCard,
 } from '@/features/dashboard';
 import { useAirQuality } from '@/hooks/useAirQuality';
 import { useCasesWeek } from '@/hooks/useCasesWeek';
@@ -131,6 +132,13 @@ export default function DashboardScreen() {
           />
 
           <CasesWeekCard data={casesWeek.data} isLoading={casesWeek.isLoading} />
+
+          <StressSandboxCard
+            cityLabel={selectedCity}
+            livePm25={pm25}
+            liveHeatC={heat.data?.heat_temperature_display}
+            casesWeek={casesWeek.data}
+          />
 
           {airQuality.isError ? (
             <Text className="text-sm text-primary">
