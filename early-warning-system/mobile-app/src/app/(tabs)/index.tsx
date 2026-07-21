@@ -6,6 +6,8 @@ import {
   AirQualityChart,
   CasesWeekCard,
   CityPicker,
+  DashboardActionsSidebar,
+  DashboardMenuButton,
   RecentAlertsCard,
   StatusCards,
 } from '@/features/dashboard';
@@ -45,6 +47,8 @@ export default function DashboardScreen() {
   const aqiLabel = isWaqiIndex ? 'AQI' : 'PM2.5 score';
 
   const [refreshing, setRefreshing] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
@@ -65,13 +69,16 @@ export default function DashboardScreen() {
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={{ paddingBottom: BottomTabInset + Spacing.four }}>
-        <View className="px-4 pb-4 pt-2">
-          <Text className="text-2xl font-bold text-neutral-900 dark:text-white">
-            Early Warning
-          </Text>
-          <Text className="text-sm text-neutral-500 dark:text-neutral-400">
-            Air quality &amp; respiratory risk — {selectedCity}
-          </Text>
+        <View className="flex-row items-start justify-between px-4 pb-4 pt-2">
+          <View className="mr-3 flex-1">
+            <Text className="text-2xl font-bold text-neutral-900 dark:text-white">
+              Early Warning
+            </Text>
+            <Text className="text-sm text-neutral-500 dark:text-neutral-400">
+              Air quality &amp; respiratory risk — {selectedCity}
+            </Text>
+          </View>
+          <DashboardMenuButton onPress={() => setSidebarOpen(true)} />
         </View>
 
         <CityPicker selectedCity={selectedCity} onSelectCity={setSelectedCity} />
@@ -112,6 +119,14 @@ export default function DashboardScreen() {
           ) : null}
         </View>
       </ScrollView>
+
+      <DashboardActionsSidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onRefresh={onRefresh}
+        refreshing={refreshing}
+        selectedCity={selectedCity}
+      />
     </SafeAreaView>
   );
 }
