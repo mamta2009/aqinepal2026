@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   AirQualityChart,
   CasesWeekCard,
+  CityInfoPanel,
   CityPicker,
   DashboardActionsSidebar,
   DashboardMenuButton,
@@ -13,6 +14,7 @@ import {
 } from '@/features/dashboard';
 import { useAirQuality } from '@/hooks/useAirQuality';
 import { useCasesWeek } from '@/hooks/useCasesWeek';
+import { useCities } from '@/hooks/useCities';
 import { useHeatCurrent } from '@/hooks/useHeatCurrent';
 import { useLatestAlert } from '@/hooks/useLatestAlert';
 import { useRuntimeConfig } from '@/hooks/useRuntimeConfig';
@@ -28,10 +30,13 @@ export default function DashboardScreen() {
   const setSelectedCity = useDashboardStore((state) => state.setSelectedCity);
 
   const runtimeConfig = useRuntimeConfig();
+  const cities = useCities();
   const airQuality = useAirQuality(selectedCity);
   const heat = useHeatCurrent(selectedCity);
   const casesWeek = useCasesWeek(selectedCity);
   const latestAlert = useLatestAlert(selectedCity);
+
+  const selectedCityInfo = cities.data?.cities.find((c) => c.name === selectedCity);
 
   const threshold =
     runtimeConfig.data?.dashboard.pm25_alert_threshold_ugm3 ?? DEFAULT_PM25_THRESHOLD;
@@ -58,11 +63,12 @@ export default function DashboardScreen() {
         casesWeek.refetch(),
         latestAlert.refetch(),
         runtimeConfig.refetch(),
+        cities.refetch(),
       ]);
     } finally {
       setRefreshing(false);
     }
-  }, [airQuality, heat, casesWeek, latestAlert, runtimeConfig]);
+  }, [airQuality, heat, casesWeek, latestAlert, runtimeConfig, cities]);
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-50 dark:bg-surface-dark" edges={['top']}>
@@ -82,6 +88,8 @@ export default function DashboardScreen() {
         </View>
 
         <CityPicker selectedCity={selectedCity} onSelectCity={setSelectedCity} />
+
+        <CityInfoPanel city={selectedCityInfo} isLoading={cities.isLoading} />
 
         <StatusCards
           pm25={pm25}

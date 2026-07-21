@@ -2,6 +2,9 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { CITY_NAMES, type CityName } from '@/constants/cities';
 
+/** Matches `--phase1` on the web geographic selector. */
+const PHASE1_GREEN = '#10b981';
+
 interface CityPickerProps {
   selectedCity: CityName;
   onSelectCity: (city: CityName) => void;
@@ -28,9 +31,10 @@ export function CityPicker({ selectedCity, onSelectCity }: CityPickerProps) {
               onPress={() => onSelectCity(city)}
               className={
                 isSelected
-                  ? 'rounded-full bg-primary px-4 py-2'
+                  ? 'rounded-full px-4 py-2'
                   : 'rounded-full border border-neutral-300 px-4 py-2 dark:border-neutral-700'
-              }>
+              }
+              style={isSelected ? { backgroundColor: PHASE1_GREEN } : undefined}>
               <Text
                 className={
                   isSelected

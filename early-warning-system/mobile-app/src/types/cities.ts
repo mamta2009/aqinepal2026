@@ -5,6 +5,8 @@ export interface CityInfo {
   elevation: number;
   province: string;
   status: string;
+  /** Present on the web dashboard config; API may omit (defaults to Phase 1). */
+  phase?: number;
 }
 
 /** `GET /api/cities` response (`main.py`). */
