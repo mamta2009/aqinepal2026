@@ -41,6 +41,7 @@ export default function RootLayout() {
             <Stack.Screen name="register" options={{ title: 'Register' }} />
             <Stack.Screen name="verify" options={{ title: 'Verify' }} />
             <Stack.Screen name="alerts" options={{ title: 'Recent Alerts' }} />
+            <Stack.Screen name="compare" options={{ title: 'Compare cities' }} />
           </Stack>
         </AuthBootstrap>
       </ThemeProvider>

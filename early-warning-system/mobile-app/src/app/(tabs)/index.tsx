@@ -82,10 +82,16 @@ export default function DashboardScreen() {
         contentContainerStyle={{ paddingBottom: BottomTabInset + Spacing.four }}>
         <View className="flex-row items-start justify-between px-4 pb-4 pt-2">
           <View className="mr-3 flex-1">
-            <Text className="text-2xl font-bold text-neutral-900 dark:text-white">
-              Early Warning
+            <View className="flex-row items-center gap-2">
+              <Text className="text-2xl font-bold text-primary">▲</Text>
+              <Text className="font-mono text-2xl font-bold uppercase tracking-tight text-primary">
+                EARLY WARNING
+              </Text>
+            </View>
+            <Text className="mt-0.5 text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+              Nepal Respiratory Health Alerts
             </Text>
-            <Text className="text-sm text-neutral-500 dark:text-neutral-400">
+            <Text className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
               Air quality &amp; respiratory risk — {selectedCity}
             </Text>
           </View>

@@ -138,6 +138,11 @@ export function DashboardActionsSidebar({
     router.push({ pathname: '/alerts', params: { city: selectedCity } });
   }, [onClose, router, selectedCity]);
 
+  const handleCompare = useCallback(() => {
+    onClose();
+    router.push('/compare');
+  }, [onClose, router]);
+
   const handleAqiHelp = useCallback(async () => {
     const href = `${API_BASE_URL}${AQI_HELP_PATH}`;
     onClose();
@@ -218,6 +223,11 @@ export function DashboardActionsSidebar({
             label="Recent Alerts"
             hint={`View alerts for ${selectedCity}`}
             onPress={handleAlerts}
+          />
+          <ActionRow
+            label="Compare Cities"
+            hint="Side-by-side air snapshot chart and readings"
+            onPress={handleCompare}
           />
           <ActionRow
             label="aqiHelp"
