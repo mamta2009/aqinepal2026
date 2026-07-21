@@ -5,9 +5,7 @@ import { API_BASE_URL, API_TIMEOUT_MS } from "@/constants/api";
 /**
  * Shared Axios instance for all backend calls.
  *
- * Auth isn't wired up yet (that's a later feature) — `getAuthToken` is a
- * swappable provider so the request interceptor below doesn't need to change
- * once `store/authStore` exists; it just starts returning a real token.
+ * Bearer token comes from `setAuthTokenProvider` (wired by `store/authStore`).
  */
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -18,11 +16,19 @@ export const apiClient = axios.create({
 });
 
 type AuthTokenProvider = () => string | null;
+type UnauthorizedHandler = () => void;
 
 let getAuthToken: AuthTokenProvider = () => null;
+let onUnauthorized: UnauthorizedHandler | null = null;
 
 export function setAuthTokenProvider(provider: AuthTokenProvider): void {
   getAuthToken = provider;
+}
+
+export function setUnauthorizedHandler(
+  handler: UnauthorizedHandler | null,
+): void {
+  onUnauthorized = handler;
 }
 
 apiClient.interceptors.request.use((config) => {
@@ -32,6 +38,16 @@ apiClient.interceptors.request.use((config) => {
   }
   return config;
 });
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      onUnauthorized?.();
+    }
+    return Promise.reject(error);
+  },
+);
 
 export interface ApiError {
   status: number | null;
@@ -44,14 +60,19 @@ export function toApiError(error: unknown): ApiError {
   if (axiosError?.isAxiosError) {
     const status = axiosError.response?.status ?? null;
     const detail = axiosError.response?.data?.detail;
-    return {
-      status,
-      message:
-        (typeof detail === "string" && detail) ||
-        axiosError.message ||
-        "Network request failed",
-      detail,
-    };
+    let message =
+      (typeof detail === "string" && detail) ||
+      axiosError.message ||
+      "Network request failed";
+    if (detail && typeof detail === "object" && !Array.isArray(detail)) {
+      const maybeMsg = (detail as { message?: unknown }).message;
+      if (typeof maybeMsg === "string") message = maybeMsg;
+    }
+    if (Array.isArray(detail) && detail.length > 0) {
+      const first = detail[0] as { msg?: string };
+      if (typeof first?.msg === "string") message = first.msg;
+    }
+    return { status, message, detail };
   }
   return {
     status: null,

@@ -20,11 +20,13 @@ export default function AppTabs() {
         />
       </NativeTabs.Trigger>
 
-      {/*
-        Future tabs (added one feature at a time, per the integration plan):
-        - Alerts (notification inbox)
-        - Account (login / profile / preferences)
-      */}
+      <NativeTabs.Trigger name="account">
+        <NativeTabs.Trigger.Label>Account</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          src={require('@/assets/images/tabIcons/explore.png')}
+          renderingMode="template"
+        />
+      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }
