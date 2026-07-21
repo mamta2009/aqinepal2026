@@ -30,3 +30,18 @@ export const AlertLevelColors: Record<AlertLevel, string> = {
   SEVERE: BrandColors.primaryDark,
   "NO DATA": "#6b7280",
 };
+
+/**
+ * Left-bar colors for the Heat status card, matching web
+ * `#heat-card.heat-hot` / `.heat-mod` (`--high` / `--moderate` / `--low`).
+ * MODERATE starts at ~30°C (`HEAT_THRESHOLD_MODERATE_C`).
+ */
+export const HeatLevelColors: Record<
+  "LOW" | "MODERATE" | "HIGH" | "SEVERE",
+  string
+> = {
+  LOW: BrandColors.success,
+  MODERATE: "#f57c00",
+  HIGH: BrandColors.primary,
+  SEVERE: BrandColors.primary,
+};
