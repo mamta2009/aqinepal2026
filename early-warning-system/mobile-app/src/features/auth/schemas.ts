@@ -38,6 +38,10 @@ export const registerSchema = z
     consent_given: z
       .boolean()
       .refine((v) => v === true, { message: "Consent is required" }),
+    privacy_agreed: z
+      .boolean()
+      .refine((v) => v === true, { message: "Privacy agreement is required" }),
+    data_use: z.boolean(),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
@@ -107,7 +111,7 @@ export const channelPrefsSchema = z.object({
 
 export type ChannelPrefsFormValues = z.infer<typeof channelPrefsSchema>;
 
-/** Build API register payload from form values (drops confirm password). */
+/** Build API register payload from form values (drops confirm password and local-only flags). */
 export function toRegisterPayload(values: RegisterFormValues) {
   const phone = values.phone_number.trim();
   const whatsapp = (values.whatsapp_number || "").trim() || phone;
@@ -127,7 +131,7 @@ export function toRegisterPayload(values: RegisterFormValues) {
     preferred_channels: values.preferred_channels,
     environmental_topics: values.environmental_topics,
     language: values.language,
-    consent_given: true as boolean,
+    consent_given: values.consent_given === true,
     password: values.password,
   };
 }

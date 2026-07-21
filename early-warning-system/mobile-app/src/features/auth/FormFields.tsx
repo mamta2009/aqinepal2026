@@ -1,10 +1,36 @@
+import { type ReactNode } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
+
+export function FormSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: ReactNode;
+}) {
+  return (
+    <View className="mb-5 border-b border-neutral-200 pb-4 dark:border-neutral-800">
+      <Text className="mb-1 text-lg font-bold text-neutral-900 dark:text-white">{title}</Text>
+      {description ? (
+        <Text className="mb-3 text-sm leading-5 text-neutral-500 dark:text-neutral-400">
+          {description}
+        </Text>
+      ) : (
+        <View className="mb-3" />
+      )}
+      {children}
+    </View>
+  );
+}
 
 interface AuthTextFieldProps {
   label: string;
   value: string;
   onChangeText: (text: string) => void;
   error?: string;
+  help?: string;
   placeholder?: string;
   secureTextEntry?: boolean;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
@@ -18,6 +44,7 @@ export function AuthTextField({
   value,
   onChangeText,
   error,
+  help,
   placeholder,
   secureTextEntry,
   autoCapitalize = 'none',
@@ -27,9 +54,7 @@ export function AuthTextField({
 }: AuthTextFieldProps) {
   return (
     <View className="mb-3">
-      <Text className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-        {label}
-      </Text>
+      <Text className="mb-1 text-sm font-medium text-neutral-800 dark:text-neutral-200">{label}</Text>
       <TextInput
         className="rounded-xl border border-neutral-300 bg-white px-3 py-3 text-base text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
         value={value}
@@ -42,8 +67,11 @@ export function AuthTextField({
         keyboardType={keyboardType}
         multiline={multiline}
         editable={editable}
-        style={multiline ? { minHeight: 80, textAlignVertical: 'top' } : undefined}
+        style={multiline ? { minHeight: 96, textAlignVertical: 'top' } : undefined}
       />
+      {help ? (
+        <Text className="mt-1 text-xs leading-4 text-neutral-500 dark:text-neutral-400">{help}</Text>
+      ) : null}
       {error ? <Text className="mt-1 text-xs text-primary">{error}</Text> : null}
     </View>
   );
@@ -60,6 +88,9 @@ interface ChipMultiSelectProps {
   selected: string[];
   onChange: (next: string[]) => void;
   error?: string;
+  help?: string;
+  /** When true, selecting a chip replaces the selection (single-select). */
+  single?: boolean;
 }
 
 export function ChipMultiSelect({
@@ -68,8 +99,14 @@ export function ChipMultiSelect({
   selected,
   onChange,
   error,
+  help,
+  single = false,
 }: ChipMultiSelectProps) {
   const toggle = (value: string) => {
+    if (single) {
+      onChange([value]);
+      return;
+    }
     if (selected.includes(value)) {
       onChange(selected.filter((v) => v !== value));
     } else {
@@ -79,9 +116,7 @@ export function ChipMultiSelect({
 
   return (
     <View className="mb-3">
-      <Text className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-        {label}
-      </Text>
+      <Text className="mb-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">{label}</Text>
       <View className="flex-row flex-wrap gap-2">
         {options.map((opt) => {
           const isOn = selected.includes(opt.value);
@@ -104,6 +139,9 @@ export function ChipMultiSelect({
           );
         })}
       </View>
+      {help ? (
+        <Text className="mt-1 text-xs leading-4 text-neutral-500 dark:text-neutral-400">{help}</Text>
+      ) : null}
       {error ? <Text className="mt-1 text-xs text-primary">{error}</Text> : null}
     </View>
   );
