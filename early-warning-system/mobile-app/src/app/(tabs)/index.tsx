@@ -9,6 +9,7 @@ import {
   CityPicker,
   DashboardActionsSidebar,
   DashboardMenuButton,
+  FiveDayForecastCard,
   RecentAlertsCard,
   StatusCards,
 } from '@/features/dashboard';
@@ -18,6 +19,7 @@ import { useCities } from '@/hooks/useCities';
 import { useHeatCurrent } from '@/hooks/useHeatCurrent';
 import { useLatestAlert } from '@/hooks/useLatestAlert';
 import { useRuntimeConfig } from '@/hooks/useRuntimeConfig';
+import { useWeekForecast } from '@/hooks/useWeekForecast';
 import { toApiError } from '@/services/api/client';
 import { useDashboardStore } from '@/store/dashboardStore';
 import { alertLevelFromPm25 } from '@/utils/alertLevel';
@@ -34,6 +36,7 @@ export default function DashboardScreen() {
   const airQuality = useAirQuality(selectedCity);
   const heat = useHeatCurrent(selectedCity);
   const casesWeek = useCasesWeek(selectedCity);
+  const weekForecast = useWeekForecast(selectedCity);
   const latestAlert = useLatestAlert(selectedCity);
 
   const selectedCityInfo = cities.data?.cities.find((c) => c.name === selectedCity);
@@ -61,6 +64,7 @@ export default function DashboardScreen() {
         airQuality.refetch(),
         heat.refetch(),
         casesWeek.refetch(),
+        weekForecast.refetch(),
         latestAlert.refetch(),
         runtimeConfig.refetch(),
         cities.refetch(),
@@ -68,7 +72,7 @@ export default function DashboardScreen() {
     } finally {
       setRefreshing(false);
     }
-  }, [airQuality, heat, casesWeek, latestAlert, runtimeConfig, cities]);
+  }, [airQuality, heat, casesWeek, weekForecast, latestAlert, runtimeConfig, cities]);
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-50 dark:bg-surface-dark" edges={['top']}>
@@ -109,7 +113,14 @@ export default function DashboardScreen() {
             sourceLabel={airQuality.data?.source ?? 'API'}
           />
 
-          <CasesWeekCard data={casesWeek.data} isLoading={casesWeek.isLoading} />
+          <FiveDayForecastCard
+            cityLabel={selectedCity}
+            pm25={pm25}
+            data={weekForecast.data}
+            isLoading={weekForecast.isLoading}
+            isError={weekForecast.isError}
+            error={weekForecast.error}
+          />
 
           <RecentAlertsCard
             cityLabel={selectedCity}
@@ -118,6 +129,8 @@ export default function DashboardScreen() {
             latestAlert={latestAlert.data}
             isLoadingLatestAlert={latestAlert.isLoading}
           />
+
+          <CasesWeekCard data={casesWeek.data} isLoading={casesWeek.isLoading} />
 
           {airQuality.isError ? (
             <Text className="text-sm text-primary">

@@ -3,6 +3,7 @@ import { apiClient } from "./client";
 import type { AirQualityResponse } from "@/types/airQuality";
 import type { LatestAlertResponse } from "@/types/alerts";
 import type { CasesWeekResponse } from "@/types/cases";
+import type { WeekPredictResponse } from "@/types/forecast";
 import type { HeatCurrentResponse } from "@/types/heat";
 import type { CityName } from "@/constants/cities";
 
@@ -33,6 +34,15 @@ export async function getHeatCurrent(
 export async function getCasesWeek(city: CityName): Promise<CasesWeekResponse> {
   const { data } = await apiClient.get<CasesWeekResponse>(
     `/api/cases/week/${city}`,
+  );
+  return data;
+}
+
+export async function getWeekPredict(
+  city: CityName,
+): Promise<WeekPredictResponse> {
+  const { data } = await apiClient.get<WeekPredictResponse>(
+    `/api/models/predict/week/${city}`,
   );
   return data;
 }

@@ -1,0 +1,96 @@
+import { useMemo } from 'react';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+
+import { BrandColors } from '@/constants/brand';
+import { buildFiveDayForecast } from '@/utils/forecastDays';
+import { toApiError } from '@/services/api/client';
+
+import type { WeekPredictResponse } from '@/types/forecast';
+
+interface FiveDayForecastCardProps {
+  cityLabel: string;
+  pm25: number | null | undefined;
+  data: WeekPredictResponse | undefined;
+  isLoading: boolean;
+  isError?: boolean;
+  error?: unknown;
+}
+
+/** Recreates the AI "5-Day Forecast" panel from `frontend/index.html`. */
+export function FiveDayForecastCard({
+  cityLabel,
+  pm25,
+  data,
+  isLoading,
+  isError,
+  error,
+}: FiveDayForecastCardProps) {
+  const days = useMemo(
+    () => buildFiveDayForecast(data?.forecast, pm25),
+    [data?.forecast, pm25],
+  );
+
+  const modelLabel = data?.forecast?.model ? ` · ${data.forecast.model}` : '';
+
+  return (
+    <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <View className="mb-1 flex-row flex-wrap items-center gap-2">
+        <Text className="text-sm font-semibold text-neutral-900 dark:text-white">
+          5-Day Forecast
+        </Text>
+        <View
+          className="rounded px-2 py-0.5"
+          style={{ backgroundColor: 'rgba(6, 182, 212, 0.15)' }}>
+          <Text className="text-[10px] font-bold uppercase tracking-wide" style={{ color: BrandColors.ai }}>
+            AI Powered
+          </Text>
+        </View>
+      </View>
+
+      <Text className="mb-3 text-xs text-neutral-500 dark:text-neutral-400">
+        Predicted respiratory cases based on air quality forecast
+      </Text>
+
+      {isLoading && !data ? (
+        <ActivityIndicator className="my-6 self-center" color={BrandColors.ai} />
+      ) : isError && !data ? (
+        <Text className="py-4 text-sm text-neutral-500 dark:text-neutral-400">
+          Forecast unavailable
+          {error ? `: ${toApiError(error).message}` : ''}
+        </Text>
+      ) : (
+        <>
+          <Text className="mb-2 text-[11px] text-neutral-400 dark:text-neutral-500">
+            {cityLabel}
+            {modelLabel}
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 10 }}>
+            {days.map((day) => (
+              <View
+                key={day.day}
+                className="min-w-[100px] items-center rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-3 dark:border-neutral-700 dark:bg-neutral-950">
+                <Text className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                  Day {day.day}
+                </Text>
+                <Text className="font-mono text-2xl font-bold text-neutral-900 dark:text-white">
+                  {day.pm25}
+                </Text>
+                <Text className="text-[10px] text-neutral-400 dark:text-neutral-500">
+                  µg/m³
+                </Text>
+                <Text
+                  className="mt-2 text-xs font-semibold"
+                  style={{ color: BrandColors.ai }}>
+                  {day.cases} cases
+                </Text>
+              </View>
+            ))}
+          </ScrollView>
+        </>
+      )}
+    </View>
+  );
+}

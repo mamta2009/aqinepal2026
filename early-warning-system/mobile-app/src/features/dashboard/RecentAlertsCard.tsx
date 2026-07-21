@@ -1,36 +1,13 @@
-import { ActivityIndicator, Text, View } from 'react-native';
+import { useMemo } from 'react';
+import { useRouter } from 'expo-router';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
-import { AlertLevelColors } from '@/constants/brand';
-import { alertLevelFromPm25 } from '@/utils/alertLevel';
-import { formatRelativeTimestamp } from '@/utils/format';
+import { AlertRow } from '@/features/dashboard/AlertRow';
+import { buildRecentAlerts } from '@/utils/buildRecentAlerts';
 
 import type { LatestAlertResponse } from '@/types/alerts';
 
-interface AlertRowProps {
-  level: string;
-  time: string;
-  message: string;
-}
-
-function AlertRow({ level, time, message }: AlertRowProps) {
-  const color = AlertLevelColors[level as keyof typeof AlertLevelColors] ?? '#6b7280';
-  return (
-    <View className="flex-row gap-3 py-3">
-      <View className="w-1.5 rounded-full" style={{ backgroundColor: color }} />
-      <View className="flex-1">
-        <View className="flex-row items-center justify-between">
-          <Text
-            className="text-[11px] font-bold uppercase tracking-wide"
-            style={{ color }}>
-            {level}
-          </Text>
-          <Text className="text-[11px] text-neutral-400 dark:text-neutral-500">{time}</Text>
-        </View>
-        <Text className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">{message}</Text>
-      </View>
-    </View>
-  );
-}
+const PREVIEW_LIMIT = 2;
 
 interface RecentAlertsCardProps {
   cityLabel: string;
@@ -41,9 +18,7 @@ interface RecentAlertsCardProps {
 }
 
 /**
- * Recreates the "Recent alerts" panel from `frontend/index.html`: a
- * client-derived tier from live PM2.5 (`displayAlerts()` parity), plus the
- * real last broadcast summary from `GET /api/alerts/latest`.
+ * Dashboard preview of Recent Alerts (first few rows) with See all → `/alerts`.
  */
 export function RecentAlertsCard({
   cityLabel,
@@ -52,40 +27,64 @@ export function RecentAlertsCard({
   latestAlert,
   isLoadingLatestAlert,
 }: RecentAlertsCardProps) {
-  const level = alertLevelFromPm25(pm25, thresholdUgM3);
+  const router = useRouter();
 
-  const syntheticMessage =
-    level === 'NO DATA'
-      ? `${cityLabel}: no PM2.5 from API yet.`
-      : level === 'HIGH'
-        ? `${cityLabel}: PM2.5 ${Math.round(pm25 as number)} µg/m³ (threshold ${thresholdUgM3}). Elevated respiratory load possible.`
-        : level === 'MODERATE'
-          ? `${cityLabel}: PM2.5 ${Math.round(pm25 as number)} µg/m³ exceeds alert threshold (${thresholdUgM3}). Monitor.`
-          : `${cityLabel}: PM2.5 ${Math.round(pm25 as number)} µg/m³ below threshold (${thresholdUgM3}).`;
+  const allAlerts = useMemo(
+    () =>
+      buildRecentAlerts({
+        cityLabel,
+        pm25,
+        thresholdUgM3,
+        latestAlert,
+      }),
+    [cityLabel, pm25, thresholdUgM3, latestAlert],
+  );
+
+  const preview = allAlerts.slice(0, PREVIEW_LIMIT);
+  const hasMore = allAlerts.length > PREVIEW_LIMIT;
 
   return (
     <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-      <Text className="mb-1 text-sm font-semibold text-neutral-900 dark:text-white">
-        Recent alerts
-      </Text>
+      <View className="mb-1 flex-row items-center justify-between">
+        <Text className="text-sm font-semibold text-neutral-900 dark:text-white">
+          Recent alerts · {cityLabel}
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`See all alerts for ${cityLabel}`}
+          onPress={() =>
+            router.push({ pathname: '/alerts', params: { city: cityLabel } })
+          }
+          className="active:opacity-70">
+          <Text className="text-xs font-semibold text-secondary">See all</Text>
+        </Pressable>
+      </View>
 
-      <AlertRow level={level} time="Just now" message={syntheticMessage} />
-
-      {isLoadingLatestAlert ? (
+      {isLoadingLatestAlert && !latestAlert ? (
         <ActivityIndicator className="my-3 self-start" />
-      ) : latestAlert?.ok && latestAlert.source === 'alert_broadcasts' ? (
-        <AlertRow
-          level={latestAlert.severity_level ?? latestAlert.level ?? 'INFO'}
-          time={formatRelativeTimestamp(latestAlert.timestamp)}
-          message={`Last broadcast to ${latestAlert.city ?? cityLabel}: ${latestAlert.hazard_type ?? 'air'} alert, ${latestAlert.total_recipients ?? 0} recipients.`}
-        />
       ) : (
-        <AlertRow
-          level="INFO"
-          time="System"
-          message={latestAlert?.message ?? 'No broadcast history yet.'}
-        />
+        preview.map((alert) => (
+          <AlertRow
+            key={alert.id}
+            level={alert.level}
+            time={alert.time}
+            message={alert.message}
+          />
+        ))
       )}
+
+      {hasMore ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={() =>
+            router.push({ pathname: '/alerts', params: { city: cityLabel } })
+          }
+          className="mt-2 items-center rounded-xl border border-neutral-200 py-2.5 active:opacity-70 dark:border-neutral-700">
+          <Text className="text-sm font-semibold text-secondary">
+            See all for {cityLabel} ({allAlerts.length})
+          </Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }

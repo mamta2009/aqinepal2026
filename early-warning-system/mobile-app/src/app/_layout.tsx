@@ -40,6 +40,7 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="register" options={{ title: 'Register' }} />
             <Stack.Screen name="verify" options={{ title: 'Verify' }} />
+            <Stack.Screen name="alerts" options={{ title: 'Recent Alerts' }} />
           </Stack>
         </AuthBootstrap>
       </ThemeProvider>

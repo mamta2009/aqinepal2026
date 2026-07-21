@@ -133,6 +133,11 @@ export function DashboardActionsSidebar({
     router.push('/register');
   }, [onClose, router]);
 
+  const handleAlerts = useCallback(() => {
+    onClose();
+    router.push({ pathname: '/alerts', params: { city: selectedCity } });
+  }, [onClose, router, selectedCity]);
+
   const handleAqiHelp = useCallback(async () => {
     const href = `${API_BASE_URL}${AQI_HELP_PATH}`;
     onClose();
@@ -208,6 +213,11 @@ export function DashboardActionsSidebar({
             label="Register for Alerts"
             hint="Sign up for SMS and email alerts"
             onPress={handleRegister}
+          />
+          <ActionRow
+            label="Recent Alerts"
+            hint={`View alerts for ${selectedCity}`}
+            onPress={handleAlerts}
           />
           <ActionRow
             label="aqiHelp"
