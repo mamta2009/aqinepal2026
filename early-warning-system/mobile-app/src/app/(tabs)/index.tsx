@@ -91,14 +91,17 @@ export default function DashboardScreen() {
             <Text className="mt-0.5 text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
               Nepal Respiratory Health Alerts
             </Text>
-            <Text className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-              Air quality &amp; respiratory risk — {selectedCity}
-            </Text>
           </View>
           <DashboardMenuButton onPress={() => setSidebarOpen(true)} />
         </View>
 
         <CityPicker selectedCity={selectedCity} onSelectCity={setSelectedCity} />
+
+        <View className="px-4 pb-4">
+          <Text className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+            Air quality &amp; respiratory risk — {selectedCity}
+          </Text>
+        </View>
 
         <CityInfoPanel city={selectedCityInfo} isLoading={cities.isLoading} />
 
