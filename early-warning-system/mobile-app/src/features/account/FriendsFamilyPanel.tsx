@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-
 import {
   AuthTextField,
   Banner,
@@ -10,6 +9,7 @@ import {
   ConsentToggle,
   PrimaryButton,
 } from '@/features/auth/FormFields';
+import { AccountSectionAccent, FeatureSection } from '@/components/FeatureSection';
 import { useSharedContacts } from '@/hooks/useAuth';
 import {
   createSharedContact,
@@ -19,7 +19,7 @@ import {
 } from '@/services/api/auth';
 import { toApiError } from '@/services/api/client';
 import { BrandColors } from '@/constants/brand';
-
+import { toastError, toastInfo, toastSuccess } from '@/utils/toast';
 import type { SharedAlertContact, SharedContactChannel } from '@/types/auth';
 
 const CHANNEL_OPTIONS = [
@@ -78,9 +78,6 @@ export function FriendsFamilyPanel() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [message, setMessage] = useState('');
   const [consented, setConsented] = useState(false);
-  const [banner, setBanner] = useState<{ message: string; tone: 'info' | 'error' | 'success' } | null>(
-    null,
-  );
 
   const contacts = listQuery.data?.contacts ?? [];
   const limits = listQuery.data?.limits;
@@ -111,28 +108,27 @@ export function FriendsFamilyPanel() {
     setChannel(ch === 'email' || ch === 'whatsapp' || ch === 'sms' ? ch : 'sms');
     setPhone(contact.phone_e164?.trim() || '+977');
     setEmail(contact.email?.trim() || '');
-    setBanner(null);
   };
 
   const createMutation = useMutation({
     mutationFn: createSharedContact,
     onSuccess: async () => {
-      setBanner({ message: 'Contact saved.', tone: 'success' });
+      toastSuccess('Contact saved.');
       resetForm();
       await invalidate();
     },
-    onError: (error) => setBanner({ message: toApiError(error).message, tone: 'error' }),
+    onError: (error) => toastError(toApiError(error).message),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, body }: { id: string; body: Parameters<typeof updateSharedContact>[1] }) =>
       updateSharedContact(id, body),
     onSuccess: async () => {
-      setBanner({ message: 'Contact updated.', tone: 'success' });
+      toastSuccess('Contact updated.');
       resetForm();
       await invalidate();
     },
-    onError: (error) => setBanner({ message: toApiError(error).message, tone: 'error' }),
+    onError: (error) => toastError(toApiError(error).message),
   });
 
   const deleteMutation = useMutation({
@@ -140,10 +136,10 @@ export function FriendsFamilyPanel() {
     onSuccess: async (_data, id) => {
       setSelectedIds((prev) => prev.filter((x) => x !== id));
       if (editingId === id) resetForm();
-      setBanner({ message: 'Contact removed.', tone: 'success' });
+      toastSuccess('Contact removed.');
       await invalidate();
     },
-    onError: (error) => setBanner({ message: toApiError(error).message, tone: 'error' }),
+    onError: (error) => toastError(toApiError(error).message),
   });
 
   const deleting = deleteMutation.isPending;
@@ -154,15 +150,14 @@ export function FriendsFamilyPanel() {
     onSuccess: async (data) => {
       const ok = data.results?.filter((r) => r.ok).length ?? 0;
       const fail = data.results?.filter((r) => !r.ok).length ?? 0;
-      setBanner({
-        message: `Sent to ${ok} contact(s)${fail ? `, ${fail} failed` : ''}.`,
-        tone: fail ? 'info' : 'success',
-      });
+      const msg = `Sent to ${ok} contact(s)${fail ? `, ${fail} failed` : ''}.`;
+      if (fail) toastInfo(msg);
+      else toastSuccess(msg);
       setMessage('');
       setConsented(false);
       await invalidate();
     },
-    onError: (error) => setBanner({ message: toApiError(error).message, tone: 'error' }),
+    onError: (error) => toastError(toApiError(error).message),
   });
 
   const toggleSelected = (id: string) => {
@@ -174,13 +169,13 @@ export function FriendsFamilyPanel() {
   const onSubmit = () => {
     const name = displayName.trim();
     if (!name) {
-      setBanner({ message: 'Name is required.', tone: 'error' });
+      toastError('Name is required.');
       return;
     }
 
     if (channel === 'email') {
       if (!email.trim()) {
-        setBanner({ message: 'Email is required for email channel.', tone: 'error' });
+        toastError('Email is required for email channel.');
         return;
       }
       const body = {
@@ -202,10 +197,9 @@ export function FriendsFamilyPanel() {
     }
 
     if (!phone.trim().startsWith('+')) {
-      setBanner({ message: 'Phone must start with + (E.164).', tone: 'error' });
+      toastError('Phone must start with + (E.164).');
       return;
-    }
-    const body = {
+    } const body = {
       display_name: name,
       channel,
       phone_e164: phone.trim(),
@@ -232,9 +226,8 @@ export function FriendsFamilyPanel() {
         contact them; sending is rate-limited per day.
       </Text>
       {limitsLine ? <Banner message={limitsLine} tone="info" /> : null}
-      {banner ? <Banner message={banner.message} tone={banner.tone} /> : null}
 
-      <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <FeatureSection accent={AccountSectionAccent.contactForm}>
         <Text className="mb-2 text-sm font-semibold text-neutral-900 dark:text-white">
           {isEditing ? 'Edit contact' : 'Add contact'}
         </Text>
@@ -290,9 +283,9 @@ export function FriendsFamilyPanel() {
             <PrimaryButton label="Cancel edit" variant="ghost" onPress={resetForm} />
           ) : null}
         </View>
-      </View>
+      </FeatureSection>
 
-      <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <FeatureSection accent={AccountSectionAccent.contactList}>
         <Text className="mb-2 text-sm font-semibold text-neutral-900 dark:text-white">
           Saved contacts
         </Text>
@@ -364,9 +357,9 @@ export function FriendsFamilyPanel() {
             })}
           </>
         )}
-      </View>
+      </FeatureSection>
 
-      <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <FeatureSection accent={AccountSectionAccent.sendAlert}>
         <Text className="mb-2 text-sm font-semibold text-neutral-900 dark:text-white">
           Send now
         </Text>
@@ -398,7 +391,7 @@ export function FriendsFamilyPanel() {
             })
           }
         />
-      </View>
+      </FeatureSection>
     </View>
   );
 }

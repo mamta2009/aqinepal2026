@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 import { ActivityIndicator, Text, View, useColorScheme } from 'react-native';
 import { BarChart } from 'react-native-gifted-charts';
-
 import { BrandColors } from '@/constants/brand';
-
+import {
+  DashboardSection,
+  DashboardSectionAccent,
+} from '@/features/dashboard/DashboardSection';
 import type { CasesWeekResponse } from '@/types/cases';
 
 interface CasesWeekCardProps {
@@ -28,7 +30,7 @@ export function CasesWeekCard({ data, isLoading }: CasesWeekCardProps) {
   }, [data]);
 
   return (
-    <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+    <DashboardSection accent={DashboardSectionAccent.cases}>
       <View className="mb-3 flex-row items-baseline justify-between">
         <Text className="text-sm font-semibold text-neutral-900 dark:text-white">
           Respiratory cases — this week
@@ -41,7 +43,7 @@ export function CasesWeekCard({ data, isLoading }: CasesWeekCardProps) {
       </View>
 
       {isLoading ? (
-        <ActivityIndicator className="h-[160px] self-center" />
+        <ActivityIndicator className="h-[160px] self-center" color={BrandColors.secondary} />
       ) : bars.length > 0 ? (
         <BarChart
           data={bars}
@@ -62,6 +64,6 @@ export function CasesWeekCard({ data, isLoading }: CasesWeekCardProps) {
       <Text className="mt-3 text-xs text-neutral-500 dark:text-neutral-400">
         {data?.note ?? 'Synthetic demo data — transitions to real DHIS2 data when connected.'}
       </Text>
-    </View>
+    </DashboardSection>
   );
 }

@@ -1,8 +1,11 @@
 import { useMemo } from 'react';
 import { Text, View, useColorScheme } from 'react-native';
 import { LineChart } from 'react-native-gifted-charts';
-
 import { BrandColors } from '@/constants/brand';
+import {
+  DashboardSection,
+  DashboardSectionAccent,
+} from '@/features/dashboard/DashboardSection';
 import { generate24hFromReading } from '@/utils/chartSeries';
 
 interface AirQualityChartProps {
@@ -25,7 +28,7 @@ export function AirQualityChart({ pm25, cityLabel, sourceLabel }: AirQualityChar
   }, [pm25, cityLabel]);
 
   return (
-    <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+    <DashboardSection accent={DashboardSectionAccent.airQuality}>
       <Text className="mb-3 text-sm font-semibold text-neutral-900 dark:text-white">
         Air quality — 24h
       </Text>
@@ -64,6 +67,6 @@ export function AirQualityChart({ pm25, cityLabel, sourceLabel }: AirQualityChar
         Deterministic intra-day variation around the latest {sourceLabel} reading — not observed
         hourly AQ.
       </Text>
-    </View>
+    </DashboardSection>
   );
 }

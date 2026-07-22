@@ -1,8 +1,7 @@
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-
+import { AccountSectionAccent, FeatureSection } from '@/components/FeatureSection';
 import { formatRelativeTimestamp } from '@/utils/format';
-
 import type { NotificationInboxEntry } from '@/types/auth';
 
 interface NotificationInboxListProps {
@@ -96,7 +95,8 @@ export function NotificationInboxList({
       {showSeeMore && hasMore ? (
         <Pressable
           onPress={() => router.push('/inbox')}
-          className="mt-2 items-center rounded-xl border border-secondary px-3 py-2">
+          className="mt-2 items-center rounded-xl border px-3 py-2"
+          style={{ borderColor: 'rgba(245, 158, 11, 0.45)' }}>
           <Text className="text-sm font-semibold text-secondary">See more notifications</Text>
         </Pressable>
       ) : null}
@@ -105,9 +105,5 @@ export function NotificationInboxList({
 
   if (bare) return <View>{body}</View>;
 
-  return (
-    <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-      {body}
-    </View>
-  );
+  return <FeatureSection accent={AccountSectionAccent.inbox}>{body}</FeatureSection>;
 }

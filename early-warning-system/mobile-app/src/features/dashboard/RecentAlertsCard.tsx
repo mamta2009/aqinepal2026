@@ -1,10 +1,12 @@
 import { useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
-
 import { AlertRow } from '@/features/dashboard/AlertRow';
+import {
+  DashboardSection,
+  DashboardSectionAccent,
+} from '@/features/dashboard/DashboardSection';
 import { buildRecentAlerts } from '@/utils/buildRecentAlerts';
-
 import type { LatestAlertResponse } from '@/types/alerts';
 
 const PREVIEW_LIMIT = 2;
@@ -44,7 +46,7 @@ export function RecentAlertsCard({
   const hasMore = allAlerts.length > PREVIEW_LIMIT;
 
   return (
-    <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+    <DashboardSection accent={DashboardSectionAccent.alerts}>
       <View className="mb-1 flex-row items-center justify-between">
         <Text className="text-sm font-semibold text-neutral-900 dark:text-white">
           Recent alerts · {cityLabel}
@@ -79,12 +81,13 @@ export function RecentAlertsCard({
           onPress={() =>
             router.push({ pathname: '/alerts', params: { city: cityLabel } })
           }
-          className="mt-2 items-center rounded-xl border border-neutral-200 py-2.5 active:opacity-70 dark:border-neutral-700">
+          className="mt-2 items-center rounded-xl border py-2.5 active:opacity-70"
+          style={{ borderColor: 'rgba(245, 158, 11, 0.45)' }}>
           <Text className="text-sm font-semibold text-secondary">
             See all for {cityLabel} ({allAlerts.length})
           </Text>
         </Pressable>
       ) : null}
-    </View>
+    </DashboardSection>
   );
 }

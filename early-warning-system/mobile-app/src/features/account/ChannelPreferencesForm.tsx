@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-
+import { AccountSectionAccent, FeatureSection } from '@/components/FeatureSection';
 import {
   Banner,
   ChipMultiSelect,
@@ -16,7 +15,7 @@ import {
 } from '@/features/auth/schemas';
 import { patchPreferences } from '@/services/api/auth';
 import { toApiError } from '@/services/api/client';
-
+import { toastError, toastSuccess } from '@/utils/toast';
 import type { AuthProfile, NotificationChannel } from '@/types/auth';
 
 interface ChannelPreferencesFormProps {
@@ -25,9 +24,6 @@ interface ChannelPreferencesFormProps {
 
 export function ChannelPreferencesForm({ profile }: ChannelPreferencesFormProps) {
   const queryClient = useQueryClient();
-  const [banner, setBanner] = useState<{ message: string; tone: 'info' | 'error' | 'success' } | null>(
-    null,
-  );
 
   const form = useForm<ChannelPrefsFormValues>({
     resolver: zodResolver(channelPrefsSchema),
@@ -53,19 +49,18 @@ export function ChannelPreferencesForm({ profile }: ChannelPreferencesFormProps)
         consent_given: values.consent_given,
       }),
     onSuccess: async (data) => {
-      setBanner({ message: data.message || 'Preferences saved.', tone: 'success' });
+      toastSuccess(data.message || 'Preferences saved.');
       await queryClient.invalidateQueries({ queryKey: ['auth', 'profile'] });
     },
-    onError: (error) => setBanner({ message: toApiError(error).message, tone: 'error' }),
+    onError: (error) => toastError(toApiError(error).message),
   });
 
   return (
-    <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+    <FeatureSection accent={AccountSectionAccent.channels}>
       <Banner
         message="Choose how we may reach you for alerts (matches your registration — save to update)."
         tone="info"
       />
-      {banner ? <Banner message={banner.message} tone={banner.tone} /> : null}
 
       <Controller
         control={form.control}
@@ -101,6 +96,6 @@ export function ChannelPreferencesForm({ profile }: ChannelPreferencesFormProps)
         disabled={mutation.isPending}
         onPress={form.handleSubmit((values) => mutation.mutate(values))}
       />
-    </View>
+    </FeatureSection>
   );
 }

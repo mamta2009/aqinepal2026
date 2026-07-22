@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
 import {
   AccountNavRow,
   ChannelPreferencesForm,
@@ -18,6 +17,7 @@ import {
   useProfile,
 } from '@/hooks/useAuth';
 import { useAuthStore } from '@/store/authStore';
+import { AccountSectionAccent, FeatureSection } from '@/components/FeatureSection';
 import { BottomTabInset, Spacing } from '@/constants/theme';
 
 export default function AccountScreen() {
@@ -73,7 +73,7 @@ export default function AccountScreen() {
 
         {!isAuthenticated ? (
           <View className="gap-4">
-            <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+            <FeatureSection accent={AccountSectionAccent.signIn}>
               <Text className="mb-2 text-sm leading-5 text-neutral-600 dark:text-neutral-300">
                 Use the same email and password (or OTP) as in the main app. Preparedness buttons write
                 to the facility audit when your account is approved and linked to a site.
@@ -82,7 +82,7 @@ export default function AccountScreen() {
                 Sign in
               </Text>
               <LoginForm />
-            </View>
+            </FeatureSection>
 
             <View className="gap-3">
               <PrimaryButton
@@ -102,12 +102,12 @@ export default function AccountScreen() {
           </View>
         ) : (
           <View className="gap-4">
-            <View className="rounded-2xl border border-blue-200 bg-blue-50 px-3 py-3 dark:border-blue-900 dark:bg-blue-950">
+            <FeatureSection accent={AccountSectionAccent.tip}>
               <Text className="text-sm leading-5 text-neutral-700 dark:text-neutral-200">
                 Use the same email and password (or OTP) as in the main app. Preparedness buttons write
                 to the facility audit when your account is approved and linked to a site.
               </Text>
-            </View>
+            </FeatureSection>
 
             <ProfileCard
               profile={profileQuery.data}

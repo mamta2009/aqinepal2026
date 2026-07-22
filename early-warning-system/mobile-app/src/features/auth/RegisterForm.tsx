@@ -1,13 +1,10 @@
-import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-
 import { CITY_NAMES } from '@/constants/cities';
 import {
-  Banner,
   ChipMultiSelect,
   ConsentToggle,
   AuthTextField,
@@ -22,6 +19,7 @@ import {
 import { registerContact } from '@/services/api/contacts';
 import { toApiError } from '@/services/api/client';
 import { savePendingRegistration } from '@/utils/pendingRegistration';
+import { toastError, toastSuccess } from '@/utils/toast';
 
 const CONTACT_TYPES = [
   { value: 'health_worker', label: 'Health Worker / Doctor' },
@@ -55,9 +53,6 @@ const DEFAULT_VALUES: RegisterFormValues = {
 
 export function RegisterForm() {
   const router = useRouter();
-  const [banner, setBanner] = useState<{ message: string; tone: 'info' | 'error' | 'success' } | null>(
-    null,
-  );
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -75,24 +70,18 @@ export function RegisterForm() {
         data.warnings && data.warnings.length > 0
           ? `\n${data.warnings.join('\n')}`
           : '';
-      setBanner({
-        message: `${data.message}${warningText}`,
-        tone: 'success',
-      });
+      toastSuccess(`${data.message}${warningText}`);
       router.push('/verify');
     },
-    onError: (error) => setBanner({ message: toApiError(error).message, tone: 'error' }),
+    onError: (error) => toastError(toApiError(error).message),
   });
 
   const clearForm = () => {
     form.reset(DEFAULT_VALUES);
-    setBanner(null);
   };
 
   return (
     <View>
-      {banner ? <Banner message={banner.message} tone={banner.tone} /> : null}
-
       <FormSection title="Personal Information">
         <Controller
           control={form.control}
@@ -335,11 +324,7 @@ export function RegisterForm() {
             disabled={mutation.isPending}
             onPress={form.handleSubmit(
               (values) => mutation.mutate(values),
-              () =>
-                setBanner({
-                  message: 'Please fix the highlighted fields before submitting.',
-                  tone: 'error',
-                }),
+              () => toastError('Please fix the highlighted fields before submitting.'),
             )}
           />
         </View>

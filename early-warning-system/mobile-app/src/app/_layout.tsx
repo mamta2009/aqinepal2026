@@ -3,7 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { Stack, DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useColorScheme } from 'react-native';
-
+import Toast from 'react-native-toast-message';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { setUnauthorizedHandler } from '@/services/api/client';
 import { queryClient } from '@/services/api/queryClient';
@@ -46,6 +46,7 @@ export default function RootLayout() {
             <Stack.Screen name="facility-actions" options={{ title: 'Facility Actions' }} />
             <Stack.Screen name="friends" options={{ title: 'Friends & family' }} />
           </Stack>
+          <Toast />
         </AuthBootstrap>
       </ThemeProvider>
     </QueryClientProvider>

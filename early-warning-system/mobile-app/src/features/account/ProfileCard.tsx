@@ -1,5 +1,5 @@
 import { Text, View } from 'react-native';
-
+import { AccountSectionAccent, FeatureSection } from '@/components/FeatureSection';
 import type { AuthProfile } from '@/types/auth';
 
 function Row({ label, value }: { label: string; value?: string | null }) {
@@ -21,12 +21,12 @@ interface ProfileCardProps {
 export function ProfileCard({ profile, facilityReportingReady }: ProfileCardProps) {
   if (!profile) {
     return (
-      <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <FeatureSection accent={AccountSectionAccent.profile}>
         <Text className="mb-2 text-sm font-semibold text-neutral-900 dark:text-white">
           My registration
         </Text>
         <Text className="text-sm text-neutral-500">Loading profile…</Text>
-      </View>
+      </FeatureSection>
     );
   }
 
@@ -40,7 +40,7 @@ export function ProfileCard({ profile, facilityReportingReady }: ProfileCardProp
       : profile.facility_name) || null;
 
   return (
-    <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+    <FeatureSection accent={AccountSectionAccent.profile}>
       <Text className="mb-1 text-sm font-semibold text-neutral-900 dark:text-white">
         My registration
       </Text>
@@ -87,6 +87,6 @@ export function ProfileCard({ profile, facilityReportingReady }: ProfileCardProp
       />
       <Row label="Facility ID (scope)" value={profile.facility_id} />
       <Row label="Contact reference ID" value={profile._id} />
-    </View>
+    </FeatureSection>
   );
 }

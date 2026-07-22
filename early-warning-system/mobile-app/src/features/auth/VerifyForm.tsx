@@ -1,11 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { View } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-
-import { Banner, AuthTextField, PrimaryButton } from '@/features/auth/FormFields';
+import { AuthTextField, PrimaryButton } from '@/features/auth/FormFields';
 import { verifySchema, type VerifyFormValues } from '@/features/auth/schemas';
 import { resendVerification, verifyContact, verifyWithEmail } from '@/services/api/contacts';
 import { toApiError } from '@/services/api/client';
@@ -13,12 +12,10 @@ import {
   clearPendingRegistration,
   loadPendingRegistration,
 } from '@/utils/pendingRegistration';
+import { toastError, toastSuccess } from '@/utils/toast';
 
 export function VerifyForm() {
   const router = useRouter();
-  const [banner, setBanner] = useState<{ message: string; tone: 'info' | 'error' | 'success' } | null>(
-    null,
-  );
 
   const form = useForm<VerifyFormValues>({
     resolver: zodResolver(verifySchema),
@@ -46,10 +43,10 @@ export function VerifyForm() {
     },
     onSuccess: async (data) => {
       await clearPendingRegistration();
-      setBanner({ message: data.message || 'Verified. You can sign in now.', tone: 'success' });
+      toastSuccess(data.message || 'Verified. You can sign in now.');
       router.replace('/account');
     },
-    onError: (error) => setBanner({ message: toApiError(error).message, tone: 'error' }),
+    onError: (error) => toastError(toApiError(error).message),
   });
 
   const resendMutation = useMutation({
@@ -59,24 +56,19 @@ export function VerifyForm() {
       return resendVerification({ email: email.toLowerCase() });
     },
     onSuccess: (data) =>
-      setBanner({ message: data.message || 'Verification code resent.', tone: 'success' }),
+      toastSuccess(data.message || 'Verification code resent.'),
     onError: (error) => {
       const apiErr = toApiError(error);
       if (apiErr.status === 429) {
-        setBanner({
-          message: apiErr.message || 'Please wait before requesting another code.',
-          tone: 'error',
-        });
+        toastError(apiErr.message || 'Please wait before requesting another code.');
         return;
       }
-      setBanner({ message: apiErr.message, tone: 'error' });
+      toastError(apiErr.message);
     },
   });
 
   return (
     <View>
-      {banner ? <Banner message={banner.message} tone={banner.tone} /> : null}
-
       <Controller
         control={form.control}
         name="email"

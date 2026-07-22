@@ -7,6 +7,7 @@ export { CasesWeekCard } from "./CasesWeekCard";
 export { RecentAlertsCard } from "./RecentAlertsCard";
 export { AlertRow } from "./AlertRow";
 export { StressSandboxCard } from "./StressSandboxCard";
+export { DashboardSection, DashboardSectionAccent } from "./DashboardSection";
 export {
   DashboardActionsSidebar,
   DashboardMenuButton,

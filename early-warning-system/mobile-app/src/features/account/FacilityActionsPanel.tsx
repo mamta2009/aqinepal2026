@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-
 import { Banner, AuthTextField, PrimaryButton } from '@/features/auth/FormFields';
+import { AccountSectionAccent, FeatureSection } from '@/components/FeatureSection';
 import { useMyActionLogs } from '@/hooks/useAuth';
 import { createActionLog } from '@/services/api/actionLog';
 import { patchPreferences } from '@/services/api/auth';
 import { toApiError } from '@/services/api/client';
 import { useAuthStore } from '@/store/authStore';
 import { formatRelativeTimestamp } from '@/utils/format';
-
+import { toastError, toastSuccess } from '@/utils/toast';
 import type { AuthProfile } from '@/types/auth';
 
 const PREPAREDNESS_ACTIONS = [
@@ -52,9 +52,6 @@ export function FacilityActionsPanel({ profile }: FacilityActionsPanelProps) {
   const sites = useMemo(() => siteLabels(profile), [profile]);
   const [newSite, setNewSite] = useState('');
   const [thresholds, setThresholds] = useState<Record<string, string>>({});
-  const [banner, setBanner] = useState<{ message: string; tone: 'info' | 'error' | 'success' } | null>(
-    null,
-  );
 
   const actionLogs = useMyActionLogs(ready);
 
@@ -77,11 +74,11 @@ export function FacilityActionsPanel({ profile }: FacilityActionsPanelProps) {
   const addSiteMutation = useMutation({
     mutationFn: (name: string) => patchPreferences({ add_facility_name: name }),
     onSuccess: async (data) => {
-      setBanner({ message: data.message || 'Facility added.', tone: 'success' });
+      toastSuccess(data.message || 'Facility added.');
       setNewSite('');
       await queryClient.invalidateQueries({ queryKey: ['auth', 'profile'] });
     },
-    onError: (error) => setBanner({ message: toApiError(error).message, tone: 'error' }),
+    onError: (error) => toastError(toApiError(error).message),
   });
 
   const saveThresholdsMutation = useMutation({
@@ -98,22 +95,19 @@ export function FacilityActionsPanel({ profile }: FacilityActionsPanelProps) {
       return patchPreferences({ facility_site_pm25_thresholds: payload });
     },
     onSuccess: async (data) => {
-      setBanner({ message: data.message || 'Thresholds saved.', tone: 'success' });
+      toastSuccess(data.message || 'Thresholds saved.');
       await queryClient.invalidateQueries({ queryKey: ['auth', 'profile'] });
     },
-    onError: (error) => setBanner({ message: toApiError(error).message, tone: 'error' }),
+    onError: (error) => toastError(toApiError(error).message),
   });
 
   const actionMutation = useMutation({
     mutationFn: createActionLog,
     onSuccess: async (data) => {
-      setBanner({
-        message: `Logged for ${data.facility_site || data.facility_id}.`,
-        tone: 'success',
-      });
+      toastSuccess(`Logged for ${data.facility_site || data.facility_id}.`);
       await queryClient.invalidateQueries({ queryKey: ['auth', 'action-log'] });
     },
-    onError: (error) => setBanner({ message: toApiError(error).message, tone: 'error' }),
+    onError: (error) => toastError(toApiError(error).message),
   });
 
   const statusBanner = !ready
@@ -130,9 +124,8 @@ export function FacilityActionsPanel({ profile }: FacilityActionsPanelProps) {
       </Text>
 
       <Banner message={statusBanner} tone={ready ? 'success' : 'info'} />
-      {banner ? <Banner message={banner.message} tone={banner.tone} /> : null}
 
-      <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+      <FeatureSection accent={AccountSectionAccent.sites}>
         <Text className="mb-1 text-sm font-semibold text-neutral-900 dark:text-white">
           Sites you cover
         </Text>
@@ -209,10 +202,10 @@ export function FacilityActionsPanel({ profile }: FacilityActionsPanelProps) {
             />
           </View>
         )}
-      </View>
+      </FeatureSection>
 
       {ready ? (
-        <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+        <FeatureSection accent={AccountSectionAccent.actionLog}>
           <Text className="mb-2 text-sm font-semibold text-neutral-900 dark:text-white">
             Recent facility actions
           </Text>
@@ -236,7 +229,7 @@ export function FacilityActionsPanel({ profile }: FacilityActionsPanelProps) {
               </View>
             ))
           )}
-        </View>
+        </FeatureSection>
       ) : null}
     </View>
   );

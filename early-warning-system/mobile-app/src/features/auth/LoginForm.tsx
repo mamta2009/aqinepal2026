@@ -3,7 +3,6 @@ import { View } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
-
 import {
   Banner,
   AuthTextField,
@@ -25,6 +24,7 @@ import {
 import { verifyWithEmail } from '@/services/api/contacts';
 import { toApiError } from '@/services/api/client';
 import { useAuthStore } from '@/store/authStore';
+import { toastError, toastInfo, toastSuccess } from '@/utils/toast';
 
 interface LoginFormProps {
   onLoggedIn?: () => void;
@@ -32,9 +32,6 @@ interface LoginFormProps {
 
 export function LoginForm({ onLoggedIn }: LoginFormProps) {
   const setSession = useAuthStore((s) => s.setSession);
-  const [banner, setBanner] = useState<{ message: string; tone: 'info' | 'error' | 'success' } | null>(
-    null,
-  );
   const [showSignupVerify, setShowSignupVerify] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
 
@@ -67,13 +64,13 @@ export function LoginForm({ onLoggedIn }: LoginFormProps) {
           scopes: data.scopes,
         },
       });
-      setBanner({ message: 'Signed in successfully.', tone: 'success' });
+      toastSuccess('Signed in successfully.');
       setShowSignupVerify(false);
       onLoggedIn?.();
     },
     onError: (error) => {
       const apiErr = toApiError(error);
-      setBanner({ message: apiErr.message, tone: 'error' });
+      toastError(apiErr.message);
       if (
         apiErr.status === 403 &&
         typeof apiErr.message === 'string' &&
@@ -96,18 +93,12 @@ export function LoginForm({ onLoggedIn }: LoginFormProps) {
     onSuccess: (data) => {
       if (data.code_ttl_minutes != null) {
         setOtpSent(true);
-        setBanner({
-          message: `OTP sent (valid ~${data.code_ttl_minutes} min). Check your channels.`,
-          tone: 'success',
-        });
+        toastSuccess(`OTP sent (valid ~${data.code_ttl_minutes} min). Check your channels.`);
       } else {
-        setBanner({
-          message: data.message || 'If eligible, a code was sent.',
-          tone: 'info',
-        });
+        toastInfo(data.message || 'If eligible, a code was sent.');
       }
     },
-    onError: (error) => setBanner({ message: toApiError(error).message, tone: 'error' }),
+    onError: (error) => toastError(toApiError(error).message),
   });
 
   const otpExchangeMutation = useMutation({
@@ -124,10 +115,10 @@ export function LoginForm({ onLoggedIn }: LoginFormProps) {
           scopes: data.scope ? [data.scope] : [],
         },
       });
-      setBanner({ message: 'Facility session started.', tone: 'success' });
+      toastSuccess('Facility session started.');
       onLoggedIn?.();
     },
-    onError: (error) => setBanner({ message: toApiError(error).message, tone: 'error' }),
+    onError: (error) => toastError(toApiError(error).message),
   });
 
   const signupVerifyMutation = useMutation({
@@ -137,19 +128,14 @@ export function LoginForm({ onLoggedIn }: LoginFormProps) {
         verification_code: values.verification_code.trim(),
       }),
     onSuccess: (data) => {
-      setBanner({
-        message: data.message || 'Verified. Sign in with your password.',
-        tone: 'success',
-      });
+      toastSuccess(data.message || 'Verified. Sign in with your password.');
       setShowSignupVerify(false);
     },
-    onError: (error) => setBanner({ message: toApiError(error).message, tone: 'error' }),
+    onError: (error) => toastError(toApiError(error).message),
   });
 
   return (
     <View className="gap-2">
-      {banner ? <Banner message={banner.message} tone={banner.tone} /> : null}
-
       <Controller
         control={loginForm.control}
         name="email"

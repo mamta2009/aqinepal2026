@@ -1,10 +1,12 @@
 import { useMemo } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
-
 import { BrandColors } from '@/constants/brand';
+import {
+  DashboardSection,
+  DashboardSectionAccent,
+} from '@/features/dashboard/DashboardSection';
 import { buildFiveDayForecast } from '@/utils/forecastDays';
 import { toApiError } from '@/services/api/client';
-
 import type { WeekPredictResponse } from '@/types/forecast';
 
 interface FiveDayForecastCardProps {
@@ -33,7 +35,7 @@ export function FiveDayForecastCard({
   const modelLabel = data?.forecast?.model ? ` · ${data.forecast.model}` : '';
 
   return (
-    <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+    <DashboardSection accent={DashboardSectionAccent.forecast}>
       <View className="mb-1 flex-row flex-wrap items-center gap-2">
         <Text className="text-sm font-semibold text-neutral-900 dark:text-white">
           5-Day Forecast
@@ -41,7 +43,9 @@ export function FiveDayForecastCard({
         <View
           className="rounded px-2 py-0.5"
           style={{ backgroundColor: 'rgba(6, 182, 212, 0.15)' }}>
-          <Text className="text-[10px] font-bold uppercase tracking-wide" style={{ color: BrandColors.ai }}>
+          <Text
+            className="text-[10px] font-bold uppercase tracking-wide"
+            style={{ color: BrandColors.ai }}>
             AI Powered
           </Text>
         </View>
@@ -71,19 +75,19 @@ export function FiveDayForecastCard({
             {days.map((day) => (
               <View
                 key={day.day}
-                className="min-w-[100px] items-center rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-3 dark:border-neutral-700 dark:bg-neutral-950">
+                className="min-w-[100px] items-center rounded-lg border px-3 py-3"
+                style={{
+                  borderColor: 'rgba(6, 182, 212, 0.35)',
+                  backgroundColor: 'rgba(6, 182, 212, 0.06)',
+                }}>
                 <Text className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
                   Day {day.day}
                 </Text>
                 <Text className="font-mono text-2xl font-bold text-neutral-900 dark:text-white">
                   {day.pm25}
                 </Text>
-                <Text className="text-[10px] text-neutral-400 dark:text-neutral-500">
-                  µg/m³
-                </Text>
-                <Text
-                  className="mt-2 text-xs font-semibold"
-                  style={{ color: BrandColors.ai }}>
+                <Text className="text-[10px] text-neutral-400 dark:text-neutral-500">µg/m³</Text>
+                <Text className="mt-2 text-xs font-semibold" style={{ color: BrandColors.ai }}>
                   {day.cases} cases
                 </Text>
               </View>
@@ -91,6 +95,6 @@ export function FiveDayForecastCard({
           </ScrollView>
         </>
       )}
-    </View>
+    </DashboardSection>
   );
 }

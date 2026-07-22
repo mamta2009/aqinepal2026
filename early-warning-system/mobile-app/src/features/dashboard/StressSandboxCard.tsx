@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View, useColorScheme } from 'react-native';
 import Slider from '@react-native-community/slider';
-
 import { BrandColors } from '@/constants/brand';
+import {
+  DashboardSection,
+  DashboardSectionAccent,
+} from '@/features/dashboard/DashboardSection';
 import {
   clampLiveHeat,
   clampLivePm25,
   computeScenarioSandbox,
   syncScenarioBaselineFromCases,
 } from '@/utils/scenarioSandbox';
-
 import type { CasesWeekResponse } from '@/types/cases';
 
 interface StressSandboxCardProps {
@@ -90,7 +92,7 @@ export function StressSandboxCard({
   const trackColor = isDark ? '#404040' : '#d4d4d4';
 
   return (
-    <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+    <DashboardSection accent={DashboardSectionAccent.scenario}>
       <View className="mb-2 flex-row flex-wrap items-center justify-between gap-2">
         <Text className="text-sm font-semibold text-neutral-900 dark:text-white">
           Scenario A · Stress sandbox
@@ -99,7 +101,8 @@ export function StressSandboxCard({
           accessibilityRole="button"
           accessibilityLabel="Use live readings"
           onPress={useLiveReadings}
-          className="rounded-md border border-neutral-300 px-3 py-1.5 active:opacity-70 dark:border-neutral-600">
+          className="rounded-md border px-3 py-1.5 active:opacity-70"
+          style={{ borderColor: 'rgba(124, 58, 237, 0.45)' }}>
           <Text className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">
             Use live readings
           </Text>
@@ -195,6 +198,6 @@ export function StressSandboxCard({
           }
         />
       </View>
-    </View>
+    </DashboardSection>
   );
 }
