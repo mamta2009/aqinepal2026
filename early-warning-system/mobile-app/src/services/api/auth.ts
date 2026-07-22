@@ -12,6 +12,7 @@ import type {
   SharedContactCreatePayload,
   SharedContactNotifyPayload,
   SharedContactNotifyResponse,
+  SharedContactUpdatePayload,
   SharedContactsResponse,
 } from "@/types/auth";
 
@@ -92,6 +93,17 @@ export async function createSharedContact(
     success: boolean;
     contact: SharedAlertContact;
   }>("/api/auth/shared-contacts", body);
+  return data;
+}
+
+export async function updateSharedContact(
+  contactId: string,
+  body: SharedContactUpdatePayload,
+): Promise<{ success: boolean; contact: SharedAlertContact }> {
+  const { data } = await apiClient.patch<{
+    success: boolean;
+    contact: SharedAlertContact;
+  }>(`/api/auth/shared-contacts/${encodeURIComponent(contactId)}`, body);
   return data;
 }
 

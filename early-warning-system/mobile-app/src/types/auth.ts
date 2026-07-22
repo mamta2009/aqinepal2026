@@ -136,6 +136,13 @@ export interface SharedContactCreatePayload {
   email?: string;
 }
 
+export interface SharedContactUpdatePayload {
+  display_name?: string;
+  channel?: SharedContactChannel;
+  phone_e164?: string | null;
+  email?: string | null;
+}
+
 export interface SharedContactNotifyPayload {
   contact_ids: string[];
   message: string;
