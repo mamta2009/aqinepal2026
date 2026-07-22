@@ -891,6 +891,71 @@ def _render_alert_email_html(
     return _email_shell(title=title, accent=accent, body_html=body)
 
 
+def _render_shared_alert_email_html(
+    *,
+    sender_name: str,
+    message: str,
+    recipient_display_name: str | None = None,
+) -> tuple[str, str]:
+    """
+    Branded HTML + plain-text body for friend/family one-off emails.
+
+    Returns ``(html_content, plain_text)`` for SendGrid multipart delivery.
+    """
+    safe_sender = html.escape((sender_name or "Early Warning user").strip() or "Early Warning user")
+    safe_msg = html.escape((message or "").strip()).replace("\n", "<br>\n")
+    greeting_name = (recipient_display_name or "").strip()
+    greeting = (
+        f"Hello {html.escape(greeting_name)},"
+        if greeting_name
+        else "Hello,"
+    )
+    accent = "#1565c0"
+    title = "Personal message via Early Warning"
+    body = f"""
+      <p style="margin:0 0 14px;font-size:15px;color:#374151;">{greeting}</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#374151;">
+        <strong>{safe_sender}</strong> sent you a message through the
+        <strong>AQI Nepal Early Warning</strong> friends &amp; family tool.
+        This is a personal note from someone who listed you as an emergency contact —
+        it is <em>not</em> an automated air-quality or heat broadcast from the platform.
+      </p>
+      <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#6b7280;font-weight:700;">
+        Message
+      </p>
+      <div style="margin:0 0 20px;padding:14px 16px;background:#f7f9fb;border-left:3px solid {accent};border-radius:0 4px 4px 0;color:#1f2933;font-size:15px;line-height:1.55;">
+        {safe_msg}
+      </div>
+      <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.5;">
+        If you did not expect this message, you can ignore it or ask the sender to remove you from their contact list.
+        Do not reply to this email for emergencies — contact local emergency services if you need urgent help.
+      </p>
+    """
+    html_content = _email_shell(
+        title=title,
+        accent=accent,
+        body_html=body,
+        footer_note=(
+            "Sent via AQI Nepal Early Warning · Friends & family alerts. "
+            "This message was initiated by a registered user, not by an automatic alert rule."
+        ),
+    )
+    plain_name = greeting_name or "there"
+    plain_sender = (sender_name or "Early Warning user").strip() or "Early Warning user"
+    plain_msg = (message or "").strip()
+    plain_text = (
+        f"Hello {plain_name},\n\n"
+        f"{plain_sender} sent you a message through the AQI Nepal Early Warning "
+        f"friends & family tool. This is a personal note — not an automated "
+        f"air-quality or heat broadcast.\n\n"
+        f"Message:\n{plain_msg}\n\n"
+        f"If you did not expect this, ask the sender to remove you from their list. "
+        f"Do not reply to this email for emergencies.\n\n"
+        f"— AQI Nepal Early Warning"
+    )
+    return html_content, plain_text
+
+
 async def send_email(
     to_email: str,
     subject: str,
@@ -2434,9 +2499,14 @@ async def registrant_notify_shared_contacts(
                 results.append({"contact_id": rid, "ok": False, "error": "missing_email"})
                 await _log_line(ch="email", status="failed", ok=False, err="missing_email")
                 continue
-            subj = f"Message from {sender_name} (Early Warning)"
-            html = f"<p><strong>{sender_name}</strong> sent you a message via Early Warning:</p><p>{msg}</p>"
-            r = await send_email(to_em, subj, html)
+            subj = f"{sender_name} shared a message via AQI Nepal Early Warning"
+            recipient_label = str(row.get("display_name") or "").strip() or None
+            html_body, plain_body = _render_shared_alert_email_html(
+                sender_name=sender_name,
+                message=msg,
+                recipient_display_name=recipient_label,
+            )
+            r = await send_email(to_em, subj, html_body, plain_text=plain_body)
             ok = bool(r.get("success"))
             results.append(
                 {

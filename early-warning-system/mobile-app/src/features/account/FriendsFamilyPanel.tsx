@@ -146,31 +146,7 @@ export function FriendsFamilyPanel() {
     onError: (error) => setBanner({ message: toApiError(error).message, tone: 'error' }),
   });
 
-  const bulkDeleteMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
-      const results = await Promise.allSettled(ids.map((id) => deleteSharedContact(id)));
-      const failed = results.filter((r) => r.status === 'rejected').length;
-      if (failed > 0 && failed === results.length) {
-        throw new Error('Could not remove the selected contacts.');
-      }
-      return { removed: results.length - failed, failed };
-    },
-    onSuccess: async (result, ids) => {
-      setSelectedIds([]);
-      if (editingId && ids.includes(editingId)) resetForm();
-      setBanner({
-        message:
-          result.failed > 0
-            ? `Removed ${result.removed}; ${result.failed} failed.`
-            : `Removed ${result.removed} contact(s).`,
-        tone: result.failed > 0 ? 'info' : 'success',
-      });
-      await invalidate();
-    },
-    onError: (error) => setBanner({ message: toApiError(error).message, tone: 'error' }),
-  });
-
-  const deleting = deleteMutation.isPending || bulkDeleteMutation.isPending;
+  const deleting = deleteMutation.isPending;
   const saving = createMutation.isPending || updateMutation.isPending;
 
   const notifyMutation = useMutation({
@@ -386,24 +362,6 @@ export function FriendsFamilyPanel() {
                 </View>
               );
             })}
-
-            {selectedIds.length > 0 ? (
-              <View className="mt-4 gap-2 border-t border-neutral-200 pt-4 dark:border-neutral-700">
-                <Text className="text-xs text-neutral-500">
-                  {selectedIds.length} selected — for sending or bulk remove
-                </Text>
-                <PrimaryButton
-                  label={
-                    bulkDeleteMutation.isPending
-                      ? 'Removing…'
-                      : `Delete selected (${selectedIds.length})`
-                  }
-                  variant="dangerOutline"
-                  disabled={deleting}
-                  onPress={() => bulkDeleteMutation.mutate([...selectedIds])}
-                />
-              </View>
-            ) : null}
           </>
         )}
       </View>
