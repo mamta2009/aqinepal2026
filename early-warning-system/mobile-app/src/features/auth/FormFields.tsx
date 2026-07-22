@@ -182,10 +182,10 @@ interface PrimaryButtonProps {
   /**
    * Semantic button styles (consistent app-wide):
    * - action / primary — filled blue: main constructive CTAs (save, sign in, register, send)
-   * - secondary — blue outline: alternate constructive actions
+   * - secondary — blue outline on light blue fill: alternate constructive actions
    * - danger — filled red: destructive (sign out, delete, remove)
-   * - dangerOutline — red outline: softer destructive (clear form)
-   * - ghost — text-only / low emphasis
+   * - dangerOutline — red outline on light red fill: softer destructive (clear form)
+   * - ghost — neutral bordered: low emphasis
    */
   variant?: 'action' | 'primary' | 'secondary' | 'danger' | 'dangerOutline' | 'ghost';
 }
@@ -200,14 +200,14 @@ export function PrimaryButton({
 
   const className =
     resolved === 'action'
-      ? 'rounded-xl bg-secondary px-4 py-3'
+      ? 'rounded-xl bg-secondary px-4 py-3 active:opacity-80'
       : resolved === 'secondary'
-        ? 'rounded-xl border border-secondary bg-transparent px-4 py-3'
+        ? 'rounded-xl border-2 border-secondary bg-blue-50 px-4 py-3 active:opacity-80 dark:bg-blue-950'
         : resolved === 'danger'
-          ? 'rounded-xl bg-primary px-4 py-3'
+          ? 'rounded-xl bg-primary px-4 py-3 active:opacity-80'
           : resolved === 'dangerOutline'
-            ? 'rounded-xl border border-primary bg-transparent px-4 py-3'
-            : 'rounded-xl px-4 py-3';
+            ? 'rounded-xl border-2 border-primary bg-red-50 px-4 py-3 active:opacity-80 dark:bg-red-950'
+            : 'rounded-xl border border-neutral-300 bg-neutral-100 px-4 py-3 active:opacity-80 dark:border-neutral-600 dark:bg-neutral-800';
 
   const textClass =
     resolved === 'action' || resolved === 'danger'
@@ -216,7 +216,7 @@ export function PrimaryButton({
         ? 'text-center font-semibold text-secondary'
         : resolved === 'dangerOutline'
           ? 'text-center font-semibold text-primary'
-          : 'text-center font-semibold text-neutral-700 dark:text-neutral-300';
+          : 'text-center font-semibold text-neutral-800 dark:text-neutral-100';
 
   return (
     <Pressable

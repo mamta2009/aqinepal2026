@@ -170,6 +170,7 @@ export function LoginForm({ onLoggedIn }: LoginFormProps) {
       />
       <PrimaryButton
         label={passwordMutation.isPending ? 'Signing in…' : 'Sign in'}
+        variant="action"
         disabled={passwordMutation.isPending}
         onPress={loginForm.handleSubmit((values) => passwordMutation.mutate(values))}
       />
@@ -195,6 +196,7 @@ export function LoginForm({ onLoggedIn }: LoginFormProps) {
           />
           <PrimaryButton
             label={signupVerifyMutation.isPending ? 'Verifying…' : 'Verify registration'}
+            variant="action"
             disabled={signupVerifyMutation.isPending}
             onPress={signupForm.handleSubmit((values) => signupVerifyMutation.mutate(values))}
           />
@@ -213,7 +215,7 @@ export function LoginForm({ onLoggedIn }: LoginFormProps) {
           onPress={() => otpRequestMutation.mutate()}
         />
         {otpSent ? (
-          <View className="mt-3">
+          <View className="mt-3 gap-2">
             <Controller
               control={otpForm.control}
               name="code"
@@ -229,6 +231,7 @@ export function LoginForm({ onLoggedIn }: LoginFormProps) {
             />
             <PrimaryButton
               label={otpExchangeMutation.isPending ? 'Exchanging…' : 'Exchange OTP'}
+              variant="action"
               disabled={otpExchangeMutation.isPending}
               onPress={otpForm.handleSubmit((values) => otpExchangeMutation.mutate(values))}
             />

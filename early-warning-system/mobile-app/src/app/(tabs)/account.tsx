@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { RefreshControl, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   AccountNavRow,
   ChannelPreferencesForm,
@@ -22,6 +22,7 @@ import { BottomTabInset, Spacing } from '@/constants/theme';
 
 export default function AccountScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const hydrated = useAuthHydrated();
   const isAuthenticated = useIsAuthenticated();
   const clearSession = useAuthStore((s) => s.clearSession);
@@ -59,7 +60,8 @@ export default function AccountScreen() {
         }
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
-          paddingBottom: BottomTabInset + Spacing.four,
+          // Extra room so Sign out (and guest CTAs) clear the native tab bar.
+          paddingBottom: BottomTabInset + Spacing.six + insets.bottom,
           paddingHorizontal: 16,
         }}>
         <View className="pb-3 pt-2">
@@ -87,12 +89,12 @@ export default function AccountScreen() {
             <View className="gap-3">
               <PrimaryButton
                 label="Register"
-                variant="secondary"
+                variant="action"
                 onPress={() => router.push('/register')}
               />
               <PrimaryButton
                 label="Verify code"
-                variant="ghost"
+                variant="secondary"
                 onPress={() => router.push('/verify')}
               />
             </View>
