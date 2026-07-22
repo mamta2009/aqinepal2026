@@ -179,27 +179,44 @@ interface PrimaryButtonProps {
   label: string;
   onPress: () => void;
   disabled?: boolean;
-  variant?: 'primary' | 'secondary' | 'ghost';
+  /**
+   * Semantic button styles (consistent app-wide):
+   * - action / primary — filled blue: main constructive CTAs (save, sign in, register, send)
+   * - secondary — blue outline: alternate constructive actions
+   * - danger — filled red: destructive (sign out, delete, remove)
+   * - dangerOutline — red outline: softer destructive (clear form)
+   * - ghost — text-only / low emphasis
+   */
+  variant?: 'action' | 'primary' | 'secondary' | 'danger' | 'dangerOutline' | 'ghost';
 }
 
 export function PrimaryButton({
   label,
   onPress,
   disabled,
-  variant = 'primary',
+  variant = 'action',
 }: PrimaryButtonProps) {
+  const resolved = variant === 'primary' ? 'action' : variant;
+
   const className =
-    variant === 'primary'
-      ? 'rounded-xl bg-primary px-4 py-3'
-      : variant === 'secondary'
+    resolved === 'action'
+      ? 'rounded-xl bg-secondary px-4 py-3'
+      : resolved === 'secondary'
         ? 'rounded-xl border border-secondary bg-transparent px-4 py-3'
-        : 'rounded-xl px-4 py-3';
+        : resolved === 'danger'
+          ? 'rounded-xl bg-primary px-4 py-3'
+          : resolved === 'dangerOutline'
+            ? 'rounded-xl border border-primary bg-transparent px-4 py-3'
+            : 'rounded-xl px-4 py-3';
+
   const textClass =
-    variant === 'primary'
+    resolved === 'action' || resolved === 'danger'
       ? 'text-center font-semibold text-white'
-      : variant === 'secondary'
+      : resolved === 'secondary'
         ? 'text-center font-semibold text-secondary'
-        : 'text-center font-semibold text-neutral-700 dark:text-neutral-300';
+        : resolved === 'dangerOutline'
+          ? 'text-center font-semibold text-primary'
+          : 'text-center font-semibold text-neutral-700 dark:text-neutral-300';
 
   return (
     <Pressable

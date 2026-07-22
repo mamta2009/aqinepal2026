@@ -23,6 +23,7 @@ interface AuthState {
   hydrated: boolean;
   hydrate: () => Promise<void>;
   setSession: (session: AuthSession) => Promise<void>;
+  setFacilityReportingReady: (ready: boolean) => Promise<void>;
   clearSession: () => Promise<void>;
 }
 
@@ -81,6 +82,11 @@ export const useAuthStore = create<AuthState>((set) => ({
       facilityReportingReady: session.facilityReportingReady,
       claims: session.claims,
     });
+  },
+
+  setFacilityReportingReady: async (ready) => {
+    await sessionSet(READY_KEY, ready ? "1" : "0");
+    set({ facilityReportingReady: ready });
   },
 
   clearSession: async () => {

@@ -22,6 +22,9 @@ export function ProfileCard({ profile, facilityReportingReady }: ProfileCardProp
   if (!profile) {
     return (
       <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+        <Text className="mb-2 text-sm font-semibold text-neutral-900 dark:text-white">
+          My registration
+        </Text>
         <Text className="text-sm text-neutral-500">Loading profile…</Text>
       </View>
     );
@@ -38,26 +41,42 @@ export function ProfileCard({ profile, facilityReportingReady }: ProfileCardProp
 
   return (
     <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-      <Text className="mb-2 text-sm font-semibold text-neutral-900 dark:text-white">
+      <Text className="mb-1 text-sm font-semibold text-neutral-900 dark:text-white">
         My registration
+      </Text>
+      <Text className="mb-3 text-xs leading-4 text-neutral-500 dark:text-neutral-400">
+        After you sign in (password or one-time code), your saved enrolment details load here — cities,
+        channels, verification, and facility linkage. Update preferences through your administrator if
+        something is wrong.
       </Text>
       <Row label="Name" value={profile.name} />
       <Row label="Email" value={profile.email} />
       <Row label="Phone" value={profile.phone_number} />
       <Row label="WhatsApp" value={profile.whatsapp_number} />
       <Row label="Role" value={profile.contact_type} />
-      <Row label="Cities" value={cities} />
-      <Row label="Facilities" value={facilities} />
+      <Row label="Coverage areas" value={cities} />
+      <Row label="Registered facilities" value={facilities} />
       <Row
-        label="Channels"
+        label="Alert channels"
         value={(profile.preferred_channels || []).join(', ') || null}
       />
       <Row
-        label="Topics"
+        label="Environmental topics"
         value={(profile.environmental_topics || []).join(', ') || null}
       />
+      <Row label="Language" value={profile.language} />
       <Row label="Verification" value={profile.verification_status} />
-      <Row label="Approval" value={profile.approval_status} />
+      <Row label="Partner approval" value={profile.approval_status} />
+      <Row
+        label="Account active"
+        value={
+          profile.active === undefined || profile.active === null
+            ? null
+            : profile.active
+              ? 'Yes'
+              : 'No'
+        }
+      />
       <Row
         label="Facility reporting"
         value={
@@ -66,6 +85,8 @@ export function ProfileCard({ profile, facilityReportingReady }: ProfileCardProp
             : 'Not ready'
         }
       />
+      <Row label="Facility ID (scope)" value={profile.facility_id} />
+      <Row label="Contact reference ID" value={profile._id} />
     </View>
   );
 }

@@ -62,7 +62,7 @@ export function ChannelPreferencesForm({ profile }: ChannelPreferencesFormProps)
   return (
     <View className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
       <Banner
-        message="Choose how you receive air and heat alerts."
+        message="Choose how we may reach you for alerts (matches your registration — save to update)."
         tone="info"
       />
       {banner ? <Banner message={banner.message} tone={banner.tone} /> : null}

@@ -327,7 +327,7 @@ export function RegisterForm() {
 
       <View className="mt-1 flex-row gap-3">
         <View className="flex-1">
-          <PrimaryButton label="Clear Form" variant="secondary" onPress={clearForm} />
+          <PrimaryButton label="Clear Form" variant="dangerOutline" onPress={clearForm} />
         </View>
         <View className="flex-1">
           <PrimaryButton

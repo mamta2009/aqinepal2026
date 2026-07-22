@@ -8,6 +8,11 @@ import type {
   NotificationInboxResponse,
   PreferencesPatch,
   PreferencesPatchResponse,
+  SharedAlertContact,
+  SharedContactCreatePayload,
+  SharedContactNotifyPayload,
+  SharedContactNotifyResponse,
+  SharedContactsResponse,
 } from "@/types/auth";
 
 export async function loginWithPassword(
@@ -64,10 +69,48 @@ export async function patchPreferences(
 
 export async function getNotificationInbox(
   limit = 80,
+  skip = 0,
 ): Promise<NotificationInboxResponse> {
   const { data } = await apiClient.get<NotificationInboxResponse>(
     "/api/auth/notification-inbox",
-    { params: { limit } },
+    { params: { limit, skip } },
+  );
+  return data;
+}
+
+export async function listSharedContacts(): Promise<SharedContactsResponse> {
+  const { data } = await apiClient.get<SharedContactsResponse>(
+    "/api/auth/shared-contacts",
+  );
+  return data;
+}
+
+export async function createSharedContact(
+  body: SharedContactCreatePayload,
+): Promise<{ success: boolean; contact: SharedAlertContact }> {
+  const { data } = await apiClient.post<{
+    success: boolean;
+    contact: SharedAlertContact;
+  }>("/api/auth/shared-contacts", body);
+  return data;
+}
+
+export async function deleteSharedContact(
+  contactId: string,
+): Promise<{ success: boolean; deleted_id: string }> {
+  const { data } = await apiClient.delete<{
+    success: boolean;
+    deleted_id: string;
+  }>(`/api/auth/shared-contacts/${encodeURIComponent(contactId)}`);
+  return data;
+}
+
+export async function notifySharedContacts(
+  body: SharedContactNotifyPayload,
+): Promise<SharedContactNotifyResponse> {
+  const { data } = await apiClient.post<SharedContactNotifyResponse>(
+    "/api/auth/shared-contacts/notify",
+    body,
   );
   return data;
 }

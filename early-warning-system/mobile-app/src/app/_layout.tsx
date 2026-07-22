@@ -42,6 +42,9 @@ export default function RootLayout() {
             <Stack.Screen name="verify" options={{ title: 'Verify' }} />
             <Stack.Screen name="alerts" options={{ title: 'Recent Alerts' }} />
             <Stack.Screen name="compare" options={{ title: 'Compare cities' }} />
+            <Stack.Screen name="inbox" options={{ title: 'Notifications' }} />
+            <Stack.Screen name="facility-actions" options={{ title: 'Facility Actions' }} />
+            <Stack.Screen name="friends" options={{ title: 'Friends & family' }} />
           </Stack>
         </AuthBootstrap>
       </ThemeProvider>

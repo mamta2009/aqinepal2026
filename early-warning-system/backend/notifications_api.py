@@ -2602,6 +2602,7 @@ async def registrant_delete_shared_contact(
 async def registrant_notification_inbox(
     authorization: str | None = Header(None),
     limit: int = Query(50, ge=1, le=200),
+    skip: int = Query(0, ge=0, le=10_000),
 ):
     """
     Recent outbound attempts to this contact (SMS / email / WhatsApp) from ``notification_logs``.
@@ -2620,9 +2621,11 @@ async def registrant_notification_inbox(
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=401, detail="Invalid session identity") from exc
 
+    total = await db.notification_logs.count_documents({"recipient_id": cid})
     cur = (
         db.notification_logs.find({"recipient_id": cid})
         .sort("timestamp", -1)
+        .skip(skip)
         .limit(limit)
     )
     rows = await cur.to_list(length=limit)
@@ -2649,7 +2652,13 @@ async def registrant_notification_inbox(
                 else None,
             }
         )
-    return {"count": len(entries), "entries": entries}
+    return {
+        "count": len(entries),
+        "total": int(total),
+        "skip": skip,
+        "limit": limit,
+        "entries": entries,
+    }
 
 
 def _facility_scope_ok_for_login(doc: dict[str, Any]) -> tuple[bool, str]:

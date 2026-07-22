@@ -101,4 +101,87 @@ export interface NotificationInboxEntry {
 export interface NotificationInboxResponse {
   count: number;
   entries: NotificationInboxEntry[];
+  total?: number;
+  skip?: number;
+  limit?: number;
+}
+
+export type SharedContactChannel = "sms" | "whatsapp" | "email";
+
+export interface SharedAlertContact {
+  id: string;
+  display_name: string;
+  channel: SharedContactChannel | string;
+  phone_e164?: string | null;
+  email?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface SharedContactsLimits {
+  max_contacts: number;
+  notify_recipients_daily_max: number;
+  notify_recipients_sent_today: number;
+}
+
+export interface SharedContactsResponse {
+  contacts: SharedAlertContact[];
+  limits: SharedContactsLimits;
+}
+
+export interface SharedContactCreatePayload {
+  display_name: string;
+  channel: SharedContactChannel;
+  phone_e164?: string;
+  email?: string;
+}
+
+export interface SharedContactNotifyPayload {
+  contact_ids: string[];
+  message: string;
+  confirm_recipients_consented: boolean;
+}
+
+export interface SharedContactNotifyResult {
+  contact_id: string;
+  channel?: string;
+  ok: boolean;
+  error?: string;
+}
+
+export interface SharedContactNotifyResponse {
+  success: boolean;
+  results: SharedContactNotifyResult[];
+  daily_cap?: number;
+  sent_today_before?: number;
+}
+
+export interface ActionLogEntry {
+  _id?: string;
+  action_type?: string;
+  facility_site?: string | null;
+  timestamp?: string;
+  details?: string | null;
+  facility_id?: string;
+  facility_name?: string | null;
+  city?: string | null;
+}
+
+export interface ActionLogListResponse {
+  facility_id: string;
+  count: number;
+  entries: ActionLogEntry[];
+}
+
+export interface ActionLogCreatePayload {
+  action_type: string;
+  details?: string;
+  facility_site?: string;
+}
+
+export interface ActionLogCreateResponse {
+  success: boolean;
+  id: string;
+  facility_id: string;
+  facility_site?: string | null;
 }

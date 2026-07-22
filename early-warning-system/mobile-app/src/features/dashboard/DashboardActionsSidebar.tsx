@@ -50,7 +50,7 @@ function ActionRow({
       onPress={onPress}
       className={
         isPrimary
-          ? 'flex-row items-center justify-between rounded-xl bg-primary px-4 py-3.5 active:opacity-80'
+          ? 'flex-row items-center justify-between rounded-xl bg-secondary px-4 py-3.5 active:opacity-80'
           : 'flex-row items-center justify-between rounded-xl border border-neutral-300 bg-white px-4 py-3.5 active:opacity-80 dark:border-neutral-700 dark:bg-neutral-900'
       }>
       <View className="flex-1 pr-2">
