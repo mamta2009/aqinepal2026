@@ -207,8 +207,10 @@ export function DashboardActionsSidebar({
             accessibilityRole="button"
             accessibilityLabel="Close"
             onPress={onClose}
-            className="rounded-lg px-2 py-1 active:opacity-70">
-            <Text className="text-lg text-neutral-500 dark:text-neutral-400">✕</Text>
+            className="rounded-lg px-2.5 py-1.5 active:opacity-70">
+            <Text className="text-2xl leading-none text-neutral-500 dark:text-neutral-400">
+              ✕
+            </Text>
           </Pressable>
         </View>
 
@@ -275,8 +277,10 @@ export function DashboardMenuButton({ onPress }: DashboardMenuButtonProps) {
       accessibilityRole="button"
       accessibilityLabel="Open dashboard actions"
       onPress={onPress}
-      className="rounded-xl border border-neutral-300 bg-white px-3 py-2 active:opacity-80 dark:border-neutral-700 dark:bg-neutral-900">
-      <Text className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">☰</Text>
+      className="rounded-xl border border-neutral-300 bg-white px-3.5 py-2.5 active:opacity-80 dark:border-neutral-700 dark:bg-neutral-900">
+      <Text className="text-2xl font-semibold leading-none text-neutral-800 dark:text-neutral-100">
+        ☰
+      </Text>
     </Pressable>
   );
 }
