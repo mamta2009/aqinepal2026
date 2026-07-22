@@ -23,8 +23,8 @@ export default function AppTabs() {
       <NativeTabs.Trigger name="account">
         <NativeTabs.Trigger.Label>Account</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
-          src={require('@/assets/images/tabIcons/explore.png')}
-          renderingMode="template"
+          sf={{ default: 'person', selected: 'person.fill' }}
+          md={{ default: 'person', selected: 'account_circle' }}
         />
       </NativeTabs.Trigger>
     </NativeTabs>
