@@ -1593,6 +1593,32 @@
                                 style="margin-top:12px;font-size:0.78rem;line-height:1.45;min-height:2em;color:var(--text-secondary);">
                                 Sign in to load notifications.
                             </div>
+                            <button type="button" class="mini-btn" id="notificationInboxShowMoreBtn"
+                                style="margin-top:10px;display:none;">Show more</button>
+
+                            <!-- Notifications modal (shows the full list without expanding the panel) -->
+                            <div id="notificationInboxModal"
+                                style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;padding:16px;">
+                                <div
+                                    style="width:min(960px,100%);max-height:82vh;overflow:auto;background:var(--bg-dark);border:1px solid var(--border);border-radius:14px;padding:16px;">
+                                    <div
+                                        style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;">
+                                        <div>
+                                            <div style="font-weight:700;color:var(--text-primary);margin-bottom:4px;">
+                                                All notifications</div>
+                                            <div
+                                                style="font-size:0.78rem;color:var(--text-secondary);line-height:1.35;">
+                                                Server delivery attempts and broadcast history.</div>
+                                        </div>
+                                        <button type="button" class="mini-btn"
+                                            id="notificationInboxModalCloseBtn">Close</button>
+                                    </div>
+                                    <div id="notificationInboxModalBody"
+                                        style="font-size:0.78rem;line-height:1.45;color:var(--text-secondary);min-height:2em;">
+                                        Loading…
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Friends & family (user-initiated SMS / email / WhatsApp) -->
@@ -1731,7 +1757,8 @@
                             </div>
                             <p style="font-size:0.8rem;color:var(--text-secondary);margin:0 0 10px;line-height:1.5;">
                                 Permanently delete your registration and personal data. You must be signed in with
-                                <strong>email + password</strong> (not OTP only). Type <strong>DELETE</strong> to confirm.
+                                <strong>email + password</strong> (not OTP only). Type <strong>DELETE</strong> to
+                                confirm.
                                 This cannot be undone. You can also use the public page
                                 <a href="/delete-account" style="color:var(--accent);">/delete-account</a>
                                 without the app.
@@ -1744,7 +1771,8 @@
                                         autocomplete="off" style="flex:1;min-width:120px;" />
                                 </div>
                                 <button type="button" class="mini-btn" id="deleteAccountBtn"
-                                    style="background:#b71c1c;border-color:#ef5350;color:#fff;">Delete my account</button>
+                                    style="background:#b71c1c;border-color:#ef5350;color:#fff;">Delete my
+                                    account</button>
                                 <p id="deleteAccountMsg" style="font-size:0.72rem;margin-top:8px;min-height:1.1em;"></p>
                             </div>
                             <p id="deleteAccountSignin" style="font-size:0.8rem;color:var(--text-tertiary);">

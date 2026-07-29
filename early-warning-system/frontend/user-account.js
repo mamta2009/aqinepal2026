@@ -456,17 +456,23 @@
 
   async function refreshNotificationInbox() {
     const wrap = document.getElementById("notificationInboxBody");
+    const showMoreBtn = document.getElementById("notificationInboxShowMoreBtn");
+    if (showMoreBtn) showMoreBtn.style.display = "none";
     if (!wrap) return;
     const tok = getFacilityBearer();
     if (!tok) {
       wrap.textContent = "Sign in to see notifications sent to you.";
       return;
     }
+    const previewLimit = 5;
     wrap.textContent = "Loading…";
     try {
-      const r = await fetch(`${API_BASE}/auth/notification-inbox?limit=80`, {
-        headers: { Authorization: `Bearer ${tok}` },
-      });
+      const r = await fetch(
+        `${API_BASE}/auth/notification-inbox?limit=${previewLimit}&skip=0`,
+        {
+          headers: { Authorization: `Bearer ${tok}` },
+        },
+      );
       const j = await r.json().catch(() => ({}));
       if (r.status === 401) {
         wrap.textContent = "Session expired — sign in again.";
@@ -480,6 +486,12 @@
         return;
       }
       const rows = j.entries || [];
+      const total =
+        typeof j.total === "number"
+          ? j.total
+          : typeof j.count === "number"
+            ? j.count
+            : 0;
       if (!rows.length) {
         wrap.innerHTML =
           '<p style="margin:0;color:var(--text-tertiary);">No delivery attempts logged yet.</p>';
@@ -505,10 +517,97 @@
           })
           .join("") +
         "</tbody></table>";
+
+      if (showMoreBtn) {
+        showMoreBtn.style.display = total > previewLimit ? "" : "none";
+      }
     } catch (e) {
       wrap.textContent = "Network error loading notifications.";
       console.warn(e);
     }
+  }
+
+  async function openNotificationInboxModal() {
+    const modal = document.getElementById("notificationInboxModal");
+    const modalBody = document.getElementById("notificationInboxModalBody");
+    if (!modal || !modalBody) return;
+    modal.style.display = "flex";
+    modalBody.textContent = "Loading…";
+    const tok = getFacilityBearer();
+    if (!tok) {
+      modalBody.textContent = "Sign in to load notifications.";
+      return;
+    }
+    const modalLimit = 200;
+    try {
+      const r = await fetch(
+        `${API_BASE}/auth/notification-inbox?limit=${modalLimit}&skip=0`,
+        {
+          headers: { Authorization: `Bearer ${tok}` },
+        },
+      );
+      const j = await r.json().catch(() => ({}));
+      if (r.status === 401) {
+        modalBody.textContent = "Session expired — sign in again.";
+        return;
+      }
+      if (!r.ok) {
+        modalBody.textContent =
+          typeof j.detail === "string"
+            ? j.detail
+            : "Could not load notifications.";
+        return;
+      }
+      const rows = j.entries || [];
+      const total =
+        typeof j.total === "number"
+          ? j.total
+          : typeof j.count === "number"
+            ? j.count
+            : 0;
+
+      if (!rows.length) {
+        modalBody.innerHTML =
+          '<p style="margin:0;color:var(--text-tertiary);">No delivery attempts logged yet.</p>';
+        return;
+      }
+
+      const esc = _escapeProfileHtml;
+      const notice =
+        total > modalLimit
+          ? `<div style="margin-bottom:10px;font-size:0.78rem;color:var(--text-tertiary);">Showing latest ${modalLimit} of ${total} delivery attempts.</div>`
+          : "";
+
+      modalBody.innerHTML =
+        notice +
+        '<table class="tbl" style="font-size:0.76rem;width:100%;border-collapse:collapse;"><thead><tr><th style="text-align:left">When</th><th>Channel</th><th>Status</th><th>Where</th><th>Content</th></tr></thead><tbody>' +
+        rows
+          .map((row) => {
+            const when = esc(row.timestamp || "—");
+            const ch = esc(row.channel || "—");
+            const st = esc(row.status || "—");
+            const meta =
+              [row.city, row.alert_level].filter(Boolean).join(" · ") || "—";
+            const body =
+              row.message != null
+                ? esc(String(row.message).slice(0, 1200))
+                : esc(row.message_preview || row.error || "—");
+            return `<tr><td style="vertical-align:top">${when}</td><td>${ch}</td><td>${st}</td><td>${esc(
+              meta,
+            )}</td><td style="max-width:420px;word-break:break-word;">${body}</td></tr>`;
+          })
+          .join("") +
+        "</tbody></table>";
+    } catch (e) {
+      modalBody.textContent = "Network error loading notifications.";
+      console.warn(e);
+    }
+  }
+
+  function closeNotificationInboxModal() {
+    const modal = document.getElementById("notificationInboxModal");
+    if (!modal) return;
+    modal.style.display = "none";
   }
 
   function syncSharedContactChannelFields() {
@@ -1280,6 +1379,24 @@
       nInb.addEventListener("click", () =>
         refreshNotificationInbox().catch(() => {}),
       );
+    const nMore = document.getElementById("notificationInboxShowMoreBtn");
+    if (nMore) {
+      nMore.addEventListener("click", () =>
+        openNotificationInboxModal().catch(() => {}),
+      );
+    }
+    const nModalClose = document.getElementById(
+      "notificationInboxModalCloseBtn",
+    );
+    if (nModalClose)
+      nModalClose.addEventListener("click", () =>
+        closeNotificationInboxModal(),
+      );
+    const nModal = document.getElementById("notificationInboxModal");
+    if (nModal)
+      nModal.addEventListener("click", (evt) => {
+        if (evt.target === nModal) closeNotificationInboxModal();
+      });
     const addF = document.getElementById("addFacilityBtn");
     if (addF)
       addF.addEventListener("click", () => onAddFacility().catch(() => {}));
