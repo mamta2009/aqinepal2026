@@ -126,3 +126,19 @@ export async function notifySharedContacts(
   );
   return data;
 }
+
+export async function deleteAccount(body: {
+  password: string;
+  confirm: string;
+}): Promise<{
+  success: boolean;
+  message?: string;
+  contact_removed?: boolean;
+}> {
+  const { data } = await apiClient.post<{
+    success: boolean;
+    message?: string;
+    contact_removed?: boolean;
+  }>("/api/auth/delete-account", body);
+  return data;
+}

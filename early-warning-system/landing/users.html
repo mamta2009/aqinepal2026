@@ -1723,6 +1723,35 @@
                                 details</button>
                         </div>
 
+                        <!-- Delete account (Play Store / self-serve) -->
+                        <div class="panel" id="deleteAccountPanel">
+                            <div class="panel-header">
+                                <span class="panel-title">Delete account</span>
+                                <div class="panel-icon">⚠️</div>
+                            </div>
+                            <p style="font-size:0.8rem;color:var(--text-secondary);margin:0 0 10px;line-height:1.5;">
+                                Permanently delete your registration and personal data. You must be signed in with
+                                <strong>email + password</strong> (not OTP only). Type <strong>DELETE</strong> to confirm.
+                                This cannot be undone. You can also use the public page
+                                <a href="/delete-account" style="color:var(--accent);">/delete-account</a>
+                                without the app.
+                            </p>
+                            <div id="deleteAccountForm" style="display:none;">
+                                <div class="facility-auth-row" style="flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+                                    <input type="password" id="deleteAccountPassword" placeholder="Current password"
+                                        autocomplete="current-password" style="flex:1;min-width:160px;" />
+                                    <input type="text" id="deleteAccountConfirm" placeholder="Type DELETE"
+                                        autocomplete="off" style="flex:1;min-width:120px;" />
+                                </div>
+                                <button type="button" class="mini-btn" id="deleteAccountBtn"
+                                    style="background:#b71c1c;border-color:#ef5350;color:#fff;">Delete my account</button>
+                                <p id="deleteAccountMsg" style="font-size:0.72rem;margin-top:8px;min-height:1.1em;"></p>
+                            </div>
+                            <p id="deleteAccountSignin" style="font-size:0.8rem;color:var(--text-tertiary);">
+                                Sign in with password to delete your account.
+                            </p>
+                        </div>
+
                         <!-- System info (prefs: Admin → Settings) -->
                         <div class="panel">
                             <div class="panel-header">

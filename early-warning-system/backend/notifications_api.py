@@ -30,6 +30,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
 import db_state
+import account_deletion
 import external_integrations
 import facility_auth
 import onchain_hooks
@@ -265,6 +266,35 @@ class RegistrantLoginIn(BaseModel):
 class RegistrantChangePasswordIn(BaseModel):
     old_password: str = Field(..., min_length=1, max_length=128)
     new_password: str = Field(..., min_length=8, max_length=128)
+
+
+class DeleteAccountIn(BaseModel):
+    password: str = Field(..., min_length=1, max_length=128)
+    confirm: str = Field(
+        ...,
+        min_length=1,
+        max_length=32,
+        description="Must be exactly DELETE",
+    )
+
+
+class DeleteAccountRequestIn(BaseModel):
+    email: EmailStr
+
+
+class DeleteAccountConfirmIn(BaseModel):
+    email: EmailStr
+    code: str = Field(..., min_length=4, max_length=16)
+    confirm: str = Field(
+        ...,
+        min_length=1,
+        max_length=32,
+        description="Must be exactly DELETE",
+    )
+
+
+_ACCOUNT_DELETION_CONFIRM_PHRASE = "DELETE"
+_ACCOUNT_DELETION_CODE_TTL_MINUTES = 15
 
 
 class FacilityLoginEmailIn(BaseModel):
@@ -1232,6 +1262,123 @@ async def _send_facility_login_code(db: Any, doc: dict[str, Any], code: str) -> 
     return warnings
 
 
+async def _send_account_deletion_code(db: Any, doc: dict[str, Any], code: str) -> list[str]:
+    """Dispatch a short-lived OTP used to confirm public account deletion."""
+    warnings: list[str] = []
+    contact_id = doc["_id"]
+    chans = list(doc.get("preferred_channels") or [])
+    # Always try email when present so users who only set phone still get a path
+    # when email is the recovery identifier for Play Store deletion.
+    if "email" not in chans and doc.get("email"):
+        chans = [*chans, "email"]
+    name = str(doc.get("name") or "")
+    ttl = _ACCOUNT_DELETION_CODE_TTL_MINUTES
+    hint = (
+        f"Early Warning account deletion code: {code}. "
+        f"Valid {ttl} minutes. If you did not request this, ignore this message."
+    )
+
+    try:
+        if "email" in chans and doc.get("email"):
+            if _sendgrid_configured():
+                safe_name = html.escape(name or "there")
+                safe_code = html.escape(code)
+                body = f"""
+                  <p style="margin:0 0 12px;">Hi {safe_name},</p>
+                  <p style="margin:0 0 18px;color:#374151;">
+                    Use this code to confirm permanent deletion of your Early Warning account
+                    and associated personal data:
+                  </p>
+                  <p style="margin:0 0 18px;text-align:center;font-family:Consolas,Monaco,monospace;font-size:32px;letter-spacing:0.28em;font-weight:700;color:#9b1c1c;">{safe_code}</p>
+                  <p style="margin:0;font-size:13px;color:#6b7280;">
+                    This code expires in {ttl} minutes. If you did not request account deletion,
+                    you can ignore this email — your account will remain active.
+                  </p>
+                """
+                html_content = _email_shell(
+                    title="Confirm account deletion",
+                    accent="#9b1c1c",
+                    body_html=body,
+                    footer_note="AQI Nepal Early Warning System",
+                )
+                plain = (
+                    f"Hi {name or 'there'},\n\n"
+                    f"Your Early Warning account deletion code is: {code}\n\n"
+                    f"This code expires in {ttl} minutes.\n"
+                    f"If you did not request this, ignore this email.\n"
+                )
+                er = await send_email(
+                    doc["email"],
+                    "Confirm Early Warning account deletion",
+                    html_content,
+                    plain_text=plain,
+                )
+                if er.get("success"):
+                    await db.notification_logs.insert_one(
+                        {
+                            "recipient_id": str(contact_id),
+                            "channel": "email",
+                            "recipient": doc["email"],
+                            "type": "account_deletion",
+                            "status": "sent",
+                            "timestamp": datetime.utcnow(),
+                        }
+                    )
+                else:
+                    warnings.append(
+                        f"email_deletion_code_failed:{er.get('error', 'unknown')}"
+                    )
+            else:
+                warnings.append("email_deletion_code_skipped_resend_not_configured")
+        if "sms" in chans and doc.get("phone_number"):
+            if twilio_notify.twilio_configured():
+                result = await send_sms(doc["phone_number"], hint)
+                if result.get("success"):
+                    await db.notification_logs.insert_one(
+                        {
+                            "recipient_id": str(contact_id),
+                            "channel": "sms",
+                            "recipient": doc["phone_number"],
+                            "type": "account_deletion",
+                            "status": "sent",
+                            "twilio_sid": result.get("sid"),
+                            "timestamp": datetime.utcnow(),
+                        }
+                    )
+                else:
+                    warnings.append(
+                        f"sms_deletion_failed:{result.get('error', 'unknown')}"
+                    )
+            else:
+                warnings.append("sms_deletion_code_skipped_twilio_not_configured")
+        if "whatsapp" in chans:
+            wa = doc.get("whatsapp_number") or doc.get("phone_number")
+            if wa and twilio_notify.twilio_configured():
+                result = await send_whatsapp(wa, hint)
+                if result.get("success"):
+                    await db.notification_logs.insert_one(
+                        {
+                            "recipient_id": str(contact_id),
+                            "channel": "whatsapp",
+                            "recipient": wa,
+                            "type": "account_deletion",
+                            "status": "sent",
+                            "twilio_sid": result.get("sid"),
+                            "timestamp": datetime.utcnow(),
+                        }
+                    )
+                else:
+                    warnings.append(
+                        f"whatsapp_deletion_failed:{result.get('error', 'unknown')}"
+                    )
+            elif wa:
+                warnings.append("whatsapp_deletion_skipped_twilio_not_configured")
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("account deletion code dispatch failed: %s", exc)
+        warnings.append(f"account_deletion_dispatch_exception:{str(exc)[:200]}")
+    return warnings
+
+
 def _session_reverification_days() -> int:
     """0 = disabled (password-only after initial registration verify)."""
     try:
@@ -2064,6 +2211,126 @@ async def registrant_change_password_endpoint(
         {"$set": {"password_hash": registrant_auth.hash_password(body.new_password)}},
     )
     return {"success": True, "message": "Password updated."}
+
+
+@router.post("/api/auth/delete-account")
+async def registrant_delete_own_account(
+    body: DeleteAccountIn,
+    session: registrant_auth.RegistrantSession = Depends(registrant_auth.load_registrant_session),
+):
+    """
+    Permanently delete the signed-in registrant's account and associated personal data.
+    Requires the current password and confirm phrase DELETE.
+    Facility OTP sessions cannot wipe the account — use a password session.
+    """
+    if body.confirm.strip() != _ACCOUNT_DELETION_CONFIRM_PHRASE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"confirm must be exactly {_ACCOUNT_DELETION_CONFIRM_PHRASE}",
+        )
+    db = db_state.require_mongo_db()
+    oid = ObjectId(session.contact_id)
+    doc = await db.contacts.find_one({"_id": oid})
+    if not doc or not doc.get("password_hash"):
+        raise HTTPException(status_code=400, detail="Password state invalid — contact support")
+    if not registrant_auth.verify_password(body.password, str(doc["password_hash"])):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    result = await account_deletion.delete_contact_and_related(db, session.contact_id)
+    result["message"] = "Account and associated personal data deleted."
+    return result
+
+
+@router.post("/api/auth/delete-account/request")
+async def public_delete_account_request(body: DeleteAccountRequestIn):
+    """
+    Send a short-lived OTP so the user can confirm account deletion without the app.
+    Response shape is deliberately uniform to avoid leaking which emails exist.
+    """
+    db = db_state.require_mongo_db()
+    email_key = str(body.email).strip()
+    generic = (
+        "If this email is registered, a confirmation code was sent to configured channels."
+    )
+    doc = await db.contacts.find_one({"email": email_key})
+    if not doc and email_key != email_key.lower():
+        doc = await db.contacts.find_one({"email": email_key.lower()})
+    if not doc:
+        doc = await db.contacts.find_one(
+            {"email": {"$regex": f"^{re.escape(email_key)}$", "$options": "i"}}
+        )
+    if doc and doc.get("password_hash"):
+        code = _verification_code()
+        expires = datetime.utcnow() + timedelta(minutes=_ACCOUNT_DELETION_CODE_TTL_MINUTES)
+        await db.contacts.update_one(
+            {"_id": doc["_id"]},
+            {
+                "$set": {
+                    "account_deletion_code": code,
+                    "account_deletion_expires_at": expires,
+                }
+            },
+        )
+        warnings = await _send_account_deletion_code(db, doc, code)
+        out: dict[str, Any] = {
+            "success": True,
+            "message": generic,
+            "code_ttl_minutes": _ACCOUNT_DELETION_CODE_TTL_MINUTES,
+        }
+        if warnings:
+            out["warnings"] = warnings
+        return out
+    await asyncio.sleep(0.15)
+    return {
+        "success": True,
+        "message": generic,
+        "code_ttl_minutes": _ACCOUNT_DELETION_CODE_TTL_MINUTES,
+    }
+
+
+@router.post("/api/auth/delete-account/confirm")
+async def public_delete_account_confirm(body: DeleteAccountConfirmIn):
+    """Confirm public account deletion with email + OTP + DELETE phrase."""
+    if body.confirm.strip() != _ACCOUNT_DELETION_CONFIRM_PHRASE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"confirm must be exactly {_ACCOUNT_DELETION_CONFIRM_PHRASE}",
+        )
+    db = db_state.require_mongo_db()
+    email_key = str(body.email).strip()
+    doc = await db.contacts.find_one({"email": email_key})
+    if not doc and email_key != email_key.lower():
+        doc = await db.contacts.find_one({"email": email_key.lower()})
+    if not doc:
+        doc = await db.contacts.find_one(
+            {"email": {"$regex": f"^{re.escape(email_key)}$", "$options": "i"}}
+        )
+    if not doc:
+        raise HTTPException(status_code=400, detail="Invalid email or code")
+    stored = doc.get("account_deletion_code")
+    if not stored or stored != body.code.strip():
+        raise HTTPException(status_code=400, detail="Invalid email or code")
+    exp_at = doc.get("account_deletion_expires_at")
+    if isinstance(exp_at, datetime):
+        if datetime.utcnow() > exp_at:
+            raise HTTPException(
+                status_code=400,
+                detail="Deletion code expired — request another",
+            )
+    elif exp_at is not None:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid deletion state — request another code",
+        )
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Deletion code expired — request another",
+        )
+
+    cid = str(doc["_id"])
+    result = await account_deletion.delete_contact_and_related(db, cid)
+    result["message"] = "Account and associated personal data deleted."
+    return result
 
 
 @router.patch("/api/auth/preferences")

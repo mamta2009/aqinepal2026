@@ -14,6 +14,7 @@ from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, Field
 
+import account_deletion
 import db_state
 import dashboard_settings_store
 import external_integrations
@@ -634,24 +635,11 @@ async def admin_delete_registrant(
 ) -> dict[str, Any]:
     """
     Permanent delete — frees the unique email constraint for QA.
-    Also removes consent audit rows keyed by string ``contact_id``.
+    Removes consent rows, notification logs, shared-alert dispatch logs,
+    anonymizes action logs, and deletes the contact.
     """
     db = db_state.require_mongo_db()
-    cid = contact_id.strip()
-    try:
-        oid = ObjectId(cid)
-    except Exception as exc:  # noqa: BLE001
-        raise HTTPException(status_code=400, detail="Invalid contact_id") from exc
-
-    d_co = await db.consent_records.delete_many({"contact_id": cid})
-    d_ct = await db.contacts.delete_one({"_id": oid})
-    if d_ct.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Contact not found")
-    return {
-        "success": True,
-        "contact_removed": True,
-        "consent_records_removed": int(d_co.deleted_count),
-    }
+    return await account_deletion.delete_contact_and_related(db, contact_id)
 
 
 @router.get("/blockchain/overview")

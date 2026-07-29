@@ -1896,6 +1896,7 @@ _landing_html = os.path.join(_landing_root, "landing.html")
 _guides_hub_html = os.path.join(_landing_root, "guides.html")
 _admin_dashboard_html = os.path.join(_landing_root, "admin_dashboard.html")
 _users_html = os.path.join(_landing_root, "users.html")
+_delete_account_html = os.path.join(_landing_root, "delete_account.html")
 _aqi_help_html = os.path.join(_landing_root, "aqi_help.html")
 _intelladapt_logo_path = Path(_landing_root) / "assets" / "intelladapt-logo.png"
 _docs_root = os.path.normpath(os.path.join(_backend_root, "..", "docs"))
@@ -1951,6 +1952,10 @@ def _system_discovery_payload() -> dict:
             "registration_portal": "/registration",
             "admin_dashboard": "/admin/dashboard",
             "users_account": "/users",
+            "delete_account": "/delete-account",
+            "auth_delete_account": "POST /api/auth/delete-account",
+            "auth_delete_account_request": "POST /api/auth/delete-account/request",
+            "auth_delete_account_confirm": "POST /api/auth/delete-account/confirm",
             "admin_registrants": "GET/POST /api/admin/registrants; PATCH …/enrolment (facilities & cities)",
             "admin_blockchain_overview": "GET /api/admin/blockchain/overview",
             "admin_blockchain_runtime_network": "PATCH /api/admin/blockchain/runtime-network",
@@ -2057,6 +2062,18 @@ async def users_account_page():
         except OSError:
             logger.exception("Could not read %s", path)
     raise HTTPException(status_code=404, detail="users.html missing")
+
+
+@app.get("/delete-account", response_class=HTMLResponse)
+async def delete_account_page():
+    """Public account-deletion page (Google Play / App Store web resource)."""
+    path = Path(_delete_account_html)
+    if path.is_file():
+        try:
+            return HTMLResponse(content=path.read_text(encoding="utf-8"))
+        except OSError:
+            logger.exception("Could not read %s", path)
+    raise HTTPException(status_code=404, detail="delete_account.html missing")
 
 
 @app.get("/help/aqi-help", response_class=HTMLResponse)

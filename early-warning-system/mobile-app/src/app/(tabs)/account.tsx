@@ -5,6 +5,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   AccountNavRow,
   ChannelPreferencesForm,
+  DeleteAccountPanel,
   NotificationInboxList,
   ProfileCard,
 } from '@/features/account';
@@ -141,6 +142,9 @@ export default function AccountScreen() {
                 onPress={() => router.push('/friends')}
               />
             </View>
+
+            <DeleteAccountPanel />
+
             <PrimaryButton
               label="Sign out"
               variant="danger"
