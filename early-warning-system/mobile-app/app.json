@@ -3,6 +3,7 @@
     "name": "Early Warning System",
     "slug": "early-warning-system",
     "version": "1.0.0",
+    "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/6b356195-f590-4513-9648-3429f98cbee0",
       "checkAutomatically": "ON_LOAD",
@@ -26,7 +27,8 @@
       },
       "predictiveBackGestureEnabled": false,
       "googleServicesFile": "./google-services.json",
-      "usesCleartextTraffic": true
+      "usesCleartextTraffic": true,
+      "versionCode": 2
     },
     "web": {
       "output": "static",
@@ -53,9 +55,6 @@
       "eas": {
         "projectId": "6b356195-f590-4513-9648-3429f98cbee0"
       }
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
     }
   }
 }
