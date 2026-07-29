@@ -1,0 +1,13 @@
+**/__pycache__
+**/*.pyc
+**/.venv
+**/venv
+**/.env
+!**/.env.example
+**/node_modules
+**/mobile-app
+**/.git
+**/.DS_Store
+**/docs-private
+**/*.md
+!docs/**/*.md
