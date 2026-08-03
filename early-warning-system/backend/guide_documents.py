@@ -82,10 +82,11 @@ def derive_title(markdown_raw: str, fallback: str) -> str:
 
 
 def render_markdown_page(full_path: Path) -> tuple[str, str]:
+    """Return ``(title, html_fragment)`` for embedding in the public guides layout."""
     raw = full_path.read_text(encoding="utf-8")
     title = derive_title(raw, fallback=full_path.stem.replace("_", " "))
     inner = markdown_to_html_fragment(raw)
-    return title, _SHELL.format(title=html.escape(title), inner=inner)
+    return title, inner
 
 
 def list_private_markdown_basenames() -> list[str]:

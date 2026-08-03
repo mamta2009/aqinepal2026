@@ -21,7 +21,7 @@ from typing import Any
 from bson import ObjectId
 import httpx
 from dotenv import load_dotenv
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -34,6 +34,7 @@ import dashboard_settings_store
 import db_state
 import external_integrations
 import guide_documents
+import web_pages
 import onchain_hooks
 from cities_config import CITIES_CONFIG
 from facility_presets import FACILITY_PRESETS_BY_CITY
@@ -1892,16 +1893,10 @@ async def submit_daily_report(
 
 
 _landing_root = os.path.normpath(os.path.join(_backend_root, "..", "landing"))
-_landing_html = os.path.join(_landing_root, "landing.html")
-_guides_hub_html = os.path.join(_landing_root, "guides.html")
-_admin_dashboard_html = os.path.join(_landing_root, "admin_dashboard.html")
-_users_html = os.path.join(_landing_root, "users.html")
-_delete_account_html = os.path.join(_landing_root, "delete_account.html")
-_privacy_policy_html = os.path.join(_landing_root, "privacy-policy.html")
-_aqi_help_html = os.path.join(_landing_root, "aqi_help.html")
 _intelladapt_logo_path = Path(_landing_root) / "assets" / "intelladapt-logo.png"
 _docs_root = os.path.normpath(os.path.join(_backend_root, "..", "docs"))
 _docs_technology_dir = os.path.join(_docs_root, "tech")
+_frontend_dir = os.path.normpath(os.path.join(_backend_root, "..", "frontend"))
 
 
 def _system_discovery_payload() -> dict:
@@ -1914,7 +1909,7 @@ def _system_discovery_payload() -> dict:
         "guides": "/guides",
         "guides_markdown_preview": "/guides/md/{filepath}",
         "documentation_legacy_redirect": "/documentation",
-        "dashboard": "/frontend/index.html",
+        "dashboard": "/dashboard",
         "docs": "/docs",
         "api_base": "/api",
         "endpoints": {
@@ -1954,7 +1949,7 @@ def _system_discovery_payload() -> dict:
             "admin_dashboard": "/admin/dashboard",
             "users_account": "/users",
             "delete_account": "/delete-account",
-            "privacy_policy": "/privacy-policy.html",
+            "privacy_policy": "/privacy-policy",
             "auth_delete_account": "POST /api/auth/delete-account",
             "auth_delete_account_request": "POST /api/auth/delete-account/request",
             "auth_delete_account_confirm": "POST /api/auth/delete-account/confirm",
@@ -1995,37 +1990,35 @@ async def system_discovery():
 
 
 @app.get("/")
-async def landing_page():
-    """Public marketing landing HTML when `landing/landing.html` is present."""
-    path = Path(_landing_html)
-    if path.is_file():
-        try:
-            return HTMLResponse(content=path.read_text(encoding="utf-8"))
-        except OSError:
-            logger.exception("Could not read %s — falling back to JSON", path)
-    return JSONResponse(_system_discovery_payload())
+async def landing_page(request: Request):
+    """Public marketing landing (Jinja marketing layout)."""
+    try:
+        return web_pages.render(request, "pages/home.html", active="home")
+    except Exception:
+        logger.exception("Landing template failed — falling back to JSON discovery")
+        return JSONResponse(_system_discovery_payload())
 
 
 @app.get("/guides", response_class=HTMLResponse)
-async def guides_hub():
-    """Public guides hub: diagrams from docs/tech + markdown index under docs/guides (see /guides/md/…)."""
-    path = Path(_guides_hub_html)
-    if path.is_file():
-        try:
-            return HTMLResponse(content=path.read_text(encoding="utf-8"))
-        except OSError:
-            logger.exception("Could not read %s — 404", path)
-    raise HTTPException(status_code=404, detail="guides.html missing")
+async def guides_hub(request: Request):
+    """Public guides hub."""
+    return web_pages.render(request, "pages/guides.html", active="guides")
 
 
 @app.get("/guides/md/{filepath:path}", response_class=HTMLResponse)
-async def guides_markdown_page(filepath: str):
-    """Render a *.md file from docs/guides/ as HTML."""
+async def guides_markdown_page(request: Request, filepath: str):
+    """Render a *.md file from docs/guides/ inside the public layout."""
     gp = guide_documents.safe_markdown_under(guide_documents.GUIDES_MARKDOWN_ROOT, filepath)
     if gp is None:
         raise HTTPException(status_code=404, detail="Guide markdown not found")
-    _title, page = guide_documents.render_markdown_page(gp)
-    return HTMLResponse(page)
+    title, fragment = guide_documents.render_markdown_page(gp)
+    return web_pages.render(
+        request,
+        "pages/guide_md.html",
+        active="guides",
+        title=title,
+        content=fragment,
+    )
 
 
 @app.get("/documentation")
@@ -2043,64 +2036,56 @@ async def documentation_technology_media_redirect(path: str):
 
 
 @app.get("/admin/dashboard", response_class=HTMLResponse)
-async def admin_dashboard_page():
-    """Operator HTML console (loads admin JSON APIs — requires NOTIFICATION_API_KEY per request)."""
-    path = Path(_admin_dashboard_html)
-    if path.is_file():
-        try:
-            return HTMLResponse(content=path.read_text(encoding="utf-8"))
-        except OSError:
-            logger.exception("Could not read %s", path)
-    raise HTTPException(status_code=404, detail="admin_dashboard.html missing")
+async def admin_dashboard_page(request: Request):
+    """Operator HTML console."""
+    return web_pages.render(request, "pages/admin.html", active="admin")
 
 
 @app.get("/users", response_class=HTMLResponse)
-async def users_account_page():
-    """Registrant HTML: sign-in, profile, facility actions (static shell + /frontend/user-account.js)."""
-    path = Path(_users_html)
-    if path.is_file():
-        try:
-            return HTMLResponse(content=path.read_text(encoding="utf-8"))
-        except OSError:
-            logger.exception("Could not read %s", path)
-    raise HTTPException(status_code=404, detail="users.html missing")
+async def users_account_page(request: Request):
+    """Registrant account UI."""
+    return web_pages.render(request, "pages/users.html", active="users")
 
 
 @app.get("/delete-account", response_class=HTMLResponse)
-async def delete_account_page():
+async def delete_account_page(request: Request):
     """Public account-deletion page (Google Play / App Store web resource)."""
-    path = Path(_delete_account_html)
-    if path.is_file():
-        try:
-            return HTMLResponse(content=path.read_text(encoding="utf-8"))
-        except OSError:
-            logger.exception("Could not read %s", path)
-    raise HTTPException(status_code=404, detail="delete_account.html missing")
+    return web_pages.render(request, "pages/delete_account.html", active="delete")
 
 
-@app.get("/privacy-policy.html", response_class=HTMLResponse)
 @app.get("/privacy-policy", response_class=HTMLResponse)
-async def privacy_policy_page():
+async def privacy_policy_page(request: Request):
     """Public privacy policy (Google Play User Data / privacy policy URL)."""
-    path = Path(_privacy_policy_html)
-    if path.is_file():
-        try:
-            return HTMLResponse(content=path.read_text(encoding="utf-8"))
-        except OSError:
-            logger.exception("Could not read %s", path)
-    raise HTTPException(status_code=404, detail="privacy-policy.html missing")
+    return web_pages.render(request, "pages/privacy.html", active="privacy")
+
+
+@app.get("/privacy-policy.html", include_in_schema=False)
+async def privacy_policy_html_redirect():
+    return RedirectResponse(url="/privacy-policy", status_code=301)
+
+
+@app.get("/landing-assets/privacy.html", include_in_schema=False)
+async def privacy_policy_legacy_asset_redirect():
+    """Redirect the old static privacy asset to the canonical clean URL."""
+    return RedirectResponse(url="/privacy-policy", status_code=301)
 
 
 @app.get("/help/aqi-help", response_class=HTMLResponse)
-async def aqi_help_page():
-    """Interactive aqiHelp chat (guides-grounded LLM via OpenRouter)."""
-    path = Path(_aqi_help_html)
-    if path.is_file():
-        try:
-            return HTMLResponse(content=path.read_text(encoding="utf-8"))
-        except OSError:
-            logger.exception("Could not read %s", path)
-    raise HTTPException(status_code=404, detail="aqi_help.html missing")
+async def aqi_help_page(request: Request):
+    """Interactive aqiHelp chat."""
+    return web_pages.render(request, "pages/aqi_help.html", active="aqi-help")
+
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard_page(request: Request):
+    """Product readiness dashboard (canonical clean URL)."""
+    return web_pages.render(request, "pages/dashboard.html", active="dashboard")
+
+
+@app.get("/frontend/index.html", include_in_schema=False)
+async def dashboard_legacy_html_redirect():
+    """Legacy static dashboard path → clean /dashboard."""
+    return RedirectResponse(url="/dashboard", status_code=301)
 
 
 @app.get("/favicon.ico", include_in_schema=False)
@@ -2135,9 +2120,9 @@ if os.path.isdir(_docs_technology_dir):
         name="guides_technology_media",
     )
 
-_frontend_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "frontend"))
 if os.path.isdir(_frontend_dir):
     app.mount("/frontend", StaticFiles(directory=_frontend_dir), name="frontend")
+
 
 if __name__ == "__main__":
     import uvicorn

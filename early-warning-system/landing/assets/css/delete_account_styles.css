@@ -1,0 +1,136 @@
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+/* body provided by shared layout */
+
+        .wrap {
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .lede {
+            color: #b0b8c1;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .card {
+            background: #1a1f26;
+            border: 1px solid #333842;
+            border-radius: 14px;
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .card h2 {
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            color: #fff;
+        }
+
+        .card p,
+        .card li {
+            color: #b0b8c1;
+            font-size: 0.9rem;
+        }
+
+        .card ul {
+            margin: 0.5rem 0 0 1.1rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.7rem 0.85rem;
+            border-radius: 8px;
+            border: 1px solid #333842;
+            background: #0f1419;
+            color: #fff;
+            font: inherit;
+            margin-bottom: 0.9rem;
+        }
+
+        input:focus {
+            outline: 2px solid #d32f2f;
+            border-color: transparent;
+        }
+
+        .btn {
+            display: inline-block;
+            border: none;
+            border-radius: 8px;
+            padding: 0.7rem 1.1rem;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #d32f2f;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #b71c1c;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #2e3844;
+            color: #fff;
+            margin-right: 0.5rem;
+        }
+
+        .msg {
+            margin-top: 0.85rem;
+            font-size: 0.85rem;
+            min-height: 1.2em;
+        }
+
+        .msg.ok {
+            color: #43a047;
+        }
+
+        .msg.err {
+            color: #ef5350;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        a {
+            color: #64b5f6;
+        }
+
+        .nav {
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+        }
+
+        .warn {
+            border-left: 3px solid #d32f2f;
+            padding-left: 0.75rem;
+            margin-bottom: 1rem;
+            color: #ffcdd2;
+            font-size: 0.9rem;
+        }
+    

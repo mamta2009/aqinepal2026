@@ -1,0 +1,382 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body.site-body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  color: var(--text);
+  background: linear-gradient(
+    135deg,
+    var(--bg-deep) 0%,
+    var(--bg-mid) 50%,
+    var(--bg-deep) 100%
+  );
+  background-attachment: fixed;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+body.site-body.layout-app,
+body.site-body.layout-admin {
+  background: var(--bg-deep);
+}
+
+a {
+  color: var(--link);
+}
+
+img {
+  max-width: 100%;
+}
+
+.site-skip {
+  position: absolute;
+  left: -9999px;
+}
+
+.site-skip:focus {
+  left: 1rem;
+  top: 1rem;
+  z-index: 10000;
+  background: #fff;
+  color: #0f172a;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+}
+
+/* ---- Shared brand header ---- */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  padding: 0.85rem 1.5rem;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+
+.site-header .logo,
+.site-header .brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.site-header .logo img,
+.site-header .brand img {
+  height: 36px;
+  width: auto;
+  display: block;
+}
+
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-nav a {
+  color: var(--text-soft);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.site-nav a:hover,
+.site-nav a[aria-current="page"] {
+  color: var(--accent);
+}
+
+.site-main {
+  min-height: calc(100vh - 10rem);
+}
+
+.site-main.padded {
+  padding: 1.5rem clamp(1rem, 3vw, 2rem) 3rem;
+}
+
+.site-main.prose {
+  max-width: var(--max-prose);
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+}
+
+.site-main.prose h1 {
+  color: #fff;
+  font-size: 1.75rem;
+  margin: 0 0 0.35rem;
+}
+
+.site-main.prose h2 {
+  color: #fff;
+  font-size: 1.15rem;
+  margin: 2rem 0 0.65rem;
+  border-bottom: 1px solid #334155;
+  padding-bottom: 0.35rem;
+}
+
+.site-main.prose p,
+.site-main.prose li {
+  color: var(--text-soft);
+  font-size: 0.95rem;
+}
+
+.site-main.prose .meta {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.site-main.prose .note {
+  background: var(--bg-mid);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  margin: 1rem 0;
+}
+
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 1.25rem 1.5rem 2rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.site-footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+.site-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+}
+
+.site-footer a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  color: var(--accent);
+}
+
+/* Registration form shell */
+.reg-shell {
+  width: 100%;
+  max-width: none;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.reg-card {
+  background: rgba(26, 31, 38, 0.92);
+  border: 1px solid #333842;
+  border-radius: 14px;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.reg-card h1,
+.reg-card h2 {
+  color: #fff;
+  margin-top: 0;
+}
+
+/* App / admin rail nav (product chrome) */
+.site-nav-global {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  background: #0b1220;
+  border-bottom: 1px solid var(--border);
+}
+
+.site-nav-global a {
+  color: var(--text-soft);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.site-nav-global a:hover,
+.site-nav-global a[aria-current="page"] {
+  color: var(--accent);
+}
+
+.site-nav-global .brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #fff;
+  font-weight: 700;
+  margin-right: auto;
+  text-decoration: none;
+}
+
+.site-nav-global .brand img {
+  height: 28px;
+}
+
+/* ---- Shared site topnav (home / registration / aqiHelp / admin) ---- */
+.site-topnav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(10px);
+  padding: 1rem 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  z-index: 10040;
+  border-bottom: 1px solid rgba(71, 85, 105, 0.3);
+}
+
+.site-topnav .nav-alert {
+  flex: 1 1 220px;
+  min-width: 0;
+  max-width: min(480px, 100%);
+  margin: 0 auto;
+  padding: 0.5rem 0.85rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.site-topnav .nav-alert-label {
+  font-weight: 700;
+  color: #10b981;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.72rem;
+  flex-shrink: 0;
+}
+
+.site-topnav .nav-alert-text {
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.site-topnav .logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #10b981;
+  text-decoration: none;
+}
+
+.site-topnav .logo-mark {
+  width: 36px;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.site-topnav .nav-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-topnav .nav-links a {
+  color: #cbd5e1;
+  text-decoration: none;
+  transition: color 0.3s;
+  font-size: 0.95rem;
+}
+
+.site-topnav .nav-links a:hover,
+.site-topnav .nav-links a[aria-current="page"] {
+  color: #10b981;
+}
+
+.site-topnav .cta-button {
+  background: linear-gradient(135deg, #10b981, #06b6d4);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition:
+    transform 0.3s,
+    box-shadow 0.3s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.site-topnav .cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+}
+
+/* Offset fixed site-topnav on non-home site pages */
+body.layout-registration,
+body.layout-admin,
+body.layout-aqi-help {
+  padding-top: 5.5rem;
+}
+
+@media (max-width: 900px) {
+  .site-topnav {
+    padding: 0.85rem 1rem;
+  }
+
+  .site-topnav .logo {
+    font-size: 1.15rem;
+  }
+
+  .site-topnav .nav-links {
+    gap: 1rem;
+  }
+
+  body.layout-registration,
+  body.layout-admin,
+  body.layout-aqi-help {
+    padding-top: 7.5rem;
+  }
+}

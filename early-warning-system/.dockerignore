@@ -8,6 +8,7 @@
 **/mobile-app
 **/.git
 **/.DS_Store
+# Private operator docs — bind-mounted at runtime, not baked into the image
 **/docs-private
 **/*.md
 !docs/**/*.md

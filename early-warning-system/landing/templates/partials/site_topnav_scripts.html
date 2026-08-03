@@ -1,0 +1,18 @@
+<script>
+  (function loadSiteTopnavAlert() {
+    const el = document.getElementById("navAlertText");
+    if (!el || el.dataset.loaded === "true") return;
+    fetch("/api/alerts/latest")
+      .then((response) => response.json())
+      .then((alert) => {
+        const level = alert.level || alert.aqi_level;
+        el.textContent = alert.source === "none" || alert.source === "empty"
+          ? (alert.message || "No alerts yet")
+          : [alert.city, level].filter(Boolean).join(" · ") || "—";
+        el.dataset.loaded = "true";
+      })
+      .catch(() => {
+        el.textContent = "Alerts unavailable";
+      });
+  })();
+</script>

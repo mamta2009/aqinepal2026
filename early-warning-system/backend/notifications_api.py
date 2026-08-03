@@ -25,7 +25,7 @@ from pathlib import Path
 
 import httpx
 from bson import ObjectId
-from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
@@ -36,6 +36,7 @@ import facility_auth
 import onchain_hooks
 import registrant_auth
 import twilio_notify
+import web_pages
 from cities_config import CITIES_CONFIG
 from notification_auth import (
     require_notification_api_key,
@@ -48,8 +49,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["notifications"])
 
 _BACKEND_ROOT = Path(__file__).resolve().parent
-_REGISTRATION_HTML = _BACKEND_ROOT.parent / "landing" / "registration_portal.html"
-_CONTACTS_DIR_HTML = _BACKEND_ROOT.parent / "landing" / "contacts_directory.html"
 
 SENDGRID_MAIL_API_URL = "https://api.sendgrid.com/v3/mail/send"
 
@@ -4134,27 +4133,15 @@ async def get_contact_analytics(
 
 
 @router.get("/registration", response_class=HTMLResponse)
-async def registration_portal_page():
-    """Health worker self-registration UI (see also ``/registration``)."""
-    path = _REGISTRATION_HTML
-    if path.is_file():
-        return HTMLResponse(content=path.read_text(encoding="utf-8"))
-    raise HTTPException(
-        status_code=404,
-        detail="registration_portal.html missing (expected landing/registration_portal.html)",
-    )
+async def registration_portal_page(request: Request):
+    """Health worker self-registration UI."""
+    return web_pages.render(request, "pages/registration.html", active="registration")
 
 
 @router.get("/registration/contacts-directory", response_class=HTMLResponse)
-async def contacts_directory_page():
+async def contacts_directory_page(request: Request):
     """PIN-protected viewer: calls ``GET /api/contacts/directory`` with ``X-Registration-Directory-Secret``."""
-    path = _CONTACTS_DIR_HTML
-    if path.is_file():
-        return HTMLResponse(content=path.read_text(encoding="utf-8"))
-    raise HTTPException(
-        status_code=404,
-        detail="contacts_directory.html missing (expected landing/contacts_directory.html)",
-    )
+    return web_pages.render(request, "pages/contacts_directory.html", active="contacts")
 
 
 # ---------------------------------------------------------------------------
