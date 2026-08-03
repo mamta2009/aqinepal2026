@@ -23,6 +23,12 @@ services:
     volumes:
       - ./backend/.env:/app/backend/.env:ro
       - ./config:/app/config:ro
+      # Mount HTML/static so privacy policy and landing updates apply without rebuild
+      - ./landing:/app/landing:ro
+      - ./frontend:/app/frontend:ro
+      - ./docs:/app/docs:ro
+      # Mount backend Python so route changes (e.g. /privacy-policy.html) apply after restart
+      - ./backend:/app/backend:ro
     healthcheck:
       test:
         [
