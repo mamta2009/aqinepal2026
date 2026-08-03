@@ -24,9 +24,14 @@ body.site-body {
   overflow-x: hidden;
 }
 
-body.site-body.layout-app,
-body.site-body.layout-admin {
+body.site-body.layout-app {
   background: #0f1419;
+  background-attachment: scroll;
+}
+
+body.site-body.layout-admin {
+  /* Match fixed .site-topnav (rgba(15, 23, 42, …) / #0f172a) */
+  background: #0f172a;
   background-attachment: scroll;
 }
 
@@ -267,7 +272,7 @@ body.layout-app .app-footer-container {
   top: 0;
   left: 0;
   right: 0;
-  background: rgba(15, 23, 42, 0.95);
+  background: #0f172a;
   backdrop-filter: blur(10px);
   padding: 1rem 2rem;
   display: flex;
