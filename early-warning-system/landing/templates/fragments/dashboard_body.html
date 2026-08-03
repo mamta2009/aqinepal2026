@@ -7,7 +7,7 @@
 
     <!-- HEADER -->
     <header>
-        <div class="header-content">
+        <div class="header-brand-row">
             <div class="logo-section">
                 <h1>⚠️ EARLY WARNING</h1>
                 <p>Nepal Respiratory Health Alerts</p>
@@ -17,21 +17,21 @@
                     <div class="feature-tag ai">🤖 AI-Powered</div>
                 </div>
             </div>
-            <div class="header-controls">
-                <div class="header-alert-strip" id="headerAlertStrip" title="Latest system broadcast (MongoDB)">
-                    <span class="header-alert-label">Alerts</span>
-                    <span class="header-alert-text" id="headerAlertText">…</span>
-                </div>
-                <div class="registrant-auth-chrome" id="registrantAuthChrome" hidden></div>
-                <a href="/registration" class="btn secondary" id="dashboardRegisterAlertsBtn"
-                    data-auth-hide-when-signed-in>Register for alerts</a>
-                <a href="/users" class="btn secondary">Users / Account</a>
-                <a href="/guides" class="btn secondary">📚 Guides</a>
-                <a href="/help/aqi-help" class="btn secondary" title="How the platform works — from our guides">💬
-                    aqiHelp</a>
-                <button class="btn secondary" onclick="refreshAllData()">⟳ REFRESH</button>
-                <button class="btn" onclick="downloadData()">⬇ EXPORT</button>
+            <div class="registrant-auth-chrome" id="registrantAuthChrome" hidden></div>
+        </div>
+        <div class="header-controls">
+            <div class="header-alert-strip" id="headerAlertStrip" title="Latest system broadcast (MongoDB)">
+                <span class="header-alert-label">Alerts</span>
+                <span class="header-alert-text" id="headerAlertText">…</span>
             </div>
+            <a href="/registration" class="btn secondary" id="dashboardRegisterAlertsBtn"
+                data-auth-hide-when-signed-in>Register for alerts</a>
+            <a href="/users" class="btn secondary">Users / Account</a>
+            <a href="/guides" class="btn secondary">📚 Guides</a>
+            <a href="/help/aqi-help" class="btn secondary" title="How the platform works — from our guides">💬
+                aqiHelp</a>
+            <button class="btn secondary" onclick="refreshAllData()">⟳ REFRESH</button>
+            <button class="btn" onclick="downloadData()">⬇ EXPORT</button>
         </div>
     </header>
 

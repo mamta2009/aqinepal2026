@@ -57,6 +57,9 @@
   }
 
   function setRegisterVisible(visible) {
+    if (document.body) {
+      document.body.classList.toggle("registrant-signed-in", !visible);
+    }
     var nodes = document.querySelectorAll(
       "[data-auth-hide-when-signed-in], #dashboardRegisterAlertsBtn, a.registrant-register-cta",
     );
@@ -81,16 +84,21 @@
 
   function renderChrome(opts) {
     opts = opts || {};
-    var root = document.getElementById("registrantAuthChrome");
-    if (!root) return;
-
     var tok = getToken();
+    var root = document.getElementById("registrantAuthChrome");
+
+    // Always sync Register CTAs from session first (even if chrome slot is missing)
     if (!tok) {
-      root.hidden = true;
-      root.innerHTML = "";
       setRegisterVisible(true);
+      if (root) {
+        root.hidden = true;
+        root.innerHTML = "";
+      }
       return;
     }
+
+    setRegisterVisible(false);
+    if (!root) return;
 
     var name =
       opts.name || readClaims().name || readClaims().email || "Signed in";
@@ -102,8 +110,6 @@
       escapeHtml(name) +
       "</strong></span></span>" +
       '<button type="button" class="btn secondary" id="registrantAuthSignOut">Sign out</button>';
-
-    setRegisterVisible(false);
 
     var btn = document.getElementById("registrantAuthSignOut");
     if (btn) {

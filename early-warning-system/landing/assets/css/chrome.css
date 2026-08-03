@@ -265,6 +265,25 @@ img {
   display: none !important;
 }
 
+/*
+ * a.btn { display: inline-flex } otherwise overrides the HTML [hidden] UA rule,
+ * so Register CTAs can stay visible after login until a full page reload.
+ */
+[data-auth-hide-when-signed-in][hidden],
+a.registrant-register-cta[hidden],
+#dashboardRegisterAlertsBtn[hidden],
+.site-nav-global a[href="/registration"][hidden],
+.site-nav-global .nav-sep[hidden],
+body.registrant-signed-in [data-auth-hide-when-signed-in],
+body.registrant-signed-in a.registrant-register-cta,
+body.registrant-signed-in #dashboardRegisterAlertsBtn,
+body.registrant-signed-in .site-nav-global a[href="/registration"],
+body.registrant-signed-in
+  .site-nav-global
+  .nav-sep:has(+ a[href="/registration"]) {
+  display: none !important;
+}
+
 .registrant-auth-pill {
   display: inline-flex;
   align-items: center;

@@ -142,12 +142,31 @@ header {
   animation: fadeInDown 0.8s ease-out;
 }
 
-.header-content {
+.header-brand-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 20px;
+  gap: 16px 24px;
   flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.header-brand-row .logo-section {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.header-brand-row .registrant-auth-chrome {
+  flex: 0 1 auto;
+  justify-content: flex-end;
+  margin-top: 0.55rem; /* align with subtitle under the title */
+}
+
+.header-controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .logo-section h1 {
@@ -207,13 +226,6 @@ header {
   border-color: var(--ai);
   color: var(--ai);
   background: rgba(6, 182, 212, 0.1);
-}
-
-.header-controls {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  align-items: center;
 }
 
 .header-alert-strip {
@@ -412,7 +424,7 @@ a.btn {
     font-size: 0.95rem;
   }
 
-  .header-content .logo-section h1 {
+  .header-brand-row .logo-section h1 {
     font-size: 1.6rem;
   }
 }
@@ -1429,6 +1441,16 @@ footer {
 
   .status-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .header-brand-row {
+    margin-bottom: 12px;
+  }
+
+  .header-brand-row .registrant-auth-chrome {
+    margin-top: 0;
+    width: 100%;
+    justify-content: flex-start;
   }
 
   .header-controls {
