@@ -26,7 +26,8 @@ body.site-body {
 
 body.site-body.layout-app,
 body.site-body.layout-admin {
-  background: var(--bg-deep);
+  background: #0f1419;
+  background-attachment: scroll;
 }
 
 a {
@@ -210,14 +211,14 @@ img {
   margin-top: 0;
 }
 
-/* App / admin rail nav (product chrome) */
+/* App / admin rail nav (product chrome) — blends with page, not a separate bar */
 .site-nav-global {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem 1rem;
   align-items: center;
-  padding: 0.75rem 1.25rem;
-  background: #0b1220;
+  padding: 0.65rem 0.25rem 0.75rem;
+  background: transparent;
   border-bottom: 1px solid var(--border);
 }
 
@@ -245,6 +246,19 @@ img {
 
 .site-nav-global .brand img {
   height: 28px;
+}
+
+body.layout-app .app-nav-container {
+  padding-top: 10px;
+  padding-bottom: 0;
+}
+
+body.layout-app .site-main {
+  min-height: 0;
+}
+
+body.layout-app .app-footer-container {
+  padding-top: 0.5rem;
 }
 
 /* ---- Shared site topnav (home / registration / aqiHelp / admin) ---- */
