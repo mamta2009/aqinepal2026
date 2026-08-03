@@ -193,7 +193,7 @@ img {
   width: 100%;
   max-width: none;
   margin: 0 auto;
-  padding: 1.5rem 1rem 3rem;
+  padding: 2rem 1rem 3rem;
 }
 
 .reg-card {
@@ -358,7 +358,7 @@ img {
 body.layout-registration,
 body.layout-admin,
 body.layout-aqi-help {
-  padding-top: 5.5rem;
+  padding-top: 6.75rem;
 }
 
 @media (max-width: 900px) {
@@ -377,6 +377,6 @@ body.layout-aqi-help {
   body.layout-registration,
   body.layout-admin,
   body.layout-aqi-help {
-    padding-top: 7.5rem;
+    padding-top: 8.5rem;
   }
 }

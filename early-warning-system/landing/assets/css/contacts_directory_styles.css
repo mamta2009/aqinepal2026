@@ -7,7 +7,10 @@ body.layout-registration {
     var(--bg-mid) 50%,
     var(--bg-deep) 100%
   ) !important;
-  padding: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  padding-bottom: 0 !important;
+  padding-top: 6.75rem !important;
   min-height: 100vh;
 }
 body.layout-registration .container {
