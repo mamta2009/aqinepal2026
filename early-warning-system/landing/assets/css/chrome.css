@@ -128,6 +128,107 @@ img {
   padding: 2rem 1.25rem 3rem;
 }
 
+/* Clear fixed marketing topnav on privacy / prose pages.
+   Must beat home_styles `* { padding: 0 }` if that sheet is also loaded. */
+body.layout-marketing .site-main.prose.privacy-prose {
+  padding-top: 7.5rem !important;
+  padding-bottom: 3rem !important;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+@media (max-width: 900px) {
+  body.layout-marketing .site-main.prose.privacy-prose {
+    padding-top: 9.5rem !important;
+  }
+}
+
+/* Shared marketing footer (homepage + privacy + other marketing pages) */
+body.layout-marketing > footer,
+body.site-body > footer.site-marketing-footer,
+.site-marketing-footer,
+body.layout-marketing footer {
+  background: rgba(15, 23, 42, 0.95);
+  border-top: 1px solid rgba(71, 85, 105, 0.3);
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #64748b;
+}
+
+body.layout-marketing footer .footer-content,
+.site-marketing-footer .footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+body.layout-marketing footer .footer-links,
+.site-marketing-footer .footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+body.layout-marketing footer .footer-links a,
+.site-marketing-footer .footer-links a {
+  color: #94a3b8;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+body.layout-marketing footer .footer-links a:hover,
+body.layout-marketing footer .footer-links a[aria-current="page"],
+.site-marketing-footer .footer-links a:hover,
+.site-marketing-footer .footer-links a[aria-current="page"] {
+  color: #10b981;
+}
+
+body.layout-marketing footer .footer-bottom,
+.site-marketing-footer .footer-bottom {
+  padding-top: 2rem;
+  border-top: 1px solid rgba(71, 85, 105, 0.3);
+  font-size: 0.9rem;
+}
+
+body.layout-marketing footer .footer-disclaimer,
+.site-marketing-footer .footer-disclaimer {
+  margin-top: 1.75rem;
+  font-size: 0.72rem;
+  line-height: 1.55;
+  color: #64748b;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+body.layout-marketing footer .footer-powered,
+.site-marketing-footer .footer-powered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.85rem;
+  margin-top: 1.25rem;
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+body.layout-marketing footer .footer-powered .footer-logo-powered,
+.site-marketing-footer .footer-powered .footer-logo-powered {
+  height: 34px;
+  width: auto;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+body.layout-marketing footer .footer-copyright,
+.site-marketing-footer .footer-copyright {
+  margin-top: 0.65rem;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
 .site-main.prose h1 {
   color: #fff;
   font-size: 1.75rem;

@@ -33,6 +33,7 @@ _DOCS_GUIDES = (_BACKEND_ROOT.parent / "docs" / "guides").resolve()
 # Explicit allow-list only (avoid pulling sensitive or huge paths).
 _CORPUS_RELPATHS: tuple[str, ...] = (
     "APPLICATION_OVERVIEW.md",
+    "DASHBOARD_FEATURES.md",
     "IMPLEMENTATION_SNAPSHOT.md",
     "README.md",
     "CURSOR_SETUP_GUIDE.md",
