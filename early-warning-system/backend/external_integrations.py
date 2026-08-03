@@ -828,7 +828,19 @@ async def air_quality_current_waqi_then_rapid(
 
 
 def openrouter_api_key() -> str:
-    return (os.getenv("OPENROUTER_API_KEY") or "").strip()
+    key = (os.getenv("OPENROUTER_API_KEY") or "").strip()
+    if not key:
+        return ""
+    upper = key.upper()
+    # Common .env placeholders must not count as configured
+    if (
+        upper.startswith("PASTE")
+        or "YOUR_OPENROUTER" in upper
+        or "YOUR_API_KEY" in upper
+        or upper in {"CHANGEME", "XXX", "NONE", "NULL", "TODO", "REPLACE_ME"}
+    ):
+        return ""
+    return key
 
 
 def weatherapi_com_api_key() -> str:

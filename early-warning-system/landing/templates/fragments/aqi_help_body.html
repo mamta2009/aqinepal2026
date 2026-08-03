@@ -50,10 +50,10 @@
             .then(function (j) {
                 if (!j.openrouter_configured) {
                     metaWarn.hidden = false;
-                    metaWarn.textContent = 'OpenRouter is not configured on this server (OPENROUTER_API_KEY). aqiHelp cannot answer until it is set.';
+                    metaWarn.textContent = j.unavailable_message || 'This service is currently unavailable.';
                 } else if (j.build_error || !j.chunk_count) {
                     metaWarn.hidden = false;
-                    metaWarn.textContent = 'Guide corpus issue: ' + (j.build_error || 'no chunks') + ' — check server logs.';
+                    metaWarn.textContent = j.unavailable_message || 'This service is currently unavailable.';
                 }
             })
             .catch(function () { /* ignore */ });
@@ -73,15 +73,19 @@
                 });
                 var j = await r.json().catch(function () { return {}; });
                 if (!r.ok) {
-                    var det = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail || r.status);
-                    appendBot('Error: ' + det, []);
+                    var det = typeof j.detail === 'string'
+                        ? j.detail
+                        : (r.status === 429
+                            ? 'Too many requests; try again in a minute.'
+                            : 'This service is currently unavailable.');
+                    appendBot(det, []);
                     statusEl.textContent = '';
                 } else {
                     appendBot(j.reply || '(empty reply)', j.citations || []);
                     if (j.disclaimer) statusEl.textContent = j.disclaimer;
                 }
             } catch (e) {
-                appendBot('Could not reach the server: ' + String(e.message || e), []);
+                appendBot('This service is currently unavailable.', []);
             }
             sendBtn.disabled = false;
         };

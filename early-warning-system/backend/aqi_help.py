@@ -219,6 +219,7 @@ Rules:
 _DEFAULT_USER_DISCLAIMER = (
     "aqiHelp can be mistaken; rely on official documentation and operational runbooks."
 )
+_SERVICE_UNAVAILABLE = "This service is currently unavailable."
 
 
 class AqiHelpChatIn(BaseModel):
@@ -242,16 +243,14 @@ async def aqi_help_meta():
         ).strip(),
         "rate_limit_per_minute": _RATE_LIMIT,
         "note": _DEFAULT_USER_DISCLAIMER,
+        "unavailable_message": _SERVICE_UNAVAILABLE,
     }
 
 
 @router.post("/aqi/chat")
 async def aqi_help_chat(body: AqiHelpChatIn, request: Request):
     if not external_integrations.openrouter_api_key():
-        raise HTTPException(
-            status_code=503,
-            detail="aqiHelp is unavailable: set OPENROUTER_API_KEY on the server.",
-        )
+        raise HTTPException(status_code=503, detail=_SERVICE_UNAVAILABLE)
     client_ip = (request.client.host if request.client else "?") or "?"
     fwd = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
     if fwd:
@@ -261,17 +260,13 @@ async def aqi_help_chat(body: AqiHelpChatIn, request: Request):
 
     await ensure_corpus_built()
     if _STATE.build_error or _STATE.matrix is None:
-        raise HTTPException(
-            status_code=503,
-            detail=f"aqiHelp corpus not available: {_STATE.build_error or 'unknown'}",
-        )
+        logger.warning("aqiHelp corpus unavailable: %s", _STATE.build_error or "unknown")
+        raise HTTPException(status_code=503, detail=_SERVICE_UNAVAILABLE)
 
     context, cites = await asyncio.to_thread(_retrieve_context, body.message.strip())
     if not context.strip():
-        raise HTTPException(
-            status_code=503,
-            detail="Could not build context from guides (empty corpus or retrieval failed).",
-        )
+        logger.warning("aqiHelp retrieval returned empty context")
+        raise HTTPException(status_code=503, detail=_SERVICE_UNAVAILABLE)
 
     model = (os.getenv("AQI_HELP_MODEL") or os.getenv("OPENROUTER_MODEL") or "").strip() or None
     user_block = f"USER QUESTION:\n{body.message.strip()}\n\nCONTEXT (excerpts from guides):\n{context}"
@@ -284,7 +279,8 @@ async def aqi_help_chat(body: AqiHelpChatIn, request: Request):
             timeout_s=75.0,
         )
     except ValueError as exc:
-        raise HTTPException(status_code=503, detail=str(exc)[:900]) from exc
+        logger.warning("aqiHelp OpenRouter config error: %s", exc)
+        raise HTTPException(status_code=503, detail=_SERVICE_UNAVAILABLE) from exc
     except httpx.HTTPStatusError as exc:
         snippet = ""
         try:
@@ -292,16 +288,15 @@ async def aqi_help_chat(body: AqiHelpChatIn, request: Request):
         except Exception:  # noqa: BLE001
             snippet = ""
         logger.warning("aqiHelp OpenRouter HTTP %s: %s", exc.response.status_code, snippet)
-        raise HTTPException(
-            status_code=502,
-            detail="OpenRouter returned an error for aqiHelp. Check quota and model id.",
-        ) from exc
+        # Auth / missing key / quota → same public message (details stay in server logs)
+        raise HTTPException(status_code=503, detail=_SERVICE_UNAVAILABLE) from exc
     except httpx.RequestError as exc:
         logger.warning("aqiHelp OpenRouter request failed: %s", exc)
-        raise HTTPException(status_code=502, detail="Could not reach OpenRouter.") from exc
+        raise HTTPException(status_code=503, detail=_SERVICE_UNAVAILABLE) from exc
     choices = raw.get("choices") or []
     if not isinstance(choices, list) or not choices:
-        raise HTTPException(status_code=502, detail="OpenRouter returned no choices.")
+        logger.warning("aqiHelp OpenRouter returned no choices")
+        raise HTTPException(status_code=503, detail=_SERVICE_UNAVAILABLE)
     msg = choices[0].get("message") if isinstance(choices[0], dict) else {}
     content = (msg.get("content") or "").strip() if isinstance(msg, dict) else ""
 
