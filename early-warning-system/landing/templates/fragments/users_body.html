@@ -11,8 +11,10 @@
                 <p>Sign in, enrolment profile, facility actions</p>
             </div>
             <div class="header-controls">
+                <div class="registrant-auth-chrome" id="registrantAuthChrome" hidden></div>
                 <a href="/dashboard" class="btn secondary">← Dashboard</a>
-                <a href="/registration" class="btn secondary">Register</a>
+                <a href="/registration" class="btn secondary registrant-register-cta"
+                    data-auth-hide-when-signed-in>Register</a>
             </div>
         </div>
     </header>
@@ -273,6 +275,28 @@
                 details</button>
         </div>
 
+        <!-- System info (prefs: Admin → Settings) -->
+        <div class="panel">
+            <div class="panel-header">
+                <span class="panel-title">System</span>
+                <div class="panel-icon">ℹ️</div>
+            </div>
+            <p style="font-size:0.78rem;color:var(--text-secondary);line-height:1.5;margin:0 0 10px;">
+                <strong>Theme, PM2.5 alert threshold, and auto-refresh</strong> are set in the
+                <a href="/admin/dashboard" style="color:var(--accent);">Admin → Settings</a> panel (this
+                browser).
+            </p>
+            <div class="setting-group">
+                <span class="setting-label">Features</span>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.8;">
+                    ✓ Open-Source (MIT License)<br>
+                    ✓ Blockchain Verified (Polygon)<br>
+                    ✓ AI Forecasting (78% accuracy)<br>
+                    ✓ Offline Mode Enabled<br>
+                    ✓ Geographic Scalability<br>
+                </div>
+            </div>
+        </div>
         <!-- Delete account (Play Store / self-serve) -->
         <div class="panel" id="deleteAccountPanel">
             <div class="panel-header">
@@ -304,28 +328,6 @@
             </p>
         </div>
 
-        <!-- System info (prefs: Admin → Settings) -->
-        <div class="panel">
-            <div class="panel-header">
-                <span class="panel-title">System</span>
-                <div class="panel-icon">ℹ️</div>
-            </div>
-            <p style="font-size:0.78rem;color:var(--text-secondary);line-height:1.5;margin:0 0 10px;">
-                <strong>Theme, PM2.5 alert threshold, and auto-refresh</strong> are set in the
-                <a href="/admin/dashboard" style="color:var(--accent);">Admin → Settings</a> panel (this
-                browser).
-            </p>
-            <div class="setting-group">
-                <span class="setting-label">Features</span>
-                <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.8;">
-                    ✓ Open-Source (MIT License)<br>
-                    ✓ Blockchain Verified (Polygon)<br>
-                    ✓ AI Forecasting (78% accuracy)<br>
-                    ✓ Offline Mode Enabled<br>
-                    ✓ Geographic Scalability<br>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 <script>
@@ -342,4 +344,5 @@
         if (b) b.classList.add('show');
     }
 </script>
+<script src="/frontend/registrant-chrome.js" defer></script>
 <script src="/frontend/user-account.js" defer></script>

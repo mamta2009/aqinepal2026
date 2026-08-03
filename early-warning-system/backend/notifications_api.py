@@ -3099,6 +3099,8 @@ async def facility_dashboard_token(body: FacilityTokenExchangeIn):
         "token_type": "bearer",
         "expires_in": ttl_s,
         "contact_id": str(doc["_id"]),
+        "email": row.get("email"),
+        "name": row.get("name"),
         "facility_id": fid,
         "facility_name": facility_auth.facility_display_name(row),
         "city": city_live if isinstance(city_live, str) else None,

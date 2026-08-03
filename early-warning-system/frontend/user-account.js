@@ -264,11 +264,35 @@
         FACILITY_REPORTING_READY_KEY,
         j.facility_reporting_ready === true ? "1" : "0",
       );
+      try {
+        const prev = JSON.parse(
+          sessionStorage.getItem(FACILITY_CLAIMS_KEY) || "{}",
+        );
+        sessionStorage.setItem(
+          FACILITY_CLAIMS_KEY,
+          JSON.stringify({
+            ...prev,
+            name: j.name || prev.name || "",
+            email: j.email || prev.email || "",
+            facility_id: j.facility_id || prev.facility_id,
+            facility_name: j.facility_name || prev.facility_name,
+            city: j.city || prev.city,
+          }),
+        );
+      } catch (_) {
+        /* ignore */
+      }
       wrap.innerHTML = _renderUserProfileHtml(j);
       renderFacilitiesAndPrefs(j);
       showChannelForm(true, j);
       await refreshSharedContacts();
       syncFacilityReportingChrome();
+      if (window.EwsRegistrantChrome) {
+        window.EwsRegistrantChrome.refresh({
+          name: j.name || j.email,
+          reloadOnSignOut: false,
+        });
+      }
     } catch (e) {
       wrap.innerHTML =
         '<div class="user-profile-empty">Network error loading profile. Check that the API is running.</div>';
@@ -996,11 +1020,19 @@
           facility_name: j.facility_name,
           city: j.city,
           scopes: j.scopes || [],
+          name: j.name || "",
+          email: j.email || email,
         }),
       );
       pwEl.value = "";
       banner.textContent = "Signed in with password.";
       syncFacilityReportingChrome();
+      if (window.EwsRegistrantChrome) {
+        window.EwsRegistrantChrome.refresh({
+          name: j.name || j.email || email,
+          reloadOnSignOut: false,
+        });
+      }
       await refreshUserRegistrationProfile();
       await refreshFacilityAuditLog();
       await refreshNotificationInbox();
@@ -1138,11 +1170,19 @@
           facility_id: j.facility_id,
           facility_name: j.facility_name,
           city: j.city,
+          name: j.name || "",
+          email: j.email || email,
         }),
       );
       codeEl.value = "";
       banner.textContent = "Signed in — actions now write to MongoDB.";
       syncFacilityReportingChrome();
+      if (window.EwsRegistrantChrome) {
+        window.EwsRegistrantChrome.refresh({
+          name: j.name || j.email || email,
+          reloadOnSignOut: false,
+        });
+      }
       await refreshUserRegistrationProfile();
       await refreshFacilityAuditLog();
       await refreshNotificationInbox();
@@ -1161,6 +1201,11 @@
     if (rv) rv.textContent = "";
     lastProfile = null;
     syncFacilityReportingChrome();
+    if (window.EwsRegistrantChrome) {
+      window.EwsRegistrantChrome.refresh({
+        reloadOnSignOut: false,
+      });
+    }
     await refreshUserRegistrationProfile();
     await refreshFacilityAuditLog();
     await refreshNotificationInbox();
@@ -1471,6 +1516,12 @@
 
   async function boot() {
     await initRuntimeConfig();
+    if (API_BASE) {
+      window.__EWS_API_BASE__ = API_BASE;
+    }
+    window.__ewsOnRegistrantSignOut = function () {
+      facilitySignOutReporting();
+    };
     initThemeFromStorage();
     syncFacilityReportingChrome();
     setupUserAccountListeners();
@@ -1478,6 +1529,11 @@
     await refreshFacilityAuditLog().catch(() => {});
     await refreshNotificationInbox().catch(() => {});
     await refreshSharedContacts().catch(() => {});
+    if (window.EwsRegistrantChrome) {
+      window.EwsRegistrantChrome.refresh({
+        reloadOnSignOut: false,
+      });
+    }
   }
 
   document.addEventListener("DOMContentLoaded", () => {

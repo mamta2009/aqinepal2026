@@ -22,7 +22,10 @@
                     <span class="header-alert-label">Alerts</span>
                     <span class="header-alert-text" id="headerAlertText">…</span>
                 </div>
-                <a href="/registration" class="btn secondary">Register for alerts</a>
+                <div class="registrant-auth-chrome" id="registrantAuthChrome" hidden></div>
+                <a href="/registration" class="btn secondary" id="dashboardRegisterAlertsBtn"
+                    data-auth-hide-when-signed-in>Register for alerts</a>
+                <a href="/users" class="btn secondary">Users / Account</a>
                 <a href="/guides" class="btn secondary">📚 Guides</a>
                 <a href="/help/aqi-help" class="btn secondary" title="How the platform works — from our guides">💬
                     aqiHelp</a>
@@ -258,12 +261,13 @@
         </div>
 
         <!-- User account tools live on /users -->
-        <div class="panel">
+        <div class="panel" id="dashboardAccountPanel">
             <div class="panel-header">
                 <span class="panel-title">Your account</span>
                 <div class="panel-icon">👤</div>
             </div>
-            <p style="font-size:0.88rem;color:var(--text-secondary);line-height:1.55;margin:0 0 14px;">
+            <p id="dashboardAccountHint"
+                style="font-size:0.88rem;color:var(--text-secondary);line-height:1.55;margin:0 0 14px;">
                 Facility sign-in, your registration profile, and workplace preparedness buttons are on the
                 <strong>Users</strong> page so this dashboard stays focused on environmental and case data.
             </p>
@@ -344,6 +348,7 @@
             if (!prefix.startsWith('/')) prefix = '/' + prefix;
             API_ROOT = originCfg;
             API_BASE = `${originCfg}${prefix}`;
+            window.__EWS_API_BASE__ = API_BASE;
             const dj = j.dashboard;
             const rawThr = dj && dj.pm25_alert_threshold_ugm3;
             const nt = typeof rawThr === 'number' ? rawThr : parseFloat(String(rawThr), 10);
@@ -353,6 +358,7 @@
         } catch {
             API_ROOT = defaultOrigin;
             API_BASE = `${defaultOrigin}/api`;
+            window.__EWS_API_BASE__ = API_BASE;
         }
     }
 
@@ -1827,3 +1833,4 @@
     window.addEventListener('offline', checkOnlineStatus);
     window.addEventListener('offline', checkOnlineStatus);
 </script>
+<script src="/frontend/registrant-chrome.js" defer></script>
