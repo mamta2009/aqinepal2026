@@ -243,7 +243,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 3rem;
-  align-items: center;
+  align-items: start;
 }
 
 .impact-text h3 {
@@ -258,24 +258,57 @@
   line-height: 1.8;
 }
 
+.impact-metrics-label {
+  margin: 1.75rem 0 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
 .impact-metrics {
   list-style: none;
-  margin-top: 2rem;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .impact-metrics li {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  position: relative;
+  margin: 0;
+  padding: 0.9rem 1rem 0.9rem 2.35rem;
   color: #cbd5e1;
+  line-height: 1.55;
+  font-size: 0.95rem;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 10px;
+  border-left: 3px solid rgba(16, 185, 129, 0.55);
 }
 
 .impact-metrics li::before {
-  content: "✓";
-  color: #10b981;
-  font-weight: 700;
-  font-size: 1.25rem;
+  content: "";
+  position: absolute;
+  left: 0.95rem;
+  top: 1.2rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+}
+
+.impact-metrics li em {
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.impact-metrics li strong {
+  color: #fbbf24;
+  font-weight: 600;
 }
 
 .impact-visual {
@@ -283,12 +316,19 @@
   border: 1px solid rgba(71, 85, 105, 0.3);
   padding: 2rem;
   border-radius: 12px;
-  text-align: center;
+  text-align: left;
 }
 
 .impact-visual-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1;
+}
+
+.impact-visual h3 {
+  font-size: 1.25rem;
+  color: #e2e8f0;
+  margin: 0 0 0.5rem;
 }
 
 /* CTA Section */
