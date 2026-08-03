@@ -2071,9 +2071,14 @@ async def privacy_policy_legacy_asset_redirect():
 
 
 @app.get("/help/aqi-help", response_class=HTMLResponse)
-async def aqi_help_page(request: Request):
-    """Interactive aqiHelp chat."""
-    return web_pages.render(request, "pages/aqi_help.html", active="aqi-help")
+async def aqi_help_page(request: Request, embed: int = Query(0)):
+    """Interactive aqiHelp chat. Pass embed=1 for the floating-widget iframe (chat only)."""
+    return web_pages.render(
+        request,
+        "pages/aqi_help.html",
+        active="aqi-help",
+        embed=bool(embed),
+    )
 
 
 @app.get("/dashboard", response_class=HTMLResponse)

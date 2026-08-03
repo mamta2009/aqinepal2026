@@ -1,6 +1,8 @@
 <div class="aqi-help-main">
+    {% if not embed %}
     <h1>aqiHelp</h1>
     <p class="sub">Answers about how this platform works — grounded in published guides. Not medical advice.</p>
+    {% endif %}
     <div class="warn" id="metaWarn" hidden></div>
     <div class="card">
         <div id="log" aria-live="polite"></div>

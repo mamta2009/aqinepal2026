@@ -130,3 +130,70 @@ button.secondary {
   font-size: 0.85rem;
   margin-bottom: 14px;
 }
+
+/* Floating widget iframe: chat panel only (no site chrome) */
+body.aqi-help-embed {
+  padding-top: 0 !important;
+  min-height: 100%;
+  background: #0f172a !important;
+  overflow: hidden;
+}
+
+body.aqi-help-embed .site-skip {
+  display: none !important;
+}
+
+body.aqi-help-embed .site-main {
+  min-height: 0;
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+  max-width: none;
+}
+
+body.aqi-help-embed .aqi-help-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 10px 12px 12px;
+}
+
+body.aqi-help-embed .warn {
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  font-size: 0.8rem;
+}
+
+body.aqi-help-embed .card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+body.aqi-help-embed #log {
+  flex: 1;
+  min-height: 80px;
+  max-height: none;
+}
+
+body.aqi-help-embed textarea {
+  min-height: 64px;
+  font-size: 0.9rem;
+}
+
+body.aqi-help-embed button {
+  padding: 8px 14px;
+  font-size: 0.88rem;
+}
+
+body.aqi-help-embed #status {
+  font-size: 0.75rem;
+}
