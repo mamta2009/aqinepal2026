@@ -164,8 +164,19 @@ function exportCsv(data: DashboardData) {
 
 export function DashboardClient() {
   const [city, setCity] = useState("Kathmandu");
+  const [cityOptions, setCityOptions] = useState<string[]>(["Kathmandu"]);
   const query = useDashboard(city);
   const data = query.data;
+  const refreshingContent =
+    Boolean(data) && query.isFetching && query.isPlaceholderData;
+  const initialLoad = query.isPending && !data;
+
+  useEffect(() => {
+    if (!data?.cities) return;
+    const names = cityNames(data.cities);
+    if (names.length) setCityOptions(names);
+  }, [data?.cities]);
+
   const pm25 = numberFrom(data?.air?.air_quality, "pm25_ug_m3", "pm25", "pm2_5");
   const aqi = numberFrom(data?.air?.air_quality, "aqi", "us_epa_aqi", "us_epa_index");
   const effectiveHeat = heatValue(data);
@@ -185,33 +196,6 @@ export function DashboardClient() {
     )
     : [];
 
-  if (query.isPending) {
-    return (
-      <div className="page-shell py-10" role="status">
-        <div className="h-64 animate-pulse rounded-3xl bg-sky-soft" />
-        <p className="mt-3 font-bold">Loading today&apos;s decision guidance…</p>
-      </div>
-    );
-  }
-
-  if (query.isError || !data) {
-    return (
-      <div className="page-shell py-12">
-        <Card className="mx-auto max-w-2xl text-center">
-          <AlertTriangle className="mx-auto text-alert-red" aria-hidden />
-          <h1 className="mt-3 text-2xl font-bold">Dashboard data is unavailable</h1>
-          <p className="mt-2 text-muted">
-            We cannot provide a reliable outdoor recommendation. Try again or use
-            official local advice.
-          </p>
-          <Button className="mt-5" onClick={() => query.refetch()}>
-            <RefreshCw size={18} /> Try again
-          </Button>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <div className="page-shell py-6 sm:py-10">
       <header className="flex flex-col gap-4 border-b border-border pb-6 md:flex-row md:items-end md:justify-between">
@@ -225,15 +209,24 @@ export function DashboardClient() {
         <div className="grid gap-2 sm:grid-cols-[minmax(12rem,1fr)_auto]">
           <label className="text-sm font-extrabold">
             City
-            <select className="form-control mt-1" value={city} onChange={(event) => setCity(event.target.value)}>
-              {cityNames(data.cities).map((name) => <option key={name}>{name}</option>)}
+            <select
+              className="form-control mt-1"
+              value={city}
+              onChange={(event) => setCity(event.target.value)}
+              disabled={initialLoad}
+            >
+              {(cityOptions.includes(city) ? cityOptions : [city, ...cityOptions]).map(
+                (name) => (
+                  <option key={name}>{name}</option>
+                ),
+              )}
             </select>
           </label>
           <Button
             className="self-end"
             variant="secondary"
             onClick={() => query.refetch()}
-            disabled={query.isFetching}
+            disabled={!data || query.isFetching}
           >
             <RefreshCw className={query.isFetching ? "animate-spin" : ""} size={17} />
             Refresh
@@ -241,221 +234,274 @@ export function DashboardClient() {
         </div>
       </header>
 
-      {data.failures.length > 0 && (
-        <div className="mt-5 rounded-xl border border-aq-moderate/40 bg-yellow-50 p-4 text-sm" role="status">
-          <strong>Some information is unavailable:</strong> {data.failures.join(", ")}.
-          Guidance only uses the readings shown below.
-        </div>
-      )}
-
-      <section className={`mt-6 rounded-3xl border-2 p-5 sm:p-8 ${BAND_STYLE[guidance.airBand]}`} aria-labelledby="today-answer">
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge className="bg-white/80 text-current">{guidance.label}</Badge>
-          <span className="text-sm font-extrabold">For {city}</span>
-        </div>
-        <h2 id="today-answer" className="mt-4 max-w-4xl text-3xl font-extrabold leading-tight sm:text-5xl">
-          {guidance.outdoorAnswer}
-        </h2>
-        <p className="mt-4 max-w-3xl text-base font-bold sm:text-lg">{guidance.summary}</p>
-        <dl className="mt-6 flex flex-wrap gap-3">
-          <div className="rounded-xl border border-current/20 bg-white/75 px-4 py-3">
-            <dt className="flex items-center gap-1.5 text-xs font-extrabold uppercase">
-              AQI
-              <DefinitionHelp label="AQI">
-                A health communication index. Higher values mean greater
-                pollution-related health concern.
-                <span className="mt-2 block text-xs">
-                  Source: {data.air?.source || "Unavailable"} ·{" "}
-                  {provenanceText(data.air?.provenance)}
-                </span>
-              </DefinitionHelp>
-            </dt>
-            <dd className="text-2xl font-extrabold">{aqi ?? "—"}</dd>
+      {initialLoad ? (
+        <div className="mt-6" role="status" aria-live="polite">
+          <div className="h-64 animate-pulse rounded-3xl bg-sky-soft" />
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <div key={index} className="h-32 animate-pulse rounded-2xl bg-sky-soft" />
+            ))}
           </div>
-          <div className="rounded-xl border border-current/20 bg-white/75 px-4 py-3">
-            <dt className="flex items-center gap-1.5 text-xs font-extrabold uppercase">
-              PM2.5
-              <DefinitionHelp label="PM2.5">
-                Fine particles 2.5 micrometres or smaller, reported in
-                micrograms per cubic metre (µg/m³).
-                <span className="mt-2 block text-xs">
-                  Source: {data.air?.source || "Unavailable"} ·{" "}
-                  {provenanceText(data.air?.provenance)}
-                </span>
-              </DefinitionHelp>
-            </dt>
-            <dd className="text-2xl font-extrabold">
-              {pm25 ?? "—"} <span className="text-sm">µg/m³</span>
-            </dd>
-          </div>
-          <div className="rounded-xl border border-current/20 bg-white/75 px-4 py-3">
-            <dt className="flex items-center gap-1.5 text-xs font-extrabold uppercase">
-              Effective heat
-              <DefinitionHelp label="Effective heat">
-                The greater of ambient and feels-like temperature when supplied
-                by the data source.
-                <span className="mt-2 block text-xs">
-                  Source: {data.heat?.source || "Unavailable"} ·{" "}
-                  {provenanceText(data.heat?.provenance)}
-                </span>
-              </DefinitionHelp>
-            </dt>
-            <dd className="text-2xl font-extrabold">{effectiveHeat ?? "—"}°C</dd>
-          </div>
-        </dl>
-      </section>
-
-      <section className="mt-8" aria-labelledby="recommendations-title">
-        <h2 id="recommendations-title" className="text-2xl font-bold">Five things to do today</h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {guidance.recommendations.map((item, index) => (
-            <Card className="p-4" key={item.title}>
-              <span className="grid size-8 place-items-center rounded-full bg-forest text-sm font-extrabold text-white">
-                {index + 1}
-              </span>
-              <h3 className="mt-3 font-bold">{item.title}</h3>
-              <p className="mt-1 text-sm text-muted">{item.action}</p>
-            </Card>
-          ))}
+          <p className="mt-3 font-bold">Loading today&apos;s decision guidance…</p>
         </div>
-      </section>
+      ) : null}
 
-      <section className="mt-8 grid gap-4 md:grid-cols-3" aria-labelledby="people-title">
-        <h2 id="people-title" className="sr-only">
-          Advice for facilities, families, and health settings
-        </h2>
-        {[
-          [Building2, "Facilities & sites", guidance.audienceAdvice.school],
-          [HeartHandshake, "Families", guidance.audienceAdvice.parent],
-          [Stethoscope, "Health settings", guidance.audienceAdvice.student],
-        ].map(([Icon, title, advice]) => {
-          const AdviceIcon = Icon as typeof Building2;
-          return (
-            <Card key={title as string}>
-              <AdviceIcon className="text-forest" aria-hidden />
-              <h3 className="mt-3 text-xl font-bold">{title as string}</h3>
-              <p className="mt-2 text-sm text-muted">{advice as string}</p>
-            </Card>
-          );
-        })}
-      </section>
+      {query.isError && !data ? (
+        <div className="mt-6">
+          <Card className="mx-auto max-w-2xl text-center">
+            <AlertTriangle className="mx-auto text-alert-red" aria-hidden />
+            <h2 className="mt-3 text-2xl font-bold">Dashboard data is unavailable</h2>
+            <p className="mt-2 text-muted">
+              We cannot provide a reliable outdoor recommendation. Try again or use
+              official local advice.
+            </p>
+            <Button className="mt-5" onClick={() => query.refetch()}>
+              <RefreshCw size={18} /> Try again
+            </Button>
+          </Card>
+        </div>
+      ) : null}
 
-      <div className="mt-8 grid gap-5 lg:grid-cols-2">
-        <WeatherContext weather={data.weather?.weather} source={data.weather?.source} />
-        <Card>
-          <CardKicker>Latest public broadcast</CardKicker>
-          {data.latestAlert?.source === "alert_broadcasts" ? (
-            <>
-              <h2 className="text-xl font-bold">
-                {data.latestAlert.hazard_type || "Environmental"} alert · {data.latestAlert.level || "level not reported"}
+      {data ? (
+        <div className="relative mt-0" aria-busy={refreshingContent}>
+          {refreshingContent ? (
+            <div
+              className="absolute inset-0 z-20 flex items-start justify-center rounded-3xl bg-white/55 pt-24 backdrop-blur-[1px]"
+              role="status"
+              aria-live="polite"
+            >
+              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-4 py-2 text-sm font-extrabold text-ink shadow-sm">
+                <RefreshCw className="animate-spin text-forest" size={16} aria-hidden />
+                Updating {city}…
+              </div>
+            </div>
+          ) : null}
+          <div
+            className={
+              refreshingContent
+                ? "pointer-events-none opacity-55 transition-opacity"
+                : "transition-opacity"
+            }
+          >
+
+            {data.failures.length > 0 && (
+              <div className="mt-5 rounded-xl border border-aq-moderate/40 bg-yellow-50 p-4 text-sm" role="status">
+                <strong>Some information is unavailable:</strong> {data.failures.join(", ")}.
+                Guidance only uses the readings shown below.
+              </div>
+            )}
+
+            <section className={`mt-6 rounded-3xl border-2 p-5 sm:p-8 ${BAND_STYLE[guidance.airBand]}`} aria-labelledby="today-answer">
+              <div className="flex flex-wrap items-center gap-3">
+                <Badge className="bg-white/80 text-current">{guidance.label}</Badge>
+                <span className="text-sm font-extrabold">For {city}</span>
+              </div>
+              <h2 id="today-answer" className="mt-4 max-w-4xl text-3xl font-extrabold leading-tight sm:text-5xl">
+                {guidance.outdoorAnswer}
               </h2>
-              <p className="mt-2 text-sm text-muted">
-                {data.latestAlert.city || city} · {data.latestAlert.timestamp
-                  ? new Date(data.latestAlert.timestamp).toLocaleString()
-                  : "Time unavailable"}
-              </p>
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="text-forest" aria-hidden />
-              <h2 className="mt-2 text-xl font-bold">No stored broadcast to show</h2>
-              <p className="mt-2 text-sm text-muted">
-                {data.latestAlert?.message || "The latest-alert service returned no broadcast."}
-              </p>
-            </>
-          )}
-          <p className="mt-4 border-t border-border pt-3 text-xs text-muted">{guidance.operatorAlertNote}</p>
-        </Card>
-      </div>
+              <p className="mt-4 max-w-3xl text-base font-bold sm:text-lg">{guidance.summary}</p>
+              <dl className="mt-6 flex flex-wrap gap-3">
+                <div className="rounded-xl border border-current/20 bg-white/75 px-4 py-3">
+                  <dt className="flex items-center gap-1.5 text-xs font-extrabold uppercase">
+                    AQI
+                    <DefinitionHelp label="AQI">
+                      A health communication index. Higher values mean greater
+                      pollution-related health concern.
+                      <span className="mt-2 block text-xs">
+                        Source: {data.air?.source || "Unavailable"} ·{" "}
+                        {provenanceText(data.air?.provenance)}
+                      </span>
+                    </DefinitionHelp>
+                  </dt>
+                  <dd className="text-2xl font-extrabold">{aqi ?? "—"}</dd>
+                </div>
+                <div className="rounded-xl border border-current/20 bg-white/75 px-4 py-3">
+                  <dt className="flex items-center gap-1.5 text-xs font-extrabold uppercase">
+                    PM2.5
+                    <DefinitionHelp label="PM2.5">
+                      Fine particles 2.5 micrometres or smaller, reported in
+                      micrograms per cubic metre (µg/m³).
+                      <span className="mt-2 block text-xs">
+                        Source: {data.air?.source || "Unavailable"} ·{" "}
+                        {provenanceText(data.air?.provenance)}
+                      </span>
+                    </DefinitionHelp>
+                  </dt>
+                  <dd className="text-2xl font-extrabold">
+                    {pm25 ?? "—"} <span className="text-sm">µg/m³</span>
+                  </dd>
+                </div>
+                <div className="rounded-xl border border-current/20 bg-white/75 px-4 py-3">
+                  <dt className="flex items-center gap-1.5 text-xs font-extrabold uppercase">
+                    Effective heat
+                    <DefinitionHelp label="Effective heat">
+                      The greater of ambient and feels-like temperature when supplied
+                      by the data source.
+                      <span className="mt-2 block text-xs">
+                        Source: {data.heat?.source || "Unavailable"} ·{" "}
+                        {provenanceText(data.heat?.provenance)}
+                      </span>
+                    </DefinitionHelp>
+                  </dt>
+                  <dd className="text-2xl font-extrabold">{effectiveHeat ?? "—"}°C</dd>
+                </div>
+              </dl>
+            </section>
 
-      <section className="mt-8 grid gap-5 lg:grid-cols-2" aria-labelledby="trends-title">
-        <Card className="lg:col-span-2">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <CardKicker>Trend and cases</CardKicker>
-              <h2 id="trends-title" className="text-2xl font-bold">Respiratory cases this week</h2>
-              <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted">
-                <span>{data.cases?.note || "Case-series context is unavailable."}</span>
-                <DefinitionHelp label="Case data">
-                  Source: {data.cases?.source || "Unavailable"} — labelled
-                  synthetic until a live health feed is connected.
-                </DefinitionHelp>
-              </p>
+            <section className="mt-8" aria-labelledby="recommendations-title">
+              <h2 id="recommendations-title" className="text-2xl font-bold">Five things to do today</h2>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                {guidance.recommendations.map((item, index) => (
+                  <Card className="p-4" key={item.title}>
+                    <span className="grid size-8 place-items-center rounded-full bg-forest text-sm font-extrabold text-white">
+                      {index + 1}
+                    </span>
+                    <h3 className="mt-3 font-bold">{item.title}</h3>
+                    <p className="mt-1 text-sm text-muted">{item.action}</p>
+                  </Card>
+                ))}
+              </div>
+            </section>
+
+            <section className="mt-8 grid gap-4 md:grid-cols-3" aria-labelledby="people-title">
+              <h2 id="people-title" className="sr-only">
+                Advice for facilities, families, and health settings
+              </h2>
+              {[
+                [Building2, "Facilities & sites", guidance.audienceAdvice.school],
+                [HeartHandshake, "Families", guidance.audienceAdvice.parent],
+                [Stethoscope, "Health settings", guidance.audienceAdvice.student],
+              ].map(([Icon, title, advice]) => {
+                const AdviceIcon = Icon as typeof Building2;
+                return (
+                  <Card key={title as string}>
+                    <AdviceIcon className="text-forest" aria-hidden />
+                    <h3 className="mt-3 text-xl font-bold">{title as string}</h3>
+                    <p className="mt-2 text-sm text-muted">{advice as string}</p>
+                  </Card>
+                );
+              })}
+            </section>
+
+            <div className="mt-8 grid gap-5 lg:grid-cols-2">
+              <WeatherContext weather={data.weather?.weather} source={data.weather?.source} />
+              <Card>
+                <CardKicker>Latest public broadcast</CardKicker>
+                {data.latestAlert?.source === "alert_broadcasts" ? (
+                  <>
+                    <h2 className="text-xl font-bold">
+                      {data.latestAlert.hazard_type || "Environmental"} alert · {data.latestAlert.level || "level not reported"}
+                    </h2>
+                    <p className="mt-2 text-sm text-muted">
+                      {data.latestAlert.city || city} · {data.latestAlert.timestamp
+                        ? new Date(data.latestAlert.timestamp).toLocaleString()
+                        : "Time unavailable"}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="text-forest" aria-hidden />
+                    <h2 className="mt-2 text-xl font-bold">No stored broadcast to show</h2>
+                    <p className="mt-2 text-sm text-muted">
+                      {data.latestAlert?.message || "The latest-alert service returned no broadcast."}
+                    </p>
+                  </>
+                )}
+                <p className="mt-4 border-t border-border pt-3 text-xs text-muted">{guidance.operatorAlertNote}</p>
+              </Card>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="secondary" onClick={() => exportCsv(data)}>
-                <Download size={16} /> CSV
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() =>
-                  download(
-                    `${city.toLowerCase()}-climate-dashboard.json`,
-                    JSON.stringify(data, null, 2),
-                    "application/json",
-                  )
-                }
-              >
-                <Download size={16} /> JSON
-              </Button>
-            </div>
+
+            <section className="mt-8 grid gap-5 lg:grid-cols-2" aria-labelledby="trends-title">
+              <Card className="lg:col-span-2">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <CardKicker>Trend and cases</CardKicker>
+                    <h2 id="trends-title" className="text-2xl font-bold">Respiratory cases this week</h2>
+                    <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted">
+                      <span>{data.cases?.note || "Case-series context is unavailable."}</span>
+                      <DefinitionHelp label="Case data">
+                        Source: {data.cases?.source || "Unavailable"} — labelled
+                        synthetic until a live health feed is connected.
+                      </DefinitionHelp>
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" variant="secondary" onClick={() => exportCsv(data)}>
+                      <Download size={16} /> CSV
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() =>
+                        download(
+                          `${city.toLowerCase()}-climate-dashboard.json`,
+                          JSON.stringify(data, null, 2),
+                          "application/json",
+                        )
+                      }
+                    >
+                      <Download size={16} /> JSON
+                    </Button>
+                  </div>
+                </div>
+                {caseDays.length > 0 ? (
+                  <>
+                    <DashboardTrendChart labels={dates} cases={caseDays} forecast={forecastValues} />
+                    <p className="mt-3 text-sm text-muted">
+                      Text summary: {caseDays.reduce((sum, value) => sum + value, 0)} synthetic
+                      cases over seven days. The latest day has {caseDays.at(-1)} cases,
+                      compared with {caseDays[0]} on the first day shown.
+                    </p>
+                  </>
+                ) : (
+                  <p className="mt-5 rounded-xl bg-surface p-4 text-muted">No case series is available to chart.</p>
+                )}
+              </Card>
+
+              <Card>
+                <CardKicker>Illustrative forecast</CardKicker>
+                <h2 className="text-xl font-bold">Possible 3–5 day pressure</h2>
+                <p className="mt-3 text-3xl font-extrabold">
+                  {data.forecast?.surge_forecast?.risk_score_0_100 ?? "—"}
+                  <span className="text-base text-muted"> / 100 risk score</span>
+                </p>
+                <p className="mt-2 text-sm text-muted">
+                  {data.forecast?.surge_forecast?.disclaimer ||
+                    "No forecast explanation is available. Do not use this as a clinical prediction."}
+                </p>
+                <Badge className="mt-4">Synthetic input</Badge>
+              </Card>
+
+              <Card>
+                <CardKicker>City comparison</CardKicker>
+                <h2 className="text-xl font-bold">Weekly synthetic cases</h2>
+                {data.allCases?.cities ? (
+                  <div className="mt-4 overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead><tr className="border-b border-border"><th className="py-2">City</th><th className="py-2 text-right">Cases</th></tr></thead>
+                      <tbody>
+                        {Object.entries(data.allCases.cities)
+                          .sort(([, a], [, b]) => (b.total ?? 0) - (a.total ?? 0))
+                          .map(([name, value]) => (
+                            <tr className={name === city ? "bg-surface-tint font-extrabold" : "border-b border-border"} key={name}>
+                              <td className="px-2 py-2">{name}</td><td className="px-2 py-2 text-right">{value.total ?? "—"}</td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : <p className="mt-3 text-muted">Comparison data are unavailable.</p>}
+              </Card>
+
+              <ScenarioSandbox key={city} city={city} livePm25={pm25} liveHeat={effectiveHeat} caseDays={caseDays} />
+            </section>
+
+            <p className="mt-5 text-center text-xs text-muted" role="status">
+              Last refreshed {new Date(data.refreshedAt).toLocaleString()}. Automatically checks every 30 minutes.
+            </p>
           </div>
-          {caseDays.length > 0 ? (
-            <>
-              <DashboardTrendChart labels={dates} cases={caseDays} forecast={forecastValues} />
-              <p className="mt-3 text-sm text-muted">
-                Text summary: {caseDays.reduce((sum, value) => sum + value, 0)} synthetic
-                cases over seven days. The latest day has {caseDays.at(-1)} cases,
-                compared with {caseDays[0]} on the first day shown.
-              </p>
-            </>
-          ) : (
-            <p className="mt-5 rounded-xl bg-surface p-4 text-muted">No case series is available to chart.</p>
-          )}
-        </Card>
-
-        <Card>
-          <CardKicker>Illustrative forecast</CardKicker>
-          <h2 className="text-xl font-bold">Possible 3–5 day pressure</h2>
-          <p className="mt-3 text-3xl font-extrabold">
-            {data.forecast?.surge_forecast?.risk_score_0_100 ?? "—"}
-            <span className="text-base text-muted"> / 100 risk score</span>
-          </p>
-          <p className="mt-2 text-sm text-muted">
-            {data.forecast?.surge_forecast?.disclaimer ||
-              "No forecast explanation is available. Do not use this as a clinical prediction."}
-          </p>
-          <Badge className="mt-4">Synthetic input</Badge>
-        </Card>
-
-        <Card>
-          <CardKicker>City comparison</CardKicker>
-          <h2 className="text-xl font-bold">Weekly synthetic cases</h2>
-          {data.allCases?.cities ? (
-            <div className="mt-4 overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead><tr className="border-b border-border"><th className="py-2">City</th><th className="py-2 text-right">Cases</th></tr></thead>
-                <tbody>
-                  {Object.entries(data.allCases.cities)
-                    .sort(([, a], [, b]) => (b.total ?? 0) - (a.total ?? 0))
-                    .map(([name, value]) => (
-                      <tr className={name === city ? "bg-surface-tint font-extrabold" : "border-b border-border"} key={name}>
-                        <td className="px-2 py-2">{name}</td><td className="px-2 py-2 text-right">{value.total ?? "—"}</td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
-          ) : <p className="mt-3 text-muted">Comparison data are unavailable.</p>}
-        </Card>
-
-        <ScenarioSandbox key={city} city={city} livePm25={pm25} liveHeat={effectiveHeat} caseDays={caseDays} />
-      </section>
-
-      <p className="mt-5 text-center text-xs text-muted" role="status">
-        Last refreshed {new Date(data.refreshedAt).toLocaleString()}. Automatically checks every 30 minutes.
-      </p>
+        </div>
+      ) : null}
     </div>
   );
 }

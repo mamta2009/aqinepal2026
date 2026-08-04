@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AccountDashboard } from "@/components/account/account-dashboard";
+import { AccountDashboardRedirect } from "@/components/account/account-dashboard";
 
 export const metadata: Metadata = {
   title: "Registrant account",
@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function UsersPage() {
-  return <AccountDashboard />;
+  return <AccountDashboardRedirect />;
 }

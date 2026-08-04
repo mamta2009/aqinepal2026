@@ -13,5 +13,7 @@ export function useDashboard(city: string) {
     enabled: Boolean(city),
     refetchInterval: DASHBOARD_REFRESH_MS,
     staleTime: 5 * 60 * 1000,
+    // Keep prior city visible while the next city's payload loads.
+    placeholderData: (previous) => previous,
   });
 }

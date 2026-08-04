@@ -1,8 +1,4 @@
-function apiUrl(path: string) {
-  const base = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/$/, "");
-  const normalized = path.replace(/^\/+/, "");
-  return base ? `${base}/${normalized}` : `/${normalized}`;
-}
+import { apiUrl } from "./api-url";
 
 export class AdminApiError extends Error {
   constructor(

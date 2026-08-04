@@ -1,15 +1,9 @@
 import { ApiError, apiErrorMessage } from "./error";
+import { apiUrl } from "./api-url";
 
 type BrowserRequest = Omit<RequestInit, "body"> & {
   body?: BodyInit | Record<string, unknown> | unknown[];
 };
-
-/** Optional absolute API origin for `next dev`; empty = same-origin (FastAPI static host). */
-function apiUrl(path: string) {
-  const base = (process.env.NEXT_PUBLIC_API_BASE || "").replace(/\/$/, "");
-  const normalized = path.replace(/^\/+/, "");
-  return base ? `${base}/${normalized}` : `/${normalized}`;
-}
 
 export async function browserApi<T>(
   path: string,

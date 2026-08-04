@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -131,7 +132,13 @@ export function ActionsPanel({ profile }: { profile: AccountProfile }) {
   );
 }
 
-export function DeleteAccountPanel({ onDeleted }: { onDeleted: () => void }) {
+export function DeleteAccountPanel({
+  onDeleted,
+  defaultOpen = false,
+}: {
+  onDeleted: () => void;
+  defaultOpen?: boolean;
+}) {
   const form = useForm<DeleteAccountValues>({
     resolver: zodResolver(deleteAccountSchema),
     defaultValues: { password: "", confirm: "" as "DELETE" },
@@ -142,9 +149,15 @@ export function DeleteAccountPanel({ onDeleted }: { onDeleted: () => void }) {
       onDeleted();
     },
   });
+  const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <details id="security" className="rounded-2xl border border-alert-red/30 bg-white p-6">
+    <details
+      id="security"
+      open={open}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+      className="rounded-2xl border border-alert-red/30 bg-white p-6"
+    >
       <summary className="cursor-pointer text-lg font-black text-alert-red">
         Delete account
       </summary>

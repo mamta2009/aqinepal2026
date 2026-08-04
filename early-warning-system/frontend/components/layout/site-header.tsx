@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { Menu, UserRound, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useAccountProfile } from "@/hooks/use-account";
 import { cn } from "@/lib/utils/cn";
 import { NavAlert } from "./nav-alert";
 
@@ -12,14 +13,28 @@ const links = [
   { href: "/dashboard", label: "Today’s air" },
   { href: "/map", label: "Map" },
   { href: "/guides", label: "Guides" },
-  { href: "/users", label: "Account" },
   { href: "/about", label: "About" },
   { href: "/help/aqi-help", label: "aqiHelp" },
 ];
 
+function sessionLabel(profile: {
+  name?: string;
+  email?: string;
+  facility_name?: string;
+}) {
+  const name = profile.name?.trim();
+  if (name) return name;
+  const facility = profile.facility_name?.trim();
+  if (facility) return facility;
+  return profile.email?.trim() || "My account";
+}
+
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const profile = useAccountProfile();
+  const signedIn = Boolean(profile.data);
+  const displayName = profile.data ? sessionLabel(profile.data) : "";
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-white/95 backdrop-blur">
@@ -36,7 +51,7 @@ export function SiteHeader() {
             alt=""
             width={44}
             height={44}
-            className="h-11 w-11"
+            className="h-11 w-auto"
             priority
           />
           <span>Climate Compass</span>
@@ -76,13 +91,48 @@ export function SiteHeader() {
           <div className="my-2 md:my-0 md:ml-2">
             <NavAlert />
           </div>
-          <Link
-            href="/registration"
-            className="mt-2 inline-flex min-h-11 items-center justify-center rounded-full bg-forest px-4 text-sm font-extrabold text-white hover:bg-forest-dark md:mt-0 md:ml-2"
-            onClick={() => setOpen(false)}
-          >
-            Get alerts
-          </Link>
+          {signedIn ? (
+            <Link
+              href="/users/profile/"
+              title={profile.data?.email || displayName}
+              aria-label={`Signed in as ${displayName}. Open account.`}
+              aria-current={
+                pathname === "/users" || pathname.startsWith("/users/")
+                  ? "page"
+                  : undefined
+              }
+              onClick={() => setOpen(false)}
+              className="mt-2 inline-flex min-h-11 max-w-56 items-center gap-2 rounded-full bg-forest px-4 text-sm font-extrabold text-white hover:bg-forest-dark md:mt-0 md:ml-2"
+            >
+              <UserRound
+                aria-hidden="true"
+                className="size-4 shrink-0"
+              />
+              <span className="truncate">{displayName}</span>
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/users/profile/"
+                aria-current={
+                  pathname === "/users" || pathname.startsWith("/users/")
+                    ? "page"
+                    : undefined
+                }
+                onClick={() => setOpen(false)}
+                className="mt-2 inline-flex min-h-11 items-center justify-center rounded-full border border-border-strong bg-white px-4 text-sm font-extrabold text-ink hover:border-forest hover:bg-surface-tint md:mt-0 md:ml-2"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/registration"
+                className="mt-2 inline-flex min-h-11 items-center justify-center rounded-full bg-forest px-4 text-sm font-extrabold text-white hover:bg-forest-dark md:mt-0 md:ml-2"
+                onClick={() => setOpen(false)}
+              >
+                Get alerts
+              </Link>
+            </>
+          )}
         </div>
       </nav>
     </header>

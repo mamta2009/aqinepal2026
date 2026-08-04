@@ -33,24 +33,6 @@ export function AqiHelpChat({ embed = false }: { embed?: boolean }) {
     });
   }, [messages]);
 
-  useEffect(() => {
-    if (!embed) return;
-    const chrome = document.querySelectorAll<HTMLElement>(
-      "body > header, body > footer, body > .skip-link",
-    );
-    const main = document.querySelector<HTMLElement>("body > main#main-content");
-    chrome.forEach((element) => {
-      element.hidden = true;
-    });
-    if (main) main.style.display = "flex";
-    return () => {
-      chrome.forEach((element) => {
-        element.hidden = false;
-      });
-      if (main) main.style.display = "";
-    };
-  }, [embed]);
-
   async function submit(event: FormEvent) {
     event.preventDefault();
     const sent = await ask(question);
@@ -66,7 +48,7 @@ export function AqiHelpChat({ embed = false }: { embed?: boolean }) {
     <section
       className={
         embed
-          ? "flex min-h-dvh flex-col bg-surface p-3"
+          ? "flex h-full min-h-0 flex-col bg-white p-3"
           : "page-shell section-space max-w-4xl"
       }
     >
@@ -98,24 +80,54 @@ export function AqiHelpChat({ embed = false }: { embed?: boolean }) {
 
       {(unavailable || error) && (
         <div
-          className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950"
+          className="mb-4 shrink-0 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950"
           role="alert"
         >
           {unavailable || error}
         </div>
       )}
 
-      <Card className="flex min-h-0 flex-1 flex-col gap-4 p-4 sm:p-6">
+      <Card
+        className={
+          embed
+            ? "flex min-h-0 flex-1 flex-col gap-3 border-0 p-0 shadow-none sm:p-0"
+            : "flex min-h-0 flex-1 flex-col gap-4 p-4 sm:p-6"
+        }
+      >
+        {embed ? (
+          <div className="mb-1 flex flex-wrap gap-1.5" aria-label="Suggested questions">
+            {SUGGESTIONS.map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                className="rounded-full border border-border bg-surface px-2.5 py-1 text-left text-[11px] font-bold text-forest hover:border-forest"
+                onClick={() => setQuestion(suggestion)}
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        ) : null}
         <div
           ref={logRef}
-          className="min-h-64 flex-1 space-y-4 overflow-y-auto rounded-xl bg-surface p-3 sm:min-h-96"
+          className={
+            embed
+              ? "min-h-0 flex-1 space-y-3 overflow-y-auto rounded-xl bg-surface p-3"
+              : "min-h-64 flex-1 space-y-4 overflow-y-auto rounded-xl bg-surface p-3 sm:min-h-96"
+          }
           role="log"
           aria-live="polite"
           aria-relevant="additions"
           aria-label="aqiHelp conversation"
         >
           {messages.length === 0 ? (
-            <p className="m-auto max-w-sm py-16 text-center text-sm text-muted">
+            <p
+              className={
+                embed
+                  ? "m-auto max-w-sm py-8 text-center text-sm text-muted"
+                  : "m-auto max-w-sm py-16 text-center text-sm text-muted"
+              }
+            >
               Ask about AQI, local air checks, alerts, or using the platform.
             </p>
           ) : (
@@ -153,12 +165,15 @@ export function AqiHelpChat({ embed = false }: { embed?: boolean }) {
           )}
         </div>
 
-        <form onSubmit={submit} className="space-y-3">
-          <label htmlFor="aqi-help-question" className="block text-sm font-bold">
+        <form onSubmit={submit} className="shrink-0 space-y-2">
+          <label
+            htmlFor={embed ? "aqi-help-question-embed" : "aqi-help-question"}
+            className="block text-sm font-bold"
+          >
             Your question
           </label>
           <textarea
-            id="aqi-help-question"
+            id={embed ? "aqi-help-question-embed" : "aqi-help-question"}
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
             onKeyDown={(event) => {
@@ -167,7 +182,7 @@ export function AqiHelpChat({ embed = false }: { embed?: boolean }) {
                 event.currentTarget.form?.requestSubmit();
               }
             }}
-            rows={3}
+            rows={embed ? 2 : 3}
             maxLength={8000}
             className="w-full resize-y rounded-xl border border-border-strong bg-white px-4 py-3 text-base"
             placeholder="For example: What should I do when air quality is unhealthy?"
@@ -180,6 +195,7 @@ export function AqiHelpChat({ embed = false }: { embed?: boolean }) {
             </Button>
             <Button
               variant="secondary"
+              type="button"
               onClick={clear}
               disabled={sending || messages.length === 0}
             >

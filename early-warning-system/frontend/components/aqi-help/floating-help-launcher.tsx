@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ExternalLink, HelpCircle, X } from "lucide-react";
+import { AqiHelpChat } from "@/components/aqi-help/aqi-help-chat";
 
 export function FloatingHelpLauncher() {
   const [open, setOpen] = useState(false);
@@ -19,18 +20,18 @@ export function FloatingHelpLauncher() {
 
   return (
     <aside className="fixed right-4 bottom-4 z-50">
-      {open && (
+      {open ? (
         <div
           className="fixed right-3 bottom-20 flex h-[min(46rem,calc(100dvh-6rem))] w-[min(26rem,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-border-strong bg-white shadow-2xl"
           role="dialog"
           aria-modal="false"
           aria-labelledby="floating-help-title"
         >
-          <div className="flex min-h-14 items-center justify-between border-b border-border px-4">
+          <div className="flex min-h-14 shrink-0 items-center justify-between border-b border-border px-4">
             <strong id="floating-help-title">aqiHelp</strong>
             <div className="flex items-center gap-1">
               <a
-                href="/help/aqi-help"
+                href="/help/aqi-help/"
                 target="_blank"
                 rel="noreferrer"
                 className="grid size-10 place-items-center rounded-full text-forest hover:bg-surface-tint"
@@ -49,13 +50,11 @@ export function FloatingHelpLauncher() {
               </button>
             </div>
           </div>
-          <iframe
-            title="aqiHelp chat"
-            src="/help/aqi-help?embed=1"
-            className="min-h-0 flex-1 border-0"
-          />
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <AqiHelpChat embed />
+          </div>
         </div>
-      )}
+      ) : null}
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
