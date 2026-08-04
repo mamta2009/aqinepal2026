@@ -19,18 +19,16 @@ services:
       DEBUG: "False"
       ALLOW_DEV_REGISTRATION_DB_RESET: "false"
       API_PATH_PREFIX: /api
+      FRONTEND_OUT_DIR: /app/frontend/out
     volumes:
       - ./backend/.env:/app/backend/.env:ro
       - ./config:/app/config:ro
-      # Jinja pages (landing/templates), CSS, and static assets — no rebuild needed
-      - ./landing:/app/landing:ro
-      - ./frontend:/app/frontend:ro
-      # Public guide Markdown (/guides/md/…)
+      # Public guide Markdown (served via GET /api/guides)
       - ./docs:/app/docs:ro
       # Operator private Markdown (admin); not copied into the image (.dockerignore)
       - ./docs-private:/app/docs-private:ro
-      # Python routes (web_pages, clean URLs) — restart container after edits;
-      # rebuild when requirements.txt changes: docker compose up -d --build
+      # Python API — restart container after edits;
+      # rebuild when requirements.txt or frontend changes: docker compose up -d --build
       - ./backend:/app/backend:ro
     healthcheck:
       test:

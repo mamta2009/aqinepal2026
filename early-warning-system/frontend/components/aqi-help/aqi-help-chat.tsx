@@ -1,0 +1,202 @@
+"use client";
+
+import { FormEvent, useEffect, useRef, useState } from "react";
+import { LoaderCircle, Send, Trash2 } from "lucide-react";
+import { useAqiHelp } from "@/hooks/use-aqi-help";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+
+const SUGGESTIONS = [
+  "What does AQI mean?",
+  "How do I check air quality for my city?",
+  "How do I register for air and heat alerts?",
+] as const;
+export function AqiHelpChat({ embed = false }: { embed?: boolean }) {
+  const [question, setQuestion] = useState("");
+  const logRef = useRef<HTMLDivElement>(null);
+  const {
+    ask,
+    available,
+    clear,
+    disclaimer,
+    error,
+    messages,
+    meta,
+    metaLoading,
+    sending,
+  } = useAqiHelp();
+
+  useEffect(() => {
+    logRef.current?.scrollTo({
+      top: logRef.current.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [messages]);
+
+  useEffect(() => {
+    if (!embed) return;
+    const chrome = document.querySelectorAll<HTMLElement>(
+      "body > header, body > footer, body > .skip-link",
+    );
+    const main = document.querySelector<HTMLElement>("body > main#main-content");
+    chrome.forEach((element) => {
+      element.hidden = true;
+    });
+    if (main) main.style.display = "flex";
+    return () => {
+      chrome.forEach((element) => {
+        element.hidden = false;
+      });
+      if (main) main.style.display = "";
+    };
+  }, [embed]);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    const sent = await ask(question);
+    if (sent) setQuestion("");
+  }
+
+  const unavailable =
+    !metaLoading && meta && !available
+      ? meta.unavailable_message || "aqiHelp is currently unavailable."
+      : null;
+
+  return (
+    <section
+      className={
+        embed
+          ? "flex min-h-dvh flex-col bg-surface p-3"
+          : "page-shell section-space max-w-4xl"
+      }
+    >
+      {!embed && (
+        <header className="mb-6">
+          <p className="eyebrow">Guidance from published resources</p>
+          <h1 className="text-4xl font-extrabold tracking-tight">aqiHelp</h1>
+          <p className="mt-3 max-w-2xl text-ink-soft">
+            Ask a plain-language question about air quality, alerts, or Climate
+            Compass. Responses are informational and are not medical advice.
+          </p>
+        </header>
+      )}
+
+      {!embed && (
+        <div className="mb-5 flex flex-wrap gap-2" aria-label="Suggested questions">
+          {SUGGESTIONS.map((suggestion) => (
+            <button
+              key={suggestion}
+              type="button"
+              className="rounded-full border border-border-strong bg-white px-4 py-2 text-sm font-bold text-forest hover:border-forest"
+              onClick={() => setQuestion(suggestion)}
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {(unavailable || error) && (
+        <div
+          className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950"
+          role="alert"
+        >
+          {unavailable || error}
+        </div>
+      )}
+
+      <Card className="flex min-h-0 flex-1 flex-col gap-4 p-4 sm:p-6">
+        <div
+          ref={logRef}
+          className="min-h-64 flex-1 space-y-4 overflow-y-auto rounded-xl bg-surface p-3 sm:min-h-96"
+          role="log"
+          aria-live="polite"
+          aria-relevant="additions"
+          aria-label="aqiHelp conversation"
+        >
+          {messages.length === 0 ? (
+            <p className="m-auto max-w-sm py-16 text-center text-sm text-muted">
+              Ask about AQI, local air checks, alerts, or using the platform.
+            </p>
+          ) : (
+            messages.map((message) => (
+              <article
+                key={message.id}
+                className={
+                  message.role === "user"
+                    ? "ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-forest px-4 py-3 text-white"
+                    : "max-w-[90%] rounded-2xl rounded-bl-sm border border-border bg-white px-4 py-3 text-ink"
+                }
+              >
+                <p className="mb-1 text-xs font-extrabold opacity-75">
+                  {message.role === "user" ? "You" : "aqiHelp"}
+                </p>
+                <p className="whitespace-pre-wrap">{message.text}</p>
+                {message.citations && message.citations.length > 0 && (
+                  <p className="mt-3 border-t border-border pt-2 text-xs text-muted">
+                    Sources:{" "}
+                    {message.citations
+                      .map((citation) =>
+                        [citation.source, citation.heading].filter(Boolean).join(" · "),
+                      )
+                      .join("; ")}
+                  </p>
+                )}
+              </article>
+            ))
+          )}
+          {sending && (
+            <p className="flex items-center gap-2 text-sm text-muted">
+              <LoaderCircle className="size-4 animate-spin" aria-hidden />
+              aqiHelp is preparing an answer…
+            </p>
+          )}
+        </div>
+
+        <form onSubmit={submit} className="space-y-3">
+          <label htmlFor="aqi-help-question" className="block text-sm font-bold">
+            Your question
+          </label>
+          <textarea
+            id="aqi-help-question"
+            value={question}
+            onChange={(event) => setQuestion(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                event.currentTarget.form?.requestSubmit();
+              }
+            }}
+            rows={3}
+            maxLength={8000}
+            className="w-full resize-y rounded-xl border border-border-strong bg-white px-4 py-3 text-base"
+            placeholder="For example: What should I do when air quality is unhealthy?"
+            disabled={sending || Boolean(unavailable)}
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="submit" disabled={sending || question.trim().length < 2}>
+              <Send className="size-4" aria-hidden />
+              Ask aqiHelp
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={clear}
+              disabled={sending || messages.length === 0}
+            >
+              <Trash2 className="size-4" aria-hidden />
+              Clear
+            </Button>
+            <span className="text-xs text-muted" aria-live="polite">
+              {metaLoading
+                ? "Checking availability…"
+                : available
+                  ? `Available${meta?.rate_limit_per_minute ? ` · up to ${meta.rate_limit_per_minute}/minute` : ""}`
+                  : "Unavailable"}
+            </span>
+          </div>
+          {disclaimer && <p className="text-xs text-muted">{disclaimer}</p>}
+        </form>
+      </Card>
+    </section>
+  );
+}

@@ -11,7 +11,7 @@ from typing import Any
 
 import jwt
 from bson import ObjectId
-from fastapi import Header, HTTPException
+from fastapi import Header, HTTPException, Request
 
 import db_state
 
@@ -243,9 +243,10 @@ async def resolve_facility_caller(
 
 
 async def load_facility_caller(
+    request: Request,
     authorization: str | None = Header(None),
 ) -> FacilityCaller:
-    token: str | None = None
-    if authorization and authorization.strip().lower().startswith("bearer "):
-        token = authorization.strip()[7:].strip()
+    from registrant_auth import token_from_authorization_or_cookie
+
+    token = token_from_authorization_or_cookie(authorization, request)
     return await resolve_facility_caller(bearer_token=token)

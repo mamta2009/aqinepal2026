@@ -25,8 +25,7 @@ from pathlib import Path
 
 import httpx
 from bson import ObjectId
-from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, Request, Response
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
 import db_state
@@ -36,7 +35,6 @@ import facility_auth
 import onchain_hooks
 import registrant_auth
 import twilio_notify
-import web_pages
 from cities_config import CITIES_CONFIG
 from notification_auth import (
     require_notification_api_key,
@@ -1958,7 +1956,11 @@ async def _log_registrant_unverified_login_attempt(email_key: str, doc: dict[str
 
 
 @router.post("/api/auth/login")
-async def registrant_dashboard_login(body: RegistrantLoginIn):
+async def registrant_dashboard_login(
+    body: RegistrantLoginIn,
+    request: Request,
+    response: Response,
+):
     """
     Email + password → registrant session JWT (used for dashboard and, when eligible, facility actions).
 
@@ -2082,8 +2084,10 @@ async def registrant_dashboard_login(body: RegistrantLoginIn):
     scopes = registrant_auth.compute_registrant_scopes(doc)
     cov = doc.get("cities")
     eff_fac = facility_auth.effective_facility_id(doc)
+    registrant_auth.set_registrant_session_cookie(response, request, token, ttl)
     return {
         "access_token": token,
+        "authenticated": True,
         "token_type": "bearer",
         "expires_in": ttl,
         "scopes": scopes,
@@ -2096,6 +2100,13 @@ async def registrant_dashboard_login(body: RegistrantLoginIn):
         "facility_id": eff_fac,
         "facility_reporting_ready": registrant_auth.registrant_can_facility_actions(doc),
     }
+
+
+@router.post("/api/auth/logout")
+async def registrant_dashboard_logout(response: Response):
+    """Clear the HttpOnly registrant/facility session cookie used by the web UI."""
+    registrant_auth.clear_registrant_session_cookie(response)
+    return {"success": True}
 
 
 @router.get("/api/auth/me")
@@ -2126,10 +2137,24 @@ async def registrant_profile(
     return out
 
 
-def _authorization_bearer_raw(authorization: str | None) -> str | None:
-    if authorization and authorization.strip().lower().startswith("bearer "):
-        return authorization.strip()[7:].strip()
-    return None
+def _authorization_bearer_raw(
+    authorization: str | None = None,
+    request: Request | None = None,
+) -> str | None:
+    return registrant_auth.token_from_authorization_or_cookie(authorization, request)
+
+
+async def require_dashboard_access_token(
+    request: Request,
+    authorization: str | None = Header(None),
+) -> str:
+    raw = _authorization_bearer_raw(authorization, request)
+    if not raw:
+        raise HTTPException(
+            status_code=401,
+            detail="Sign in required — use password or OTP under Facility Actions, then retry.",
+        )
+    return raw
 
 
 def _contact_id_from_dashboard_bearer_token(token: str | None) -> str | None:
@@ -2148,16 +2173,18 @@ def _contact_id_from_dashboard_bearer_token(token: str | None) -> str | None:
 
 
 @router.get("/api/auth/profile")
-async def dashboard_registration_profile(authorization: str | None = Header(None)):
+async def dashboard_registration_profile(
+    token: str = Depends(require_dashboard_access_token),
+):
     """
     Full enrolment record for the signed-in user (same shape as ``GET /api/auth/me``).
 
     Accepts **either** a registrant session token (``POST /api/auth/login``) **or**
     a facility reporting token (``POST /api/auth/facility-token`` after OTP) so dashboard
-    users can read their profile regardless of sign-in method.
+    users can read their profile regardless of sign-in method. Browser sessions may use
+    the HttpOnly ``cc_registrant_token`` cookie instead of an Authorization header.
     """
-    raw = _authorization_bearer_raw(authorization)
-    cid = _contact_id_from_dashboard_bearer_token(raw)
+    cid = _contact_id_from_dashboard_bearer_token(token)
     if not cid:
         raise HTTPException(
             status_code=401,
@@ -2335,13 +2362,13 @@ async def public_delete_account_confirm(body: DeleteAccountConfirmIn):
 @router.patch("/api/auth/preferences")
 async def registrant_patch_own_preferences(
     body: RegistrantSelfPrefsPatch,
-    authorization: str | None = Header(None),
+    token: str = Depends(require_dashboard_access_token),
 ):
     """
     Update notification channels, optional facility name, and per-site PM2.5 thresholds on your own contact.
     Accepts the same ``Authorization: Bearer`` as ``GET /api/auth/profile`` (password or facility OTP session).
     """
-    raw = _authorization_bearer_raw(authorization)
+    raw = token
     cid = _contact_id_from_dashboard_bearer_token(raw)
     if not cid:
         raise HTTPException(status_code=401, detail="Sign in required.")
@@ -2556,10 +2583,10 @@ def _merge_shared_contact_updates(
 
 @router.get("/api/auth/shared-contacts")
 async def registrant_list_shared_contacts(
-    authorization: str | None = Header(None),
+    token: str = Depends(require_dashboard_access_token),
 ):
     """Friends & family list for optional SMS / email / WhatsApp from the dashboard (not included in profile JSON)."""
-    raw = _authorization_bearer_raw(authorization)
+    raw = token
     cid = _contact_id_from_dashboard_bearer_token(raw)
     if not cid:
         raise HTTPException(status_code=401, detail="Sign in required.")
@@ -2615,9 +2642,9 @@ async def registrant_list_shared_contacts(
 @router.post("/api/auth/shared-contacts")
 async def registrant_create_shared_contact(
     body: SharedAlertContactCreate,
-    authorization: str | None = Header(None),
+    token: str = Depends(require_dashboard_access_token),
 ):
-    raw = _authorization_bearer_raw(authorization)
+    raw = token
     cid = _contact_id_from_dashboard_bearer_token(raw)
     if not cid:
         raise HTTPException(status_code=401, detail="Sign in required.")
@@ -2675,10 +2702,10 @@ async def registrant_create_shared_contact(
 @router.post("/api/auth/shared-contacts/notify")
 async def registrant_notify_shared_contacts(
     body: SharedNotifyIn,
-    authorization: str | None = Header(None),
+    token: str = Depends(require_dashboard_access_token),
 ):
     """Send a one-off message to selected saved contacts (SMS / WhatsApp / email). Rate-limited per day."""
-    raw = _authorization_bearer_raw(authorization)
+    raw = token
     cid = _contact_id_from_dashboard_bearer_token(raw)
     if not cid:
         raise HTTPException(status_code=401, detail="Sign in required.")
@@ -2840,12 +2867,12 @@ async def registrant_notify_shared_contacts(
 async def registrant_update_shared_contact(
     contact_row_id: str,
     body: SharedAlertContactUpdate,
-    authorization: str | None = Header(None),
+    token: str = Depends(require_dashboard_access_token),
 ):
     payload = body.model_dump(exclude_unset=True)
     if not payload:
         raise HTTPException(status_code=400, detail="No fields to update")
-    raw = _authorization_bearer_raw(authorization)
+    raw = token
     cid = _contact_id_from_dashboard_bearer_token(raw)
     if not cid:
         raise HTTPException(status_code=401, detail="Sign in required.")
@@ -2907,9 +2934,9 @@ async def registrant_update_shared_contact(
 @router.delete("/api/auth/shared-contacts/{contact_row_id}")
 async def registrant_delete_shared_contact(
     contact_row_id: str,
-    authorization: str | None = Header(None),
+    token: str = Depends(require_dashboard_access_token),
 ):
-    raw = _authorization_bearer_raw(authorization)
+    raw = token
     cid = _contact_id_from_dashboard_bearer_token(raw)
     if not cid:
         raise HTTPException(status_code=401, detail="Sign in required.")
@@ -2936,7 +2963,7 @@ async def registrant_delete_shared_contact(
 
 @router.get("/api/auth/notification-inbox")
 async def registrant_notification_inbox(
-    authorization: str | None = Header(None),
+    token: str = Depends(require_dashboard_access_token),
     limit: int = Query(50, ge=1, le=200),
     skip: int = Query(0, ge=0, le=10_000),
 ):
@@ -2944,7 +2971,7 @@ async def registrant_notification_inbox(
     Recent outbound attempts to this contact (SMS / email / WhatsApp) from ``notification_logs``.
     Helps when a device did not receive SMS or email — the same sends are listed here.
     """
-    raw = _authorization_bearer_raw(authorization)
+    raw = token
     cid = _contact_id_from_dashboard_bearer_token(raw)
     if not cid:
         raise HTTPException(
@@ -3060,7 +3087,11 @@ async def facility_dashboard_login_challenge(body: FacilityLoginEmailIn):
 
 
 @router.post("/api/auth/facility-token")
-async def facility_dashboard_token(body: FacilityTokenExchangeIn):
+async def facility_dashboard_token(
+    body: FacilityTokenExchangeIn,
+    request: Request,
+    response: Response,
+):
     """Exchange OTP from ``POST /api/auth/facility-login`` for an access JWT."""
     db = db_state.require_mongo_db()
     email_key = str(body.email).strip()
@@ -3094,8 +3125,10 @@ async def facility_dashboard_token(body: FacilityTokenExchangeIn):
     city_live = row.get("city")
     cov = row.get("cities")
     out_cov = cov if isinstance(cov, list) else None
+    registrant_auth.set_registrant_session_cookie(response, request, token, ttl_s)
     return {
         "access_token": token,
+        "authenticated": True,
         "token_type": "bearer",
         "expires_in": ttl_s,
         "contact_id": str(doc["_id"]),
@@ -4132,18 +4165,6 @@ async def get_contact_analytics(
         "by_type": by_type,
         "by_channel": by_channel,
     }
-
-
-@router.get("/registration", response_class=HTMLResponse)
-async def registration_portal_page(request: Request):
-    """Health worker self-registration UI."""
-    return web_pages.render(request, "pages/registration.html", active="registration")
-
-
-@router.get("/registration/contacts-directory", response_class=HTMLResponse)
-async def contacts_directory_page(request: Request):
-    """PIN-protected viewer: calls ``GET /api/contacts/directory`` with ``X-Registration-Directory-Secret``."""
-    return web_pages.render(request, "pages/contacts_directory.html", active="contacts")
 
 
 # ---------------------------------------------------------------------------

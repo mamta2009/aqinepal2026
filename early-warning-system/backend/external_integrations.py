@@ -10,6 +10,7 @@ import asyncio
 import logging
 import os
 import re
+from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import quote
 
@@ -579,6 +580,7 @@ def _normalize_heat_blob_from_weatherapi_style(raw: dict[str, Any]) -> dict[str,
         "temp_c": round(tc, 1),
         "feelslike_c": round(fl, 1) if fl is not None else None,
         "effective_temp_c": round(eff, 1),
+        "observed_at": _observed_at_from_rapid_raw(raw),
         "humidity_pct": h_int,
         "wind_kph": _numeric_simple(cur, "wind_kph"),
         "condition_text": wx_text or None,
@@ -611,11 +613,21 @@ def _normalize_heat_blob_from_openweather(raw: dict[str, Any]) -> dict[str, Any]
             wx_text = wt["description"].strip()
 
     eff = max(tc, fl if fl is not None else tc)
+    observed_at: str | None = None
+    observed_epoch = raw.get("dt")
+    if isinstance(observed_epoch, (int, float)):
+        try:
+            observed_at = datetime.fromtimestamp(
+                float(observed_epoch), tz=timezone.utc
+            ).isoformat().replace("+00:00", "Z")
+        except (OverflowError, OSError, ValueError):
+            observed_at = None
 
     return {
         "temp_c": round(tc, 1),
         "feelslike_c": round(fl, 1) if fl is not None else None,
         "effective_temp_c": round(eff, 1),
+        "observed_at": observed_at,
         "humidity_pct": h_int,
         "wind_kph": None,
         "condition_text": wx_text or None,

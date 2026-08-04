@@ -3,12 +3,76 @@
 from __future__ import annotations
 
 import html
+from html.parser import HTMLParser
 from pathlib import Path
+from urllib.parse import urlsplit
 
 _backend_dir = Path(__file__).resolve().parent
 _docs_dir = (_backend_dir / ".." / "docs").resolve()
 GUIDES_MARKDOWN_ROOT = (_docs_dir / "guides").resolve()
 PRIVATE_MARKDOWN_ROOT = (_docs_dir / ".." / "docs-private").resolve()
+
+_SAFE_TAGS = {
+    "a", "blockquote", "br", "code", "del", "em", "h1", "h2", "h3", "h4",
+    "h5", "h6", "hr", "li", "ol", "p", "pre", "strong", "table", "tbody",
+    "td", "th", "thead", "tr", "ul",
+}
+_VOID_TAGS = {"br", "hr"}
+_DROP_CONTENT_TAGS = {"iframe", "object", "script", "style", "svg"}
+
+
+def _safe_href(value: str) -> bool:
+    value = value.strip()
+    if not value:
+        return False
+    parsed = urlsplit(value)
+    return not parsed.scheme or parsed.scheme.lower() in {"http", "https", "mailto"}
+
+
+class _GuideHTMLSanitizer(HTMLParser):
+    """Small allowlist sanitizer for Markdown-generated guide fragments."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.parts: list[str] = []
+        self._drop_depth = 0
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        tag = tag.lower()
+        if tag in _DROP_CONTENT_TAGS:
+            self._drop_depth += 1
+            return
+        if self._drop_depth or tag not in _SAFE_TAGS:
+            return
+        rendered_attrs = ""
+        if tag == "a":
+            href = next((value for name, value in attrs if name.lower() == "href"), None)
+            if href and _safe_href(href):
+                rendered_attrs = f' href="{html.escape(href, quote=True)}"'
+        self.parts.append(f"<{tag}{rendered_attrs}>")
+
+    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        self.handle_starttag(tag, attrs)
+
+    def handle_endtag(self, tag: str) -> None:
+        tag = tag.lower()
+        if tag in _DROP_CONTENT_TAGS:
+            if self._drop_depth:
+                self._drop_depth -= 1
+            return
+        if not self._drop_depth and tag in _SAFE_TAGS and tag not in _VOID_TAGS:
+            self.parts.append(f"</{tag}>")
+
+    def handle_data(self, data: str) -> None:
+        if not self._drop_depth:
+            self.parts.append(html.escape(data))
+
+
+def sanitize_html_fragment(fragment: str) -> str:
+    sanitizer = _GuideHTMLSanitizer()
+    sanitizer.feed(fragment)
+    sanitizer.close()
+    return "".join(sanitizer.parts)
 
 
 def safe_markdown_under(root: Path, rel: str) -> Path | None:
@@ -31,43 +95,14 @@ def markdown_to_html_fragment(source: str) -> str:
     except ImportError:
         return '<pre class="md-pre">' + html.escape(source) + "</pre>"
     try:
-        return md_lib.markdown(
-            source,
-            extensions=["fenced_code", "tables", "nl2br", "sane_lists"],
+        return sanitize_html_fragment(
+            md_lib.markdown(
+                source,
+                extensions=["fenced_code", "tables", "nl2br", "sane_lists"],
+            )
         )
     except Exception:
         return '<pre class="md-pre">' + html.escape(source) + "</pre>"
-
-
-_SHELL = """<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>{title}</title>
-<link rel="icon" type="image/png" href="/landing-assets/favicon.ico"/>
-<style>
-:root {{ font-family: system-ui, Segoe UI, sans-serif; color: #0f172a; background:#f8fafc; }}
-body {{ margin:0; }}
-.back {{ display:inline-block; margin:1rem 0 1rem clamp(16px,4vw,2rem); color:#0369a1; font-weight:600; text-decoration:none; }}
-.back:hover {{ text-decoration:underline; }}
-article.md-body {{ max-width: 52rem; margin: 0 auto 3rem; padding: 0 1.25rem 2rem; line-height:1.62; }}
-article.md-body h1 {{ font-size: 1.75rem; margin-top:0; }}
-article.md-body h2 {{ margin-top:1.5rem; font-size:1.2rem; border-bottom:1px solid #e2e8f0; padding-bottom:.25rem; }}
-article.md-body h3 {{ font-size: 1.05rem; margin-top:1.1rem; }}
-article.md-body code {{ background:#f1f5f9; padding:.1rem .35rem; border-radius:4px; font-size:.9em; }}
-article.md-body pre {{ background:#0f172a; color:#e2e8f0; padding:1rem; border-radius:8px; overflow:auto; font-size:.85rem; }}
-article.md-body pre code {{ background:transparent; color:inherit; padding:0; }}
-article.md-body table {{ border-collapse: collapse; width:100%; font-size:.92rem; }}
-article.md-body th, article.md-body td {{ border:1px solid #cbd5e1; padding:.4rem .5rem; vertical-align:top; }}
-article.md-body th {{ background:#e2e8f0; text-align:left; }}
-</style>
-</head><body>
-<nav aria-label="Up"><a class="back" href="/guides">&larr; Guides hub</a></nav>
-<article class="md-body">
-{inner}
-</article>
-</body></html>"""
 
 
 def derive_title(markdown_raw: str, fallback: str) -> str:

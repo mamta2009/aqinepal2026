@@ -1,0 +1,16 @@
+export const queryKeys = {
+  runtimeConfig: ["runtime-config"] as const,
+  cities: ["cities"] as const,
+  alertsLatest: ["alerts", "latest"] as const,
+  guides: ["guides"] as const,
+  guide: (path: string) => ["guides", path] as const,
+  environmentOverview: ["environment", "overview"] as const,
+  dashboard: (city: string) => ["dashboard", city] as const,
+  accountProfile: ["account", "profile"] as const,
+  accountInbox: ["account", "inbox"] as const,
+  accountContacts: ["account", "shared-contacts"] as const,
+  accountActions: ["account", "action-log"] as const,
+  adminStatus: ["admin", "status"] as const,
+  adminRegistrants: (query: string) => ["admin", "registrants", query] as const,
+  aqiHelpMeta: ["aqi-help", "meta"] as const,
+};
