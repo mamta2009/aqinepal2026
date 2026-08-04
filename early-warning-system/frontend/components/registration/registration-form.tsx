@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch, type UseFormRegisterReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,25 @@ import {
   type RegistrationValues,
 } from "@/validation/registration";
 import { VerificationPanel } from "./verification-panel";
+
+function applyDuplicateFieldErrors(
+  message: string,
+  setError: (
+    name: "email" | "phone_number" | "whatsapp_number",
+    error: { type: string; message: string },
+  ) => void,
+) {
+  const lower = message.toLowerCase();
+  if (lower.includes("email")) {
+    setError("email", { type: "server", message });
+  }
+  if (lower.includes("phone number") || lower.includes("phone must")) {
+    setError("phone_number", { type: "server", message });
+  }
+  if (lower.includes("whatsapp")) {
+    setError("whatsapp_number", { type: "server", message });
+  }
+}
 
 const ROLE_LABELS: Record<(typeof CONTACT_TYPES)[number], string> = {
   health_worker: "Health worker / doctor",
@@ -52,6 +72,8 @@ export function RegistrationForm() {
     handleSubmit,
     getValues,
     setValue,
+    setError,
+    clearErrors,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<RegistrationValues, unknown, RegistrationParsed>({
@@ -100,6 +122,7 @@ export function RegistrationForm() {
 
   async function onSubmit(values: RegistrationParsed) {
     setSubmitError(null);
+    clearErrors(["email", "phone_number", "whatsapp_number"]);
     try {
       const response = await register(values);
       const next = {
@@ -117,12 +140,19 @@ export function RegistrationForm() {
       } catch {
         // Storage can be blocked; the visible verification fields still work.
       }
+      toast.success("Registration successful. Enter the code from your email below.");
       reset();
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.setTimeout(() => {
+        document
+          .getElementById("registration-verify")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 80);
     } catch (error) {
-      setSubmitError(
-        error instanceof Error ? error.message : "Registration failed. Please try again.",
-      );
+      const message =
+        error instanceof Error ? error.message : "Registration failed. Please try again.";
+      applyDuplicateFieldErrors(message, setError);
+      setSubmitError(message);
+      toast.error(message);
     }
   }
 
@@ -158,9 +188,14 @@ export function RegistrationForm() {
       {result && (
         <div className="rounded-2xl border border-leaf bg-surface-tint p-5" role="status">
           <h2 className="text-xl font-extrabold text-forest-dark">
-            Registration successful
+            Registration successful — next: verify
           </h2>
           <p className="mt-1">{result.message}</p>
+          <p className="mt-3 text-sm font-bold text-forest-dark">
+            We sent a verification code to your email
+            {result.email ? ` (${result.email})` : ""}. Enter it in Step 2 below to
+            activate alerts, then sign in.
+          </p>
           {result.contactId && (
             <p className="mt-2 text-sm">
               Reference ID: <code>{result.contactId}</code>
@@ -171,6 +206,18 @@ export function RegistrationForm() {
               {result.warnings.map((warning) => <li key={warning}>{warning}</li>)}
             </ul>
           )}
+          <div className="mt-4">
+            <Button
+              type="button"
+              onClick={() =>
+                document
+                  .getElementById("registration-verify")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" })
+              }
+            >
+              Enter verification code
+            </Button>
+          </div>
         </div>
       )}
 
@@ -409,6 +456,7 @@ export function RegistrationForm() {
         key={`${result?.email || ""}:${result?.contactId || ""}`}
         initialEmail={result?.email}
         initialContactId={result?.contactId}
+        emphasized={Boolean(result)}
       />
 
       {devReset?.enabled && (

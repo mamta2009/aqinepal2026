@@ -1,8 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardKicker } from "@/components/ui/card";
 import { useAccountMutation } from "@/hooks/use-account";
@@ -56,10 +57,27 @@ export function AccountAuthPanel({ onAuthenticated }: { onAuthenticated: () => v
     defaultValues: { email: "", verification_code: "" },
   });
 
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("ew_login_email")?.trim();
+      if (!saved) return;
+      loginForm.setValue("email", saved);
+      otpRequestForm.setValue("email", saved);
+      otpForm.setValue("email", saved);
+      verifyForm.setValue("email", saved);
+      sessionStorage.removeItem("ew_login_email");
+    } catch {
+      // Prefill is optional if storage is blocked.
+    }
+    // Prefill once on mount after successful registration verify.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const login = useAccountMutation(accountApi.login, {
     onSuccess: () => {
       setReverify(null);
       setNotice("Signed in securely.");
+      toast.success("Signed in successfully.");
       onAuthenticated();
     },
     onError: (error) => {
@@ -73,24 +91,34 @@ export function AccountAuthPanel({ onAuthenticated }: { onAuthenticated: () => v
       ) {
         setReverify(error.detail as ReverificationDetail);
         setNotice("");
+        return;
       }
+      toast.error(error.message || "Sign in failed.");
     },
   });
   const requestOtp = useAccountMutation(accountApi.requestFacilityOtp, {
     onSuccess: (result, values) => {
       otpForm.setValue("email", values.email);
       setNotice(result.message);
+      toast.success(result.message || "OTP sent.");
     },
+    onError: (error) => toast.error(error.message || "Could not send OTP."),
   });
   const exchangeOtp = useAccountMutation(accountApi.exchangeFacilityOtp, {
     onSuccess: () => {
       setNotice("OTP accepted. Your secure session is ready.");
+      toast.success("Signed in with facility OTP.");
       onAuthenticated();
     },
+    onError: (error) => toast.error(error.message || "OTP sign-in failed."),
   });
   const verify = useAccountMutation(accountApi.verifyRegistration, {
-    onSuccess: (result) =>
-      setNotice(result.message || "Registration verified. You can sign in now."),
+    onSuccess: (result) => {
+      const message = result.message || "Registration verified. You can sign in now.";
+      setNotice(message);
+      toast.success(message);
+    },
+    onError: (error) => toast.error(error.message || "Verification failed."),
   });
 
   const mutationError =

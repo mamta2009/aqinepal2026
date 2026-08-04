@@ -20,7 +20,7 @@ export function HomeHero() {
               Check today&apos;s air
             </ButtonLink>
             <ButtonLink href="/registration" variant="secondary" size="lg">
-              Get alerts
+              Register alerts
             </ButtonLink>
           </div>
           <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-bold text-ink-soft">

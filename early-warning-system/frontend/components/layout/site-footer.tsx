@@ -5,10 +5,9 @@ const links = [
   ["/", "Home"],
   ["/dashboard", "Today’s air"],
   ["/guides", "Learning resources"],
-  ["/registration", "Get alerts"],
+  ["/registration", "Register alerts"],
   ["/about", "About"],
-  ["/privacy-policy", "Privacy"],
-  ["/delete-account", "Delete account"],
+  ["/privacy-policy", "Privacy Policy"],
 ] as const;
 
 export function SiteFooter() {

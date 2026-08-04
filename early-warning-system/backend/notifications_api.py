@@ -1497,6 +1497,37 @@ def _approval_status_after_contact_verified(existing_approval_lower: str) -> str
     return "pending"
 
 
+async def _reject_if_verified_channel_taken(
+    db: Any,
+    *,
+    field_label: str,
+    values: list[str],
+    exclude_id: ObjectId | None,
+) -> None:
+    """Block registration when another verified contact already owns phone/WhatsApp."""
+    cleaned = [v for v in dict.fromkeys(values) if v]
+    if not cleaned:
+        return
+    query: dict[str, Any] = {
+        "verification_status": "verified",
+        "$or": [
+            {"phone_number": {"$in": cleaned}},
+            {"whatsapp_number": {"$in": cleaned}},
+        ],
+    }
+    if exclude_id is not None:
+        query["_id"] = {"$ne": exclude_id}
+    conflict = await db.contacts.find_one(query, {"_id": 1})
+    if conflict:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"This {field_label} is already registered as verified. Delete the contact "
+                f"(or archive) if you intend to recreate it, or choose a different {field_label}."
+            ),
+        )
+
+
 async def persist_contact_registration(
     contact: ContactRegistration,
     *,
@@ -1561,10 +1592,24 @@ async def persist_contact_registration(
             raise HTTPException(
                 status_code=409,
                 detail=(
-                    "This email is already registered as verified. Delete the contact "
-                    "(or archive) if you intend to recreate it, or choose a different email."
+                    "This email is already registered as verified. Please choose a different email."
                 ),
             )
+
+    exclude_id = existing["_id"] if existing else None
+    await _reject_if_verified_channel_taken(
+        db,
+        field_label="phone number",
+        values=[normalized_phone],
+        exclude_id=exclude_id,
+    )
+    if normalized_whatsapp != normalized_phone:
+        await _reject_if_verified_channel_taken(
+            db,
+            field_label="WhatsApp number",
+            values=[normalized_whatsapp],
+            exclude_id=exclude_id,
+        )
 
     consent_ts = contact.consent_timestamp or datetime.utcnow()
     topics = _validated_environment_topics(contact.environmental_topics, default_both=True)

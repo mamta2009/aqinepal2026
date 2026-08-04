@@ -129,7 +129,7 @@ export function SiteHeader() {
                 className="mt-2 inline-flex min-h-11 items-center justify-center rounded-full bg-forest px-4 text-sm font-extrabold text-white hover:bg-forest-dark md:mt-0 md:ml-2"
                 onClick={() => setOpen(false)}
               >
-                Get alerts
+                Register alerts
               </Link>
             </>
           )}
