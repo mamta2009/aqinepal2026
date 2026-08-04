@@ -5,6 +5,9 @@
 **/.env
 !**/.env.example
 **/node_modules
+**/frontend
+**/ui
+**/landing
 **/mobile-app
 **/.git
 **/.DS_Store

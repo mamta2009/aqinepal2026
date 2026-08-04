@@ -45,10 +45,10 @@ cd frontend
 npm run dev
 ```
 
-## Docker
+## Docker (backend only)
 
 ```bash
 docker compose up -d --build
 ```
 
-The image builds the static export and serves it from FastAPI.
+Docker builds and runs the FastAPI API only. Build the Next.js UI on the host (`cd frontend && npm run build`) or deploy it separately. To have the API container serve a host-built export, uncomment the `./frontend/out` volume in `docker-compose.yml` and set `FRONTEND_OUT_DIR=/app/frontend/out` in the compose environment.

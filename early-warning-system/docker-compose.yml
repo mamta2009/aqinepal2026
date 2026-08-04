@@ -19,7 +19,6 @@ services:
       DEBUG: "False"
       ALLOW_DEV_REGISTRATION_DB_RESET: "false"
       API_PATH_PREFIX: /api
-      FRONTEND_OUT_DIR: /app/frontend/out
     volumes:
       - ./backend/.env:/app/backend/.env:ro
       - ./config:/app/config:ro
@@ -28,8 +27,10 @@ services:
       # Operator private Markdown (admin); not copied into the image (.dockerignore)
       - ./docs-private:/app/docs-private:ro
       # Python API — restart container after edits;
-      # rebuild when requirements.txt or frontend changes: docker compose up -d --build
+      # rebuild when requirements.txt changes: docker compose up -d --build
       - ./backend:/app/backend:ro
+      # Optional: serve a host-built static export from this container
+      # - ./frontend/out:/app/frontend/out:ro
     healthcheck:
       test:
         [
