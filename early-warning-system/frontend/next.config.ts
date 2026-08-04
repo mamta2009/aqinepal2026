@@ -1,9 +1,12 @@
 import type { NextConfig } from "next";
+import path from "node:path";
 
 const baseConfig: NextConfig = {
   trailingSlash: true,
   images: { unoptimized: true },
   poweredByHeader: false,
+  // Avoid picking up a yarn.lock from the home directory (/home/intelladapt).
+  outputFileTracingRoot: path.resolve(process.cwd()),
   // Allow opening `next dev` via either hostname (localhost vs 127.0.0.1).
   allowedDevOrigins: ["127.0.0.1", "localhost"],
 };
