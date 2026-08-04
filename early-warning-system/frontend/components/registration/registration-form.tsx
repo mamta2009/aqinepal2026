@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch, type UseFormRegisterReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,8 @@ export function RegistrationForm() {
   const [devApiKey, setDevApiKey] = useState("");
   const [devStatus, setDevStatus] = useState<string | null>(null);
   const [devBusy, setDevBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
   const {
     register: field,
@@ -213,23 +216,57 @@ export function RegistrationForm() {
               />
             </FormField>
             <FormField label="Dashboard password" error={errors.password?.message}>
-              <input
-                {...field("password")}
-                type="password"
-                autoComplete="new-password"
-                className={inputClass}
-              />
+              <div className="relative mt-1">
+                <input
+                  {...field("password")}
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  className="min-h-11 w-full rounded-xl border border-border-strong bg-white px-3 py-2 pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((value) => !value)}
+                  className="absolute inset-y-0 right-0 grid w-11 place-items-center text-muted hover:text-ink"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
+                >
+                  {showPassword ? (
+                    <EyeOff className="size-5" aria-hidden />
+                  ) : (
+                    <Eye className="size-5" aria-hidden />
+                  )}
+                </button>
+              </div>
             </FormField>
             <FormField
               label="Confirm password"
               error={errors.password_confirmation?.message}
             >
-              <input
-                {...field("password_confirmation")}
-                type="password"
-                autoComplete="new-password"
-                className={inputClass}
-              />
+              <div className="relative mt-1">
+                <input
+                  {...field("password_confirmation")}
+                  type={showPasswordConfirm ? "text" : "password"}
+                  autoComplete="new-password"
+                  className="min-h-11 w-full rounded-xl border border-border-strong bg-white px-3 py-2 pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordConfirm((value) => !value)}
+                  className="absolute inset-y-0 right-0 grid w-11 place-items-center text-muted hover:text-ink"
+                  aria-label={
+                    showPasswordConfirm
+                      ? "Hide password confirmation"
+                      : "Show password confirmation"
+                  }
+                  aria-pressed={showPasswordConfirm}
+                >
+                  {showPasswordConfirm ? (
+                    <EyeOff className="size-5" aria-hidden />
+                  ) : (
+                    <Eye className="size-5" aria-hidden />
+                  )}
+                </button>
+              </div>
             </FormField>
           </div>
         </Section>
