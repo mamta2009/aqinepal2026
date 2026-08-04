@@ -1,11 +1,13 @@
 "use client";
 
 import {
+  BarController,
   BarElement,
   CategoryScale,
   Chart as ChartJS,
   Legend,
   LinearScale,
+  LineController,
   LineElement,
   PointElement,
   Tooltip,
@@ -13,7 +15,10 @@ import {
 import { Chart } from "react-chartjs-2";
 import { compareBarColor } from "@/lib/compare-cities";
 
+// Chart.js tree-shaking requires controllers as well as elements.
 ChartJS.register(
+  BarController,
+  LineController,
   CategoryScale,
   LinearScale,
   BarElement,

@@ -6,6 +6,7 @@ import {
   Filler,
   Legend,
   LinearScale,
+  LineController,
   LineElement,
   PointElement,
   Tooltip,
@@ -13,6 +14,7 @@ import {
 import { Line } from "react-chartjs-2";
 
 ChartJS.register(
+  LineController,
   CategoryScale,
   LinearScale,
   PointElement,
