@@ -10,6 +10,8 @@ import {
   useAccountProfile,
   useAccountQueryClient,
   useRefreshAccount,
+  clearAccountSession,
+  markAccountSessionActive,
 } from "@/hooks/use-account";
 import { accountApi, AccountApiError, type AccountProfile } from "@/lib/api/account";
 import { cn } from "@/lib/utils/cn";
@@ -47,14 +49,21 @@ export function AccountShell({
   const unauthenticated =
     profile.error instanceof AccountApiError && profile.error.status === 401;
   const logout = useAccountMutation(accountApi.logout, {
-    onSuccess: () => queryClient.removeQueries({ queryKey: ["account"] }),
+    // Update the navbar immediately; do not wait for the logout response.
+    onMutate: () => {
+      clearAccountSession(queryClient);
+    },
+    onError: () => {
+      markAccountSessionActive(queryClient);
+      void queryClient.invalidateQueries({ queryKey: ["account"] });
+    },
   });
 
   const onAuthenticated = async () => {
+    markAccountSessionActive(queryClient);
     await queryClient.invalidateQueries({ queryKey: ["account"] });
-    await profile.refetch();
   };
-  const onSignedOut = () => queryClient.removeQueries({ queryKey: ["account"] });
+  const onSignedOut = () => clearAccountSession(queryClient);
 
   if (profile.isPending) {
     return (
