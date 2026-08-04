@@ -20,6 +20,7 @@ import {
   type ReactNode,
 } from "react";
 import { ScenarioSandbox } from "./scenario-sandbox";
+import { CityAirCompare } from "./city-air-compare";
 import { WeatherContext } from "@/components/weather/weather-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -492,6 +493,8 @@ export function DashboardClient() {
                   </div>
                 ) : <p className="mt-3 text-muted">Comparison data are unavailable.</p>}
               </Card>
+
+              <CityAirCompare cities={cityOptions} currentCity={city} />
 
               <ScenarioSandbox key={city} city={city} livePm25={pm25} liveHeat={effectiveHeat} caseDays={caseDays} />
             </section>
