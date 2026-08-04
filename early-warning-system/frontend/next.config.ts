@@ -1,8 +1,6 @@
 import type { NextConfig } from "next";
-import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
 const baseConfig: NextConfig = {
-  output: "export",
   trailingSlash: true,
   images: { unoptimized: true },
   poweredByHeader: false,
@@ -11,31 +9,26 @@ const baseConfig: NextConfig = {
 };
 
 /**
- * In `next dev`, proxy /api → FastAPI so session cookies are same-origin on :3000.
- * Static export (production) talks to FastAPI on the same host — no rewrite needed.
+ * Proxy /api → FastAPI so the browser can use same-origin /api (cookies work).
+ * Set BACKEND_PROXY_TARGET on the server (e.g. http://127.0.0.1:8010).
+ * Leave NEXT_PUBLIC_API_BASE empty unless you intentionally call the API host directly.
  */
-export default function createNextConfig(phase: string): NextConfig {
-  if (phase === PHASE_DEVELOPMENT_SERVER) {
-    const apiBase = (
-      process.env.BACKEND_PROXY_TARGET ||
-      process.env.NEXT_PUBLIC_API_BASE ||
-      "http://localhost:8000"
-    ).replace(/\/$/, "");
+export default function createNextConfig(): NextConfig {
+  const apiBase = (
+    process.env.BACKEND_PROXY_TARGET ||
+    process.env.NEXT_PUBLIC_API_BASE ||
+    "http://localhost:8000"
+  ).replace(/\/$/, "");
 
-    // Drop output:export in dev so rewrites can proxy /api → FastAPI.
-    const { output: _export, ...devConfig } = baseConfig;
-    return {
-      ...devConfig,
-      async rewrites() {
-        return [
-          {
-            source: "/api/:path*",
-            destination: `${apiBase}/api/:path*`,
-          },
-        ];
-      },
-    };
-  }
-
-  return baseConfig;
+  return {
+    ...baseConfig,
+    async rewrites() {
+      return [
+        {
+          source: "/api/:path*",
+          destination: `${apiBase}/api/:path*`,
+        },
+      ];
+    },
+  };
 }
