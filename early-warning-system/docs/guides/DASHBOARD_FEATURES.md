@@ -748,7 +748,7 @@ Newest-first sample of facility **action logs** (Stocked O₂ / Staff Called / P
 
 ### In one paragraph
 
-The Early Warning System is a **Nepal-focused respiratory / environmental readiness platform**. It combines a **public situational dashboard** (live air and heat where APIs are configured, plus illustrative case and forecast views), **optional registration** so people can receive municipality air/heat alerts on SMS, WhatsApp, or email, and a **signed-in facility layer** so approved health workers can log preparedness steps at named sites. Operators run enrolment, thresholds, and audits from a **PIN-locked admin console**. Blockchain hooks are optional demonstration / audit tooling — not the core product.
+The Climate Compass is a **Nepal-focused respiratory / environmental readiness platform**. It combines a **public situational dashboard** (live air and heat where APIs are configured, plus illustrative case and forecast views), **optional registration** so people can receive municipality air/heat alerts on SMS, WhatsApp, or email, and a **signed-in facility layer** so approved health workers can log preparedness steps at named sites. Operators run enrolment, thresholds, and audits from a **PIN-locked admin console**. Blockchain hooks are optional demonstration / audit tooling — not the core product.
 
 ### What problem it addresses
 

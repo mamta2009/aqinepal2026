@@ -207,7 +207,7 @@ def _retrieve_context(query: str, top_k: int = _TOP_K_CHUNKS) -> tuple[str, list
     return "\n\n---\n\n".join(parts), cites
 
 
-_SYSTEM_INSTRUCTIONS = """You are **aqiHelp**, the Nepal Early Warning System assistant.
+_SYSTEM_INSTRUCTIONS = """You are **aqiHelp**, the Nepal Climate Compass assistant.
 
 Rules:
 1) Answer ONLY using the CONTEXT excerpts below (from internal product guides). If the context lacks the answer, say you do not have that detail in the published guides and point users to `/guides`, `/docs` (Swagger), or their administrator.

@@ -305,7 +305,7 @@ export function RegisterForm() {
           name="data_use"
           render={({ field: { value, onChange }, fieldState }) => (
             <ConsentToggle
-              label="I allow my respiratory case data to be used for research to improve the Early Warning System (optional but appreciated)."
+              label="I allow my respiratory case data to be used for research to improve the Climate Compass (optional but appreciated)."
               checked={value === true}
               onChange={(next) => onChange(next)}
               error={fieldState.error?.message}

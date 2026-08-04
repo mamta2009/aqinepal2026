@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stop the Early Warning backend: free listener on PORT + clear Python caches (never touches .venv).
+# Stop the Climate Compass backend: free listener on PORT + clear Python caches (never touches .venv).
 # Sends SIGTERM first, then SIGKILL if the port is still in use.
 # Shows whether local MongoDB still answers (mongod is not stopped by this script).
 # Usage:

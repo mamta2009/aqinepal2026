@@ -1,4 +1,4 @@
-# Early warning system (Nepal AQI demo)
+# Climate Compass (Nepal AQI demo)
 
 **Repository:** [github.com/mamta2009/aqinepal2026](https://github.com/mamta2009/aqinepal2026)
 

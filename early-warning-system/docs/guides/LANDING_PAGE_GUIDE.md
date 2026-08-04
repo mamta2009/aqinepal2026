@@ -3,7 +3,7 @@
 ## What You Get
 
 A professional, conversion-focused landing page that:
-- ✅ Introduces your Early Warning System
+- ✅ Introduces your Climate Compass
 - ✅ Explains the problem and solution
 - ✅ Showcases features and impact
 - ✅ Guides visitors to the dashboard
@@ -82,7 +82,7 @@ Find this in landing.html:
 ```html
 <a href="#" class="logo">
     <div class="logo-icon">⚠️</div>
-    Early Warning System
+    Climate Compass
 </a>
 ```
 
@@ -92,7 +92,7 @@ Change to your organization name.
 
 Find:
 ```html
-<h1>Save Lives Through Early Warning</h1>
+<h1>Save Lives With Climate Compass</h1>
 <p>Predict respiratory health surges...</p>
 ```
 
@@ -114,7 +114,7 @@ All buttons point to `/frontend/index.html`. If hosting differently:
 ### Update footer
 
 ```html
-<p>Early Warning System for Respiratory Health • Nepal • Open-Source MIT License</p>
+<p>Climate Compass for Respiratory Health • Nepal • Open-Source MIT License</p>
 <p style="margin-top: 1rem; color: #475569;">Funded by UNICEF • Developed for health system strengthening</p>
 ```
 
@@ -206,11 +206,11 @@ Update these for better search engine visibility:
 
 ```html
 <!-- In <head> section -->
-<title>Early Warning System - Respiratory Health Nepal</title>
-<meta name="description" content="AI-powered early warning system for respiratory health surges. Save lives through 3-5 day advance predictions.">
-<meta name="keywords" content="respiratory health, early warning, Nepal, UNICEF, climate health">
+<title>Climate Compass - Respiratory Health Nepal</title>
+<meta name="description" content="AI-powered Climate Compass for respiratory health surges. Save lives through 3-5 day advance predictions.">
+<meta name="keywords" content="respiratory health, Climate Compass, Nepal, UNICEF, climate health">
 <meta name="author" content="Your Name">
-<meta property="og:title" content="Early Warning System - Respiratory Health">
+<meta property="og:title" content="Climate Compass - Respiratory Health">
 <meta property="og:description" content="Predict health surges. Prepare facilities. Save lives.">
 <meta property="og:image" content="your-image.jpg">
 ```

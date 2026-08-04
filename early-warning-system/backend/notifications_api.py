@@ -754,7 +754,7 @@ def _email_shell(
     title: str,
     accent: str,
     body_html: str,
-    footer_note: str = "You received this because you subscribed to Early Warning alerts.",
+    footer_note: str = "You received this because you subscribed to Climate Compass alerts.",
 ) -> str:
     """Table-based HTML shell with inline styles for email clients."""
     safe_title = html.escape(title)
@@ -769,7 +769,7 @@ def _email_shell(
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #d7dde5;">
         <tr>
           <td style="background:{accent};padding:18px 24px;">
-            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.85);">AQI Nepal · Early Warning</p>
+            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.85);">Climate Compass</p>
             <h1 style="margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:20px;line-height:1.3;font-weight:700;color:#ffffff;">{safe_title}</h1>
           </td>
         </tr>
@@ -931,7 +931,7 @@ def _render_shared_alert_email_html(
 
     Returns ``(html_content, plain_text)`` for SendGrid multipart delivery.
     """
-    safe_sender = html.escape((sender_name or "Early Warning user").strip() or "Early Warning user")
+    safe_sender = html.escape((sender_name or "Climate Compass user").strip() or "Climate Compass user")
     safe_msg = html.escape((message or "").strip()).replace("\n", "<br>\n")
     greeting_name = (recipient_display_name or "").strip()
     greeting = (
@@ -940,12 +940,12 @@ def _render_shared_alert_email_html(
         else "Hello,"
     )
     accent = "#1565c0"
-    title = "Personal message via Early Warning"
+    title = "Personal message via Climate Compass"
     body = f"""
       <p style="margin:0 0 14px;font-size:15px;color:#374151;">{greeting}</p>
       <p style="margin:0 0 16px;font-size:15px;color:#374151;">
         <strong>{safe_sender}</strong> sent you a message through the
-        <strong>AQI Nepal Early Warning</strong> friends &amp; family tool.
+        <strong>Climate Compass</strong> friends &amp; family tool.
         This is a personal note from someone who listed you as an emergency contact —
         it is <em>not</em> an automated air-quality or heat broadcast from the platform.
       </p>
@@ -965,22 +965,22 @@ def _render_shared_alert_email_html(
         accent=accent,
         body_html=body,
         footer_note=(
-            "Sent via AQI Nepal Early Warning · Friends & family alerts. "
+            "Sent via Climate Compass · Friends & family alerts. "
             "This message was initiated by a registered user, not by an automatic alert rule."
         ),
     )
     plain_name = greeting_name or "there"
-    plain_sender = (sender_name or "Early Warning user").strip() or "Early Warning user"
+    plain_sender = (sender_name or "Climate Compass user").strip() or "Climate Compass user"
     plain_msg = (message or "").strip()
     plain_text = (
         f"Hello {plain_name},\n\n"
-        f"{plain_sender} sent you a message through the AQI Nepal Early Warning "
+        f"{plain_sender} sent you a message through the Climate Compass "
         f"friends & family tool. This is a personal note — not an automated "
         f"air-quality or heat broadcast.\n\n"
         f"Message:\n{plain_msg}\n\n"
         f"If you did not expect this, ask the sender to remove you from their list. "
         f"Do not reply to this email for emergencies.\n\n"
-        f"— AQI Nepal Early Warning"
+        f"— Climate Compass"
     )
     return html_content, plain_text
 
@@ -1005,7 +1005,7 @@ async def send_email(
     content.append({"type": "text/html", "value": html_content})
     payload = {
         "personalizations": [{"to": [{"email": to_email}]}],
-        "from": {"email": from_email, "name": "AQI Nepal Early Warning"},
+        "from": {"email": from_email, "name": "Climate Compass"},
         "subject": subject,
         "content": content,
     }
@@ -1050,7 +1050,7 @@ async def _dispatch_verification_email(
     safe_code = html.escape(code)
     body = f"""
       <p style="margin:0 0 12px;">Hi {safe_name},</p>
-      <p style="margin:0 0 18px;color:#374151;">Use this code to verify your Early Warning registration:</p>
+      <p style="margin:0 0 18px;color:#374151;">Use this code to verify your Climate Compass registration:</p>
       <p style="margin:0 0 18px;text-align:center;font-family:Consolas,Monaco,monospace;font-size:32px;letter-spacing:0.28em;font-weight:700;color:#0f4c5c;">{safe_code}</p>
       <p style="margin:0;font-size:13px;color:#6b7280;">This code expires in 24 hours. If you did not request registration, you can ignore this email.</p>
     """
@@ -1058,16 +1058,16 @@ async def _dispatch_verification_email(
         title="Verify your registration",
         accent="#0f4c5c",
         body_html=body,
-        footer_note="AQI Nepal Early Warning System",
+        footer_note="Climate Compass",
     )
     plain = (
         f"Hi {name},\n\n"
-        f"Your Early Warning verification code is: {code}\n\n"
+        f"Your Climate Compass verification code is: {code}\n\n"
         f"This code expires in 24 hours.\n"
     )
     result = await send_email(
         email,
-        "Verify your Early Warning registration",
+        "Verify your Climate Compass registration",
         html_content,
         plain_text=plain,
     )
@@ -1097,7 +1097,7 @@ async def _dispatch_verification_sms(
 ) -> dict[str, Any]:
     result = await send_sms(
         phone_number,
-        f"Early Warning verification code: {code}. Valid 24 hours.",
+        f"Climate Compass verification code: {code}. Valid 24 hours.",
     )
     if result.get("success"):
         await db.notification_logs.insert_one(
@@ -1125,7 +1125,7 @@ async def _dispatch_verification_whatsapp(
 ) -> dict[str, Any]:
     result = await send_whatsapp(
         whatsapp_number,
-        f"Early Warning verification code: {code}. Valid 24 hours.",
+        f"Climate Compass verification code: {code}. Valid 24 hours.",
     )
     if result.get("success"):
         await db.notification_logs.insert_one(
@@ -1203,7 +1203,7 @@ async def _send_facility_login_code(db: Any, doc: dict[str, Any], code: str) -> 
     chans = doc.get("preferred_channels") or []
     name = str(doc.get("name") or "")
     ttl = facility_auth.facility_login_code_ttl_minutes()
-    hint = f"Early Warning facility dashboard code: {code}. Valid {ttl} minutes."
+    hint = f"Climate Compass facility dashboard code: {code}. Valid {ttl} minutes."
 
     try:
         if "email" in chans:
@@ -1273,7 +1273,7 @@ async def _send_account_deletion_code(db: Any, doc: dict[str, Any], code: str) -
     name = str(doc.get("name") or "")
     ttl = _ACCOUNT_DELETION_CODE_TTL_MINUTES
     hint = (
-        f"Early Warning account deletion code: {code}. "
+        f"Climate Compass account deletion code: {code}. "
         f"Valid {ttl} minutes. If you did not request this, ignore this message."
     )
 
@@ -1285,7 +1285,7 @@ async def _send_account_deletion_code(db: Any, doc: dict[str, Any], code: str) -
                 body = f"""
                   <p style="margin:0 0 12px;">Hi {safe_name},</p>
                   <p style="margin:0 0 18px;color:#374151;">
-                    Use this code to confirm permanent deletion of your Early Warning account
+                    Use this code to confirm permanent deletion of your Climate Compass account
                     and associated personal data:
                   </p>
                   <p style="margin:0 0 18px;text-align:center;font-family:Consolas,Monaco,monospace;font-size:32px;letter-spacing:0.28em;font-weight:700;color:#9b1c1c;">{safe_code}</p>
@@ -1298,17 +1298,17 @@ async def _send_account_deletion_code(db: Any, doc: dict[str, Any], code: str) -
                     title="Confirm account deletion",
                     accent="#9b1c1c",
                     body_html=body,
-                    footer_note="AQI Nepal Early Warning System",
+                    footer_note="Climate Compass",
                 )
                 plain = (
                     f"Hi {name or 'there'},\n\n"
-                    f"Your Early Warning account deletion code is: {code}\n\n"
+                    f"Your Climate Compass account deletion code is: {code}\n\n"
                     f"This code expires in {ttl} minutes.\n"
                     f"If you did not request this, ignore this email.\n"
                 )
                 er = await send_email(
                     doc["email"],
-                    "Confirm Early Warning account deletion",
+                    "Confirm Climate Compass account deletion",
                     html_content,
                     plain_text=plain,
                 )
@@ -1421,7 +1421,7 @@ async def _send_session_reverification_code(
     chans = doc.get("preferred_channels") or []
     name = str(doc.get("name") or "")
     hint = (
-        f"Early Warning periodic renewal code: {code}. Valid {ttl_minutes} minutes. "
+        f"Climate Compass periodic renewal code: {code}. Valid {ttl_minutes} minutes. "
         "Use it when signing in with your current password and a NEW dashboard password."
     )
 
@@ -1430,7 +1430,7 @@ async def _send_session_reverification_code(
             if _sendgrid_configured():
                 er = await send_email(
                     doc["email"],
-                    "Security code — Early Warning dashboard",
+                    "Security code — Climate Compass dashboard",
                     f"<p>{name or 'Hello'},</p><p>{hint}</p>",
                 )
                 if not er.get("success"):
@@ -1944,7 +1944,7 @@ async def _log_registrant_unverified_login_attempt(email_key: str, doc: dict[str
     if not alert_to:
         return
     name = str(doc.get("name") or "")
-    subj = f"[Early warning] Unverified login attempt: {email_key}"
+    subj = f"[Climate Compass] Unverified login attempt: {email_key}"
     body = (
         f"<p>Someone entered the correct password but <strong>verification_status</strong> is not verified yet.</p>"
         f"<p>Email: {email_key}<br/>Name: {name}<br/>Contact id: {cid_str}</p>"
@@ -2712,7 +2712,7 @@ async def registrant_notify_shared_contacts(
             ),
         )
 
-    sender_name = str(doc.get("name") or "Early Warning user").strip() or "Early Warning user"
+    sender_name = str(doc.get("name") or "Climate Compass user").strip() or "Climate Compass user"
     msg = body.message.strip()
     results: list[dict[str, Any]] = []
     for rid in ordered_ids:
@@ -2765,7 +2765,7 @@ async def registrant_notify_shared_contacts(
                 results.append({"contact_id": rid, "ok": False, "error": "missing_email"})
                 await _log_line(ch="email", status="failed", ok=False, err="missing_email")
                 continue
-            subj = f"{sender_name} shared a message via AQI Nepal Early Warning"
+            subj = f"{sender_name} shared a message via Climate Compass"
             recipient_label = str(row.get("display_name") or "").strip() or None
             html_body, plain_body = _render_shared_alert_email_html(
                 sender_name=sender_name,
@@ -3403,7 +3403,7 @@ async def send_notification(
         html_content = f"<p>{request.message}</p>"
         result = await send_email(
             recipient["email"],
-            request.subject or "Early Warning Alert",
+            request.subject or "Climate Compass Alert",
             html_content,
         )
 
@@ -4154,7 +4154,7 @@ async def contacts_directory_page(request: Request):
 class TwilioTestIn(BaseModel):
     to: str = Field(..., min_length=8, max_length=40)
     body: str = Field(
-        default="Early Warning System: test notification.",
+        default="Climate Compass: test notification.",
         min_length=1,
         max_length=1600,
     )
@@ -4167,7 +4167,7 @@ class TwilioTestIn(BaseModel):
 class ResendTestIn(BaseModel):
     to: EmailStr
     subject: str = Field(
-        default="Early Warning — SendGrid connectivity test",
+        default="Climate Compass — SendGrid connectivity test",
         min_length=1,
         max_length=200,
     )
@@ -4221,7 +4221,7 @@ async def notifications_resend_test(
     result = await send_email(
         str(payload.to),
         payload.subject.strip(),
-        "<p>Early Warning backend: SendGrid connectivity test succeeded.</p>",
+        "<p>Climate Compass backend: SendGrid connectivity test succeeded.</p>",
     )
     if not result.get("success"):
         err = result.get("error") or "sendgrid_failed"

@@ -1,5 +1,5 @@
 """
-Early Warning System - FastAPI Backend
+Climate Compass - FastAPI Backend
 Nepal Respiratory Health Surge Prediction
 Open-Source | Blockchain-Verified | AI-Powered
 """
@@ -225,8 +225,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Early Warning System API",
-    description="Nepal Respiratory Health Early Warning System",
+    title="Climate Compass API",
+    description="Climate Compass — Nepal Respiratory Health",
     version="3.0.0",
     lifespan=lifespan,
 )
@@ -350,7 +350,7 @@ class OpenRouterChatIn(BaseModel):
 
 
 _DEFAULT_OPENROUTER_SYSTEM = (
-    "You help explain early warning and environmental health topics for technical and policy audiences "
+    "You help explain Climate Compass and environmental health topics for technical and policy audiences "
     "working in Nepal. Be concise and cautious. You are not providing medical advice, diagnoses, or "
     "official public-health guidance."
 )
@@ -1901,7 +1901,7 @@ _frontend_dir = os.path.normpath(os.path.join(_backend_root, "..", "frontend"))
 
 def _system_discovery_payload() -> dict:
     return {
-        "system": "Early Warning System - Nepal Respiratory Health",
+        "system": "Climate Compass - Nepal Respiratory Health",
         "version": "3.0.0",
         "status": "🟢 Running",
         "features": ["Open-Source MIT", "Blockchain Verified (Polygon)", "AI-Powered (78% accuracy)"],

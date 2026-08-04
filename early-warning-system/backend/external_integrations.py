@@ -965,7 +965,7 @@ async def openrouter_chat(
         or "openai/gpt-4o-mini"
     )
     referer = (os.getenv("OPENROUTER_HTTP_REFERER") or "").strip() or None
-    title = (os.getenv("OPENROUTER_APP_TITLE") or "Early Warning System").strip()
+    title = (os.getenv("OPENROUTER_APP_TITLE") or "Climate Compass").strip()
 
     messages: list[dict[str, str]] = []
     if system_message:

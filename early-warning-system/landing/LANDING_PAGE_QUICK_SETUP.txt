@@ -8,9 +8,9 @@ WHAT IS THE LANDING PAGE?
 ═════════════════════════════════════════════════════════════════════════════════
 
 A professional introduction page that:
-  ✅ Introduces your Early Warning System
+  ✅ Introduces your Climate Compass
   ✅ Explains the problem (air pollution → respiratory emergencies)
-  ✅ Shows the solution (AI early warning system)
+  ✅ Shows the solution (Climate Compass)
   ✅ Lists key features
   ✅ Shows impact metrics
   ✅ Links to the dashboard
@@ -157,14 +157,14 @@ CUSTOMIZATION IN 30 SECONDS
 Open landing.html in a text editor. Find and change:
 
 1. Title (line 5)
-   <title>Early Warning System - Respiratory Health Nepal</title>
+   <title>Climate Compass - Respiratory Health Nepal</title>
 
 2. Logo (line 108)
    <div class="logo-icon">⚠️</div>
-   Early Warning System
+   Climate Compass
 
 3. Hero headline (line 127)
-   <h1>Save Lives Through Early Warning</h1>
+   <h1>Save Lives With Climate Compass</h1>
 
 4. Hero description (line 128)
    <p>Predict respiratory health surges...</p>
@@ -222,7 +222,7 @@ When you demo to UNICEF:
 
 3. They read about:
    ✅ Problem (air pollution + respiratory emergencies)
-   ✅ Solution (AI early warning system)
+   ✅ Solution (Climate Compass)
    ✅ Features (real-time data, blockchain, AI)
    ✅ Impact (3-5 day warning, facility preparedness)
 

@@ -1,4 +1,4 @@
-# Early warning system (Nepal AQI demo)
+# Climate Compass (Nepal AQI demo)
 
 FastAPI backend, static **landing**, **guides hub** (`/guides`), **registration**, dashboard UI, and **operator admin console**. Technical behaviour (env keys, AQ resolver order, MongoDB, notifications, provenance JSON) is maintained in **`docs/guides/IMPLEMENTATION_SNAPSHOT.md`** — prefer that file over older marketing summaries when describing what the deployment actually does.
 
