@@ -80,6 +80,7 @@ class ContactType(str, Enum):
     PARENT = "parent"
     ADMIN = "admin"
     GOVERNMENT = "government"
+    SCHOOL_ADMIN = "school_admin"
 
 
 class NotificationChannel(str, Enum):
@@ -135,6 +136,31 @@ class ContactRegistration(BaseModel):
             "Omit or null to default to both. Empty list declines environmental SMS/email pushes."
         ),
     )
+    school_contact: Optional[str] = Field(
+        None,
+        max_length=200,
+        description="School phone or outreach contact (school_admin registrations).",
+    )
+    school_address: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="School address (school_admin registrations).",
+    )
+    school_information: Optional[str] = Field(
+        None,
+        max_length=2000,
+        description="Brief information about the school (school_admin registrations).",
+    )
+
+    @model_validator(mode="after")
+    def _school_admin_requires_school_name(self) -> "ContactRegistration":
+        if self.contact_type != ContactType.SCHOOL_ADMIN:
+            return self
+        names, _ = _normalize_facility_names(self.facility_names, self.facility_name)
+        if not names:
+            raise ValueError("School name is required for school administrators.")
+        return self
+
 
 
 def _validated_environment_topics(raw: Optional[list[str]], *, default_both: bool) -> list[str]:
@@ -406,7 +432,7 @@ class AlertBroadcast(BaseModel):
     aqi_level: AlertLevel
     recipient_type: str = Field(
         "health_worker",
-        description="health_worker | parent | admin | government | all",
+        description="health_worker | parent | admin | government | school_admin | all",
     )
     message_override: Optional[str] = None
     filter_city: Optional[str] = Field(
@@ -421,7 +447,7 @@ class AlertEvaluateIn(BaseModel):
     city: str
     recipient_type: str = Field(
         "health_worker",
-        description="health_worker | parent | admin | government | all",
+        description="health_worker | parent | admin | government | school_admin | all",
     )
     filter_city: Optional[str] = Field(
         None,
@@ -1637,6 +1663,22 @@ async def persist_contact_registration(
         "active": True,
         "password_hash": registrant_auth.hash_password(contact.password),
     }
+
+    if contact.contact_type == ContactType.SCHOOL_ADMIN:
+        profile_core["school_contact"] = (
+            (contact.school_contact or "").strip() or None
+        )
+        profile_core["school_address"] = (
+            (contact.school_address or "").strip() or None
+        )
+        profile_core["school_information"] = (
+            (contact.school_information or "").strip() or None
+        )
+    else:
+        profile_core["school_contact"] = None
+        profile_core["school_address"] = None
+        profile_core["school_information"] = None
+
 
     if dispatch_verification:
         profile_core["verification_status"] = "pending"
@@ -3508,7 +3550,7 @@ async def send_notification(
 
 
 def _broadcast_allowed_types() -> set[str]:
-    return {"health_worker", "parent", "admin", "government", "all"}
+    return {"health_worker", "parent", "admin", "government", "school_admin", "all"}
 
 
 async def broadcast_to_recipients(

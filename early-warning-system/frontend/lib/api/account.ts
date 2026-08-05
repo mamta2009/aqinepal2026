@@ -17,6 +17,9 @@ export interface AccountProfile {
   facility_id?: string;
   facility_reporting_ready?: boolean;
   facility_site_pm25_thresholds?: Record<string, number>;
+  school_contact?: string | null;
+  school_address?: string | null;
+  school_information?: string | null;
   preferred_channels?: Channel[];
   environmental_topics?: string[];
   language?: string;

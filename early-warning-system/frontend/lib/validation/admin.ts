@@ -30,7 +30,13 @@ export const registrantSchema = z.object({
     .string()
     .min(8, "Password must contain at least 8 characters.")
     .max(128),
-  contact_type: z.enum(["health_worker", "parent", "admin", "government"]),
+  contact_type: z.enum([
+    "health_worker",
+    "parent",
+    "admin",
+    "government",
+    "school_admin",
+  ]),
   cities: z.array(z.string()).min(1, "Select at least one municipality."),
   facility_names: z.string(),
   facility_id: z.string(),

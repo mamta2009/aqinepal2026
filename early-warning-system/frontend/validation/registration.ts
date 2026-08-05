@@ -16,6 +16,7 @@ export const CONTACT_TYPES = [
   "parent",
   "admin",
   "government",
+  "school_admin",
 ] as const;
 
 export const CHANNELS = ["sms", "whatsapp", "email"] as const;
@@ -48,6 +49,10 @@ export const registrationSchema = z
       message: "Select your role.",
     }),
     facility_names_text: z.string().max(2000),
+    school_name: z.string().max(200).optional().or(z.literal("")),
+    school_contact: z.string().max(200).optional().or(z.literal("")),
+    school_address: z.string().max(500).optional().or(z.literal("")),
+    school_information: z.string().max(2000).optional().or(z.literal("")),
     cities: z.array(z.enum(CITIES)).min(1, "Select at least one municipality."),
     language: z.enum(["en", "ne"]),
     preferred_channels: z
@@ -67,16 +72,30 @@ export const registrationSchema = z
   .refine((data) => data.password === data.password_confirmation, {
     path: ["password_confirmation"],
     message: "Passwords do not match.",
+  })
+  .superRefine((data, ctx) => {
+    if (data.contact_type === "school_admin") {
+      if (!data.school_name?.trim()) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["school_name"],
+          message: "School name is required.",
+        });
+      }
+    }
   });
 
 export type RegistrationValues = z.input<typeof registrationSchema>;
 export type RegistrationParsed = z.output<typeof registrationSchema>;
 
 export function toRegistrationPayload(values: RegistrationParsed) {
-  const facilityNames = values.facility_names_text
-    .split(/\r?\n|;/)
-    .map((value) => value.trim())
-    .filter(Boolean);
+  const isSchoolAdmin = values.contact_type === "school_admin";
+  const facilityNames = isSchoolAdmin
+    ? [values.school_name!.trim()].filter(Boolean)
+    : values.facility_names_text
+        .split(/\r?\n|;/)
+        .map((value) => value.trim())
+        .filter(Boolean);
 
   return {
     name: values.name,
@@ -91,5 +110,12 @@ export function toRegistrationPayload(values: RegistrationParsed) {
     language: values.language,
     consent_given: values.consent_given,
     password: values.password,
+    ...(isSchoolAdmin
+      ? {
+          school_contact: values.school_contact?.trim() || undefined,
+          school_address: values.school_address?.trim() || undefined,
+          school_information: values.school_information?.trim() || undefined,
+        }
+      : {}),
   };
 }

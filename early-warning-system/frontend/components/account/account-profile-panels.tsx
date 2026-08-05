@@ -22,29 +22,70 @@ function sites(profile: AccountProfile) {
     : [];
 }
 
+function roleLabel(contactType?: string) {
+  switch (contactType) {
+    case "health_worker":
+      return "Health worker / doctor";
+    case "parent":
+      return "Parent / guardian";
+    case "admin":
+      return "Administrator";
+    case "government":
+      return "Government official";
+    case "school_admin":
+      return "School administrator";
+    default:
+      return contactType || "—";
+  }
+}
+
 export function ProfilePanel({ profile }: { profile: AccountProfile }) {
-  const rows = [
+  const isSchoolAdmin = profile.contact_type === "school_admin";
+  const schoolName =
+    profile.facility_names?.[0] ||
+    profile.facility_name ||
+    null;
+  const rows: [string, string | undefined | null][] = [
     ["Name", profile.name],
     ["Email", profile.email],
     ["Phone", profile.phone_number],
-    ["Role", profile.contact_type],
+    ["Role", roleLabel(profile.contact_type)],
     ["Coverage", profile.cities?.join(", ") || profile.city],
     ["Language", profile.language],
     ["Verification", profile.verification_status],
     ["Partner approval", profile.approval_status],
     ["Facility reporting", profile.facility_reporting_ready ? "Ready" : "Not ready"],
   ];
+
+  if (isSchoolAdmin) {
+    rows.push(
+      ["School name", schoolName],
+      ["School contact", profile.school_contact],
+      ["School address", profile.school_address],
+      ["About the school", profile.school_information],
+    );
+  }
+
   return (
     <Card id="profile">
       <CardKicker>Your registration</CardKicker>
       <h2 className="text-2xl font-black text-ink">Profile</h2>
       <dl className="mt-4 grid gap-x-5 gap-y-3 sm:grid-cols-2">
         {rows.map(([label, value]) => (
-          <div key={label} className="border-b border-border pb-2">
+          <div
+            key={label}
+            className={
+              label === "About the school"
+                ? "border-b border-border pb-2 sm:col-span-2"
+                : "border-b border-border pb-2"
+            }
+          >
             <dt className="text-xs font-extrabold tracking-wide text-ink-muted uppercase">
               {label}
             </dt>
-            <dd className="mt-1 break-words font-bold text-ink">{value || "—"}</dd>
+            <dd className="mt-1 break-words whitespace-pre-wrap font-bold text-ink">
+              {value || "—"}
+            </dd>
           </div>
         ))}
       </dl>

@@ -387,6 +387,7 @@ function CreateRegistrantDialog({
             <option value="parent">Parent</option>
             <option value="admin">Administrator</option>
             <option value="government">Government</option>
+            <option value="school_admin">School administrator</option>
           </select>
         </label>
         <label className={`${labelClass} sm:col-span-2`}>

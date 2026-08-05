@@ -44,6 +44,7 @@ const ROLE_LABELS: Record<(typeof CONTACT_TYPES)[number], string> = {
   parent: "Parent / guardian",
   admin: "Administrator",
   government: "Government official",
+  school_admin: "School administrator",
 };
 
 const CHANNEL_LABELS = { sms: "SMS", whatsapp: "WhatsApp", email: "Email" };
@@ -87,6 +88,10 @@ export function RegistrationForm() {
       password_confirmation: "",
       contact_type: undefined,
       facility_names_text: "",
+      school_name: "",
+      school_contact: "",
+      school_address: "",
+      school_information: "",
       cities: [],
       language: "en",
       preferred_channels: ["sms", "whatsapp", "email"],
@@ -98,6 +103,8 @@ export function RegistrationForm() {
   });
 
   const selectedCities = useWatch({ control, name: "cities" });
+  const contactType = useWatch({ control, name: "contact_type" });
+  const isSchoolAdmin = contactType === "school_admin";
   const cityNames = useMemo(() => {
     const source = citiesResponse?.cities;
     if (Array.isArray(source)) {
@@ -318,7 +325,10 @@ export function RegistrationForm() {
           </div>
         </Section>
 
-        <Section number="2" title="Your facility or workplace">
+        <Section
+          number="2"
+          title={isSchoolAdmin ? "Your school" : "Your facility or workplace"}
+        >
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField label="Your role" error={errors.contact_type?.message}>
               <select {...field("contact_type")} className={inputClass}>
@@ -356,18 +366,75 @@ export function RegistrationForm() {
           </fieldset>
 
           <FormField
-            label="Facility name(s)"
-            error={errors.facility_names_text?.message}
-            help="Optional for some roles. Enter one hospital, clinic, health post, office, school, or site per line."
+            label={isSchoolAdmin ? "School name" : "Facility name(s)"}
+            error={
+              isSchoolAdmin
+                ? errors.school_name?.message
+                : errors.facility_names_text?.message
+            }
+            help={
+              isSchoolAdmin
+                ? "Required. Enter the school you administer."
+                : "Optional for some roles. Enter one hospital, clinic, health post, office, school, or site per line."
+            }
           >
-            <textarea
-              {...field("facility_names_text")}
-              rows={4}
-              className={inputClass}
-              placeholder={"Patan Academy of Health Sciences\nWard 12 municipal clinic"}
-            />
+            {isSchoolAdmin ? (
+              <input
+                {...field("school_name")}
+                className={inputClass}
+                placeholder="Shree Janaki Secondary School"
+                autoComplete="organization"
+              />
+            ) : (
+              <textarea
+                {...field("facility_names_text")}
+                rows={4}
+                className={inputClass}
+                placeholder={"Patan Academy of Health Sciences\nWard 12 municipal clinic"}
+              />
+            )}
           </FormField>
-          {facilityIdeas.length > 0 && (
+          {isSchoolAdmin && (
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <FormField
+                label="School contact"
+                error={errors.school_contact?.message}
+                help="Optional phone or outreach contact for the school."
+              >
+                <input
+                  {...field("school_contact")}
+                  className={inputClass}
+                  placeholder="+977-1-XXXXXXX or school office phone"
+                />
+              </FormField>
+              <FormField
+                label="School address"
+                error={errors.school_address?.message}
+                help="Optional street or locality for the school."
+              >
+                <input
+                  {...field("school_address")}
+                  className={inputClass}
+                  placeholder="Ward, municipality, district"
+                />
+              </FormField>
+              <div className="sm:col-span-2">
+                <FormField
+                  label="About the school"
+                  error={errors.school_information?.message}
+                  help="Optional brief information (size, levels taught, notes)."
+                >
+                  <textarea
+                    {...field("school_information")}
+                    rows={3}
+                    className={inputClass}
+                    placeholder="For example: public secondary school, about 800 students…"
+                  />
+                </FormField>
+              </div>
+            </div>
+          )}
+          {!isSchoolAdmin && facilityIdeas.length > 0 && (
             <div className="mt-3">
               <p className="text-xs font-bold text-muted">
                 Illustrative name ideas for selected municipalities
