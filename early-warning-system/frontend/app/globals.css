@@ -153,12 +153,12 @@ textarea {
 @keyframes help-hint-pulse {
   0%,
   100% {
-    opacity: 0.78;
-    box-shadow: 0 0 0 0 rgb(31 121 75 / 0%);
+    opacity: 0.72;
+    box-shadow: 0 0 0 0 rgb(21 89 54 / 0%);
   }
   50% {
     opacity: 1;
-    box-shadow: 0 0 0 2px rgb(31 121 75 / 18%);
+    box-shadow: 0 0 0 2px rgb(21 89 54 / 42%);
   }
 }
 
