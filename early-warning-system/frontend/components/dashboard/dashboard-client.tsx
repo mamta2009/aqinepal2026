@@ -25,6 +25,7 @@ import { WeatherContext } from "@/components/weather/weather-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardKicker } from "@/components/ui/card";
+import { Reveal } from "@/components/ui/reveal";
 import { useDashboard } from "@/hooks/use-dashboard";
 import { cityNames, type DashboardData } from "@/lib/api/dashboard";
 import {
@@ -200,41 +201,43 @@ export function DashboardClient() {
 
   return (
     <div className="page-shell py-6 sm:py-10">
-      <header className="flex flex-col gap-4 border-b border-border pb-6 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="eyebrow">Today&apos;s health decision</p>
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Can we go outside?</h1>
-          <p className="mt-2 text-muted">
-            Clear public guidance for air quality and heat — separate from operator alert rules.
-          </p>
-        </div>
-        <div className="grid gap-2 sm:grid-cols-[minmax(12rem,1fr)_auto]">
-          <label className="text-sm font-extrabold">
-            City
-            <select
-              className="form-control mt-1"
-              value={city}
-              onChange={(event) => setCity(event.target.value)}
-              disabled={initialLoad}
+      <Reveal>
+        <header className="flex flex-col gap-4 border-b border-border pb-6 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="eyebrow">Today&apos;s health decision</p>
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Can we go outside?</h1>
+            <p className="mt-2 text-muted">
+              Clear public guidance for air quality and heat — separate from operator alert rules.
+            </p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-[minmax(12rem,1fr)_auto]">
+            <label className="text-sm font-extrabold">
+              City
+              <select
+                className="form-control mt-1"
+                value={city}
+                onChange={(event) => setCity(event.target.value)}
+                disabled={initialLoad}
+              >
+                {(cityOptions.includes(city) ? cityOptions : [city, ...cityOptions]).map(
+                  (name) => (
+                    <option key={name}>{name}</option>
+                  ),
+                )}
+              </select>
+            </label>
+            <Button
+              className="self-end"
+              variant="secondary"
+              onClick={() => query.refetch()}
+              disabled={!data || query.isFetching}
             >
-              {(cityOptions.includes(city) ? cityOptions : [city, ...cityOptions]).map(
-                (name) => (
-                  <option key={name}>{name}</option>
-                ),
-              )}
-            </select>
-          </label>
-          <Button
-            className="self-end"
-            variant="secondary"
-            onClick={() => query.refetch()}
-            disabled={!data || query.isFetching}
-          >
-            <RefreshCw className={query.isFetching ? "animate-spin" : ""} size={17} />
-            Refresh
-          </Button>
-        </div>
-      </header>
+              <RefreshCw className={query.isFetching ? "animate-spin" : ""} size={17} />
+              Refresh
+            </Button>
+          </div>
+        </header>
+      </Reveal>
 
       {initialLoad ? (
         <div className="mt-6" role="status" aria-live="polite">
@@ -249,7 +252,7 @@ export function DashboardClient() {
       ) : null}
 
       {query.isError && !data ? (
-        <div className="mt-6">
+        <Reveal className="mt-6">
           <Card className="mx-auto max-w-2xl text-center">
             <AlertTriangle className="mx-auto text-alert-red" aria-hidden />
             <h2 className="mt-3 text-2xl font-bold">Dashboard data is unavailable</h2>
@@ -261,11 +264,11 @@ export function DashboardClient() {
               <RefreshCw size={18} /> Try again
             </Button>
           </Card>
-        </div>
+        </Reveal>
       ) : null}
 
       {data ? (
-        <div className="relative mt-0" aria-busy={refreshingContent}>
+        <div key={city} className="relative mt-0" aria-busy={refreshingContent}>
           {refreshingContent ? (
             <div
               className="absolute inset-0 z-20 flex items-start justify-center rounded-3xl bg-white/55 pt-24 backdrop-blur-[1px]"
@@ -287,12 +290,15 @@ export function DashboardClient() {
           >
 
             {data.failures.length > 0 && (
-              <div className="mt-5 rounded-xl border border-aq-moderate/40 bg-yellow-50 p-4 text-sm" role="status">
-                <strong>Some information is unavailable:</strong> {data.failures.join(", ")}.
-                Guidance only uses the readings shown below.
-              </div>
+              <Reveal>
+                <div className="mt-5 rounded-xl border border-aq-moderate/40 bg-yellow-50 p-4 text-sm" role="status">
+                  <strong>Some information is unavailable:</strong> {data.failures.join(", ")}.
+                  Guidance only uses the readings shown below.
+                </div>
+              </Reveal>
             )}
 
+            <Reveal>
             <section className={`mt-6 rounded-3xl border-2 p-5 sm:p-8 ${BAND_STYLE[guidance.airBand]}`} aria-labelledby="today-answer">
               <div className="flex flex-wrap items-center gap-3">
                 <Badge className="bg-white/80 text-current">{guidance.label}</Badge>
@@ -360,18 +366,23 @@ export function DashboardClient() {
                 </p>
               ) : null}
             </section>
+            </Reveal>
 
             <section className="mt-8" aria-labelledby="recommendations-title">
-              <h2 id="recommendations-title" className="text-2xl font-bold">Five things to do today</h2>
+              <Reveal>
+                <h2 id="recommendations-title" className="text-2xl font-bold">Five things to do today</h2>
+              </Reveal>
               <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 {guidance.recommendations.map((item, index) => (
-                  <Card className="p-4" key={item.title}>
-                    <span className="grid size-8 place-items-center rounded-full bg-forest text-sm font-extrabold text-white">
-                      {index + 1}
-                    </span>
-                    <h3 className="mt-3 font-bold">{item.title}</h3>
-                    <p className="mt-1 text-sm text-muted">{item.action}</p>
-                  </Card>
+                  <Reveal key={item.title} delay={0.06 * index} className="h-full">
+                    <Card className="h-full p-4">
+                      <span className="grid size-8 place-items-center rounded-full bg-forest text-sm font-extrabold text-white">
+                        {index + 1}
+                      </span>
+                      <h3 className="mt-3 font-bold">{item.title}</h3>
+                      <p className="mt-1 text-sm text-muted">{item.action}</p>
+                    </Card>
+                  </Reveal>
                 ))}
               </div>
             </section>
@@ -384,20 +395,25 @@ export function DashboardClient() {
                 [Building2, "Facilities & sites", guidance.audienceAdvice.school],
                 [HeartHandshake, "Families", guidance.audienceAdvice.parent],
                 [Stethoscope, "Health settings", guidance.audienceAdvice.student],
-              ].map(([Icon, title, advice]) => {
+              ].map(([Icon, title, advice], index) => {
                 const AdviceIcon = Icon as typeof Building2;
                 return (
-                  <Card key={title as string}>
-                    <AdviceIcon className="text-forest" aria-hidden />
-                    <h3 className="mt-3 text-xl font-bold">{title as string}</h3>
-                    <p className="mt-2 text-sm text-muted">{advice as string}</p>
-                  </Card>
+                  <Reveal key={title as string} delay={0.07 * index} className="h-full">
+                    <Card className="h-full">
+                      <AdviceIcon className="text-forest" aria-hidden />
+                      <h3 className="mt-3 text-xl font-bold">{title as string}</h3>
+                      <p className="mt-2 text-sm text-muted">{advice as string}</p>
+                    </Card>
+                  </Reveal>
                 );
               })}
             </section>
 
             <div className="mt-8 grid gap-5 lg:grid-cols-2">
-              <WeatherContext weather={data.weather?.weather} source={data.weather?.source} />
+              <Reveal>
+                <WeatherContext weather={data.weather?.weather} source={data.weather?.source} />
+              </Reveal>
+              <Reveal delay={0.08}>
               <Card>
                 <CardKicker>Latest public broadcast</CardKicker>
                 {data.latestAlert?.source === "alert_broadcasts" ? (
@@ -422,10 +438,12 @@ export function DashboardClient() {
                 )}
                 <p className="mt-4 border-t border-border pt-3 text-xs text-muted">{guidance.operatorAlertNote}</p>
               </Card>
+              </Reveal>
             </div>
 
             <section className="mt-8 grid gap-5 lg:grid-cols-2" aria-labelledby="trends-title">
-              <Card className="lg:col-span-2">
+              <Reveal className="lg:col-span-2">
+              <Card>
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <CardKicker>Trend and cases</CardKicker>
@@ -470,7 +488,9 @@ export function DashboardClient() {
                   <p className="mt-5 rounded-xl bg-surface p-4 text-muted">No case series is available to chart.</p>
                 )}
               </Card>
+              </Reveal>
 
+              <Reveal delay={0.06}>
               <Card>
                 <CardKicker>Illustrative forecast</CardKicker>
                 <h2 className="text-xl font-bold">Possible 3–5 day pressure</h2>
@@ -484,7 +504,9 @@ export function DashboardClient() {
                 </p>
                 <Badge className="mt-4">Synthetic input</Badge>
               </Card>
+              </Reveal>
 
+              <Reveal delay={0.1}>
               <Card>
                 <CardKicker>City comparison</CardKicker>
                 <h2 className="text-xl font-bold">Weekly synthetic cases</h2>
@@ -505,15 +527,22 @@ export function DashboardClient() {
                   </div>
                 ) : <p className="mt-3 text-muted">Comparison data are unavailable.</p>}
               </Card>
+              </Reveal>
 
-              <CityAirCompare cities={cityOptions} currentCity={city} />
+              <Reveal delay={0.08}>
+                <CityAirCompare cities={cityOptions} currentCity={city} />
+              </Reveal>
 
-              <ScenarioSandbox key={city} city={city} livePm25={pm25} liveHeat={effectiveHeat} caseDays={caseDays} />
+              <Reveal delay={0.12}>
+                <ScenarioSandbox key={city} city={city} livePm25={pm25} liveHeat={effectiveHeat} caseDays={caseDays} />
+              </Reveal>
             </section>
 
-            <p className="mt-5 text-center text-xs text-muted" role="status">
-              Last refreshed {new Date(data.refreshedAt).toLocaleString()}. Automatically checks every 30 minutes.
-            </p>
+            <Reveal delay={0.05}>
+              <p className="mt-5 text-center text-xs text-muted" role="status">
+                Last refreshed {new Date(data.refreshedAt).toLocaleString()}. Automatically checks every 30 minutes.
+              </p>
+            </Reveal>
           </div>
         </div>
       ) : null}
