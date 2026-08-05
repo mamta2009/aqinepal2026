@@ -40,12 +40,10 @@ export function HomeHero() {
           <div>
             <p className="eyebrow">Climate-Health Alerts</p>
             <h1 className="max-w-4xl text-5xl leading-[1.02] font-extrabold tracking-[-0.045em] text-ink sm:text-7xl">
-              Know the climate around you. Act when it matters.
+              How is the air near you?
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-muted sm:text-xl">
-              Climate Compass helps you check air and heat for selected places and
-              get notified when conditions change — for school administrators,
-              teachers, parents, and health workers.
+              Check here for air, heat and rain information in one place!
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <ButtonLink href="/dashboard" size="lg">
@@ -147,10 +145,10 @@ export function HomeHero() {
               </span>
               <div>
                 <p className="font-extrabold text-ink">
-                  Check here for air and heat information in one place!
+                  Start with a nearby city
                 </p>
                 <p className="mt-1 text-sm text-muted">
-                  Start with a nearby city, then register if you want alerts.
+                  Then register if you want alerts when conditions change.
                 </p>
               </div>
             </div>

@@ -9,7 +9,7 @@ import { Mission } from "@/components/home/mission";
 export const metadata: Metadata = {
   title: "Climate checks and alerts",
   description:
-    "Check air and heat for selected places and get notifications when conditions change. For school administrators, teachers, parents, and health workers.",
+    "How is the air near you? Check here for air, heat and rain information in one place.",
 };
 
 export default function HomePage() {
