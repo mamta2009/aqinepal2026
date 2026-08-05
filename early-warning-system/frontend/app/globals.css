@@ -150,9 +150,180 @@ textarea {
   top: 1rem;
 }
 
+@keyframes help-hint-pulse {
+  0%,
+  100% {
+    opacity: 0.78;
+    box-shadow: 0 0 0 0 rgb(31 121 75 / 0%);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 0 2px rgb(31 121 75 / 18%);
+  }
+}
+
+.help-hint-pulse {
+  animation: help-hint-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes hero-sun-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes hero-sun-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes hero-sun-badge {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes hero-sun-ray {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  12% {
+    opacity: 0.95;
+  }
+  70% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes hero-cloud-float {
+  0%,
+  100% {
+    transform: translateX(0) translateY(0);
+  }
+  50% {
+    transform: translateX(10px) translateY(-3px);
+  }
+}
+
+@keyframes hero-cloud-float-alt {
+  0%,
+  100% {
+    transform: translateX(0) translateY(0);
+  }
+  50% {
+    transform: translateX(-8px) translateY(4px);
+  }
+}
+
+@keyframes hero-rain-drop {
+  0% {
+    transform: translateY(-16px);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.95;
+  }
+  85% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(150px);
+    opacity: 0;
+  }
+}
+
+.hero-sun-glow {
+  animation: hero-sun-glow 4.5s ease-in-out infinite;
+}
+
+.hero-sun-spin {
+  animation: hero-sun-spin 28s linear infinite;
+}
+
+.hero-sun-wrap {
+  animation: hero-sun-badge 3.2s ease-in-out infinite;
+}
+
+.hero-sun-rays {
+  position: absolute;
+  inset: -1.75rem;
+  z-index: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.hero-sun-ray-arm {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 50%;
+  width: 3.5px;
+  margin-left: -1px;
+  transform-origin: center bottom;
+}
+
+.hero-sun-ray {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  border-radius: 999px;
+  animation-name: hero-sun-ray;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.hero-cloud-float {
+  animation: hero-cloud-float 5.5s ease-in-out infinite;
+}
+
+.hero-cloud-float-alt {
+  animation: hero-cloud-float-alt 6.2s ease-in-out infinite;
+}
+
+.hero-rain-drop {
+  animation-name: hero-rain-drop;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+
+  .help-hint-pulse {
+    animation: none;
+    opacity: 1;
+  }
+
+  .hero-sun-glow,
+  .hero-sun-spin,
+  .hero-sun-wrap,
+  .hero-sun-ray,
+  .hero-cloud-float,
+  .hero-cloud-float-alt,
+  .hero-rain-drop {
+    animation: none !important;
   }
 
   *,

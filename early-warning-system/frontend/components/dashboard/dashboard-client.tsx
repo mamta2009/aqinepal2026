@@ -112,7 +112,8 @@ function DefinitionHelp({
     <span className="relative inline-flex" ref={rootRef}>
       <button
         type="button"
-        className="inline-grid size-6 place-items-center rounded-full border border-current/25 bg-white/90 text-current transition hover:bg-white focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-forest/25"
+        className={`inline-grid size-6 cursor-pointer place-items-center rounded-full border border-current/25 bg-white/90 text-current transition hover:bg-white focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-forest/25 ${open ? "" : "help-hint-pulse"
+          }`}
         aria-label={`What does ${label} mean?`}
         aria-expanded={open}
         aria-controls={panelId}
@@ -302,51 +303,62 @@ export function DashboardClient() {
               </h2>
               <p className="mt-4 max-w-3xl text-base font-bold sm:text-lg">{guidance.summary}</p>
               <dl className="mt-6 flex flex-wrap gap-3">
-                <div className="rounded-xl border border-current/20 bg-white/75 px-4 py-3">
+                <div className="min-w-[9rem] rounded-xl border border-current/20 bg-white/75 px-4 py-3">
                   <dt className="flex items-center gap-1.5 text-xs font-extrabold uppercase">
-                    AQI
-                    <DefinitionHelp label="AQI">
-                      A health communication index. Higher values mean greater
-                      pollution-related health concern.
+                    Air score (AQI)
+                    <DefinitionHelp label="Air score (AQI)">
+                      A simple score other weather and air apps often show
+                      (roughly 0 toward 500). Lower is generally cleaner; higher
+                      means more caution.
                       <span className="mt-2 block text-xs">
                         Source: {data.air?.source || "Unavailable"} ·{" "}
                         {provenanceText(data.air?.provenance)}
                       </span>
                     </DefinitionHelp>
                   </dt>
-                  <dd className="text-2xl font-extrabold">{aqi ?? "—"}</dd>
-                </div>
-                <div className="rounded-xl border border-current/20 bg-white/75 px-4 py-3">
-                  <dt className="flex items-center gap-1.5 text-xs font-extrabold uppercase">
-                    PM2.5
-                    <DefinitionHelp label="PM2.5">
-                      Fine particles 2.5 micrometres or smaller, reported in
-                      micrograms per cubic metre (µg/m³).
-                      <span className="mt-2 block text-xs">
-                        Source: {data.air?.source || "Unavailable"} ·{" "}
-                        {provenanceText(data.air?.provenance)}
-                      </span>
-                    </DefinitionHelp>
-                  </dt>
-                  <dd className="text-2xl font-extrabold">
-                    {pm25 ?? "—"} <span className="text-sm">µg/m³</span>
+                  <dd className="text-4xl font-extrabold tracking-tight">
+                    {aqi ?? "—"}
                   </dd>
+                  {aqi == null && pm25 != null ? (
+                    <p className="mt-1 text-xs font-bold text-current/70">
+                      Score unavailable; band uses the particle reading below
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-xs font-bold text-current/70">
+                      The main number to glance at
+                    </p>
+                  )}
                 </div>
-                <div className="rounded-xl border border-current/20 bg-white/75 px-4 py-3">
+                <div className="min-w-[9rem] rounded-xl border border-current/20 bg-white/75 px-4 py-3">
                   <dt className="flex items-center gap-1.5 text-xs font-extrabold uppercase">
-                    Effective heat
-                    <DefinitionHelp label="Effective heat">
-                      The greater of ambient and feels-like temperature when supplied
-                      by the data source.
+                    Heat
+                    <DefinitionHelp label="Heat">
+                      Outdoor temperature used for heat context (effective or
+                      feels-like when the provider supplies it).
                       <span className="mt-2 block text-xs">
                         Source: {data.heat?.source || "Unavailable"} ·{" "}
                         {provenanceText(data.heat?.provenance)}
                       </span>
                     </DefinitionHelp>
                   </dt>
-                  <dd className="text-2xl font-extrabold">{effectiveHeat ?? "—"}°C</dd>
+                  <dd className="text-4xl font-extrabold tracking-tight">
+                    {effectiveHeat ?? "—"}
+                    {effectiveHeat != null ? (
+                      <span className="text-2xl">°C</span>
+                    ) : null}
+                  </dd>
+                  <p className="mt-1 text-xs font-bold text-current/70">
+                    How hot it feels outdoors
+                  </p>
                 </div>
               </dl>
+              {pm25 != null ? (
+                <p className="mt-3 text-sm text-current/80">
+                  Fine particles (PM2.5):{" "}
+                  <span className="font-extrabold">{pm25} µg/m³</span>
+                  {" · "}tiny pollution particles linked to the air score above
+                </p>
+              ) : null}
             </section>
 
             <section className="mt-8" aria-labelledby="recommendations-title">
