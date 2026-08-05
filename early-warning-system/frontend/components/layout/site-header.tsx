@@ -11,7 +11,6 @@ import { NavAlert } from "./nav-alert";
 
 const links = [
   { href: "/dashboard", label: "Today’s conditions" },
-  { href: "/alerts", label: "Alerts" },
   { href: "/map", label: "Map" },
   { href: "/guides", label: "Guides" },
   { href: "/about", label: "About" },

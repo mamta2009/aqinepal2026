@@ -2,11 +2,12 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { BellRing, CheckCircle2, RefreshCw } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, CardKicker } from "@/components/ui/card";
 import { Reveal } from "@/components/ui/reveal";
+import { useSelectedCity } from "@/hooks/use-selected-city";
 import { api } from "@/lib/api/endpoints";
 import { cityNames } from "@/lib/api/dashboard";
 import { queryKeys } from "@/lib/api/query-keys";
@@ -51,6 +52,7 @@ function DeliveryResults({
 }
 
 export function AlertsDetail() {
+  const { selectedCity: city, setSelectedCity } = useSelectedCity();
   const citiesQuery = useQuery({
     queryKey: queryKeys.cities,
     queryFn: api.cities.list,
@@ -60,11 +62,12 @@ export function AlertsDetail() {
     () => cityNames(citiesQuery.data),
     [citiesQuery.data],
   );
-  const [city, setCity] = useState("");
+  const cityOptions = cities.includes(city) ? cities : [city, ...cities];
 
   const alertQuery = useQuery({
     queryKey: queryKeys.alertsLatest(city),
-    queryFn: () => api.alerts.latest(city || undefined),
+    queryFn: () => api.alerts.latest(city),
+    enabled: Boolean(city),
     staleTime: 5 * 60_000,
   });
 
@@ -81,8 +84,8 @@ export function AlertsDetail() {
               <CardKicker>Filter</CardKicker>
               <h2 className="text-xl font-bold">Place</h2>
               <p className="mt-1 text-sm text-muted">
-                Choose a city to see the latest stored broadcast for that place,
-                or keep All cities for the newest broadcast nationwide.
+                Uses the same saved city as Today&apos;s conditions. Change it
+                here or on the dashboard — it is stored for your next visit.
               </p>
             </div>
             <label className="grid gap-1 text-sm font-bold">
@@ -90,10 +93,9 @@ export function AlertsDetail() {
               <select
                 className="min-h-11 min-w-[14rem] rounded-xl border border-border-strong bg-white px-3 font-bold text-ink"
                 value={city}
-                onChange={(event) => setCity(event.target.value)}
+                onChange={(event) => setSelectedCity(event.target.value)}
               >
-                <option value="">All cities</option>
-                {cities.map((name) => (
+                {cityOptions.map((name) => (
                   <option key={name} value={name}>
                     {name}
                   </option>

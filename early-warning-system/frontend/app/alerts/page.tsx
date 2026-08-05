@@ -19,8 +19,8 @@ export default function AlertsPage() {
           </h1>
           <p className="mt-3 text-muted">
             This page shows the most recent row from the real alert_broadcasts
-            log — the same source as the navbar Latest alert strip. It is not a
-            live PM2.5 threshold calculator.
+            log for your saved city — the same place used on Today&apos;s
+            conditions. It is not a live PM2.5 threshold calculator.
           </p>
         </header>
       </Reveal>

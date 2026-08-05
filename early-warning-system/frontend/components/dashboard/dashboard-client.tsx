@@ -31,11 +31,13 @@ import { Card, CardKicker } from "@/components/ui/card";
 import { DefinitionHelp } from "@/components/ui/definition-help";
 import { Reveal } from "@/components/ui/reveal";
 import { useDashboard } from "@/hooks/use-dashboard";
+import { useSelectedCity } from "@/hooks/use-selected-city";
 import { cityNames, type DashboardData } from "@/lib/api/dashboard";
 import {
   getClimateGuidance,
   type AirQualityBand,
 } from "@/lib/climate-guidance";
+import { DEFAULT_SELECTED_CITY } from "@/lib/store/location-slice";
 import { extractRainIndicator } from "@/lib/weather-rain";
 
 const DashboardTrendChart = dynamic(
@@ -116,8 +118,8 @@ function exportCsv(data: DashboardData) {
 }
 
 export function DashboardClient() {
-  const [city, setCity] = useState("Kathmandu");
-  const [cityOptions, setCityOptions] = useState<string[]>(["Kathmandu"]);
+  const { selectedCity: city, setSelectedCity } = useSelectedCity();
+  const [cityOptions, setCityOptions] = useState<string[]>([DEFAULT_SELECTED_CITY]);
   const query = useDashboard(city);
   const data = query.data;
   const refreshingContent =
@@ -170,7 +172,7 @@ export function DashboardClient() {
               <select
                 className="form-control mt-1"
                 value={city}
-                onChange={(event) => setCity(event.target.value)}
+                onChange={(event) => setSelectedCity(event.target.value)}
                 disabled={initialLoad}
               >
                 {(cityOptions.includes(city) ? cityOptions : [city, ...cityOptions]).map(
