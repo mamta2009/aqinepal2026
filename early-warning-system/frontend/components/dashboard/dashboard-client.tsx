@@ -5,7 +5,6 @@ import {
   AlertTriangle,
   Building2,
   CheckCircle2,
-  CircleHelp,
   Download,
   HeartHandshake,
   RefreshCw,
@@ -13,18 +12,17 @@ import {
 } from "lucide-react";
 import {
   useEffect,
-  useId,
   useMemo,
-  useRef,
   useState,
-  type ReactNode,
 } from "react";
 import { ScenarioSandbox } from "./scenario-sandbox";
 import { CityAirCompare } from "./city-air-compare";
+import { FiveDayForecast } from "./five-day-forecast";
 import { WeatherContext } from "@/components/weather/weather-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardKicker } from "@/components/ui/card";
+import { DefinitionHelp } from "@/components/ui/definition-help";
 import { Reveal } from "@/components/ui/reveal";
 import { useDashboard } from "@/hooks/use-dashboard";
 import { cityNames, type DashboardData } from "@/lib/api/dashboard";
@@ -80,61 +78,6 @@ function provenanceText(value?: Record<string, unknown>): string {
   }
   const role = value?.deployment_role;
   return typeof role === "string" ? role.replaceAll("_", " ") : "Provenance details unavailable";
-}
-
-function DefinitionHelp({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLSpanElement>(null);
-  const panelId = useId();
-
-  useEffect(() => {
-    if (!open) return;
-    const onPointerDown = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("mousedown", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open]);
-
-  return (
-    <span className="relative inline-flex" ref={rootRef}>
-      <button
-        type="button"
-        className={`inline-grid size-6 cursor-pointer place-items-center rounded-full border border-current/25 bg-white/90 text-current transition hover:bg-white focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-forest/25 ${open ? "" : "help-hint-pulse"
-          }`}
-        aria-label={`What does ${label} mean?`}
-        aria-expanded={open}
-        aria-controls={panelId}
-        onClick={() => setOpen((value) => !value)}
-      >
-        <CircleHelp aria-hidden size={14} />
-      </button>
-      {open ? (
-        <span
-          id={panelId}
-          role="dialog"
-          aria-label={`${label} definition`}
-          className="absolute top-full left-0 z-40 mt-2 w-64 rounded-xl border border-border bg-white p-3 text-left text-sm leading-relaxed text-ink shadow-lg sm:w-72"
-        >
-          <span className="block font-extrabold text-ink">{label}</span>
-          <span className="mt-1.5 block text-muted">{children}</span>
-        </span>
-      ) : null}
-    </span>
-  );
 }
 
 function download(name: string, content: string, type: string) {
@@ -299,73 +242,73 @@ export function DashboardClient() {
             )}
 
             <Reveal>
-            <section className={`mt-6 rounded-3xl border-2 p-5 sm:p-8 ${BAND_STYLE[guidance.airBand]}`} aria-labelledby="today-answer">
-              <div className="flex flex-wrap items-center gap-3">
-                <Badge className="bg-white/80 text-current">{guidance.label}</Badge>
-                <span className="text-sm font-extrabold">For {city}</span>
-              </div>
-              <h2 id="today-answer" className="mt-4 max-w-4xl text-3xl font-extrabold leading-tight sm:text-5xl">
-                {guidance.outdoorAnswer}
-              </h2>
-              <p className="mt-4 max-w-3xl text-base font-bold sm:text-lg">{guidance.summary}</p>
-              <dl className="mt-6 flex flex-wrap gap-3">
-                <div className="min-w-[9rem] rounded-xl border border-current/20 bg-white/75 px-4 py-3">
-                  <dt className="flex items-center gap-1.5 text-xs font-extrabold uppercase">
-                    Air score (AQI)
-                    <DefinitionHelp label="Air score (AQI)">
-                      A simple score other weather and air apps often show
-                      (roughly 0 toward 500). Lower is generally cleaner; higher
-                      means more caution.
-                      <span className="mt-2 block text-xs">
-                        Source: {data.air?.source || "Unavailable"} ·{" "}
-                        {provenanceText(data.air?.provenance)}
-                      </span>
-                    </DefinitionHelp>
-                  </dt>
-                  <dd className="text-4xl font-extrabold tracking-tight">
-                    {aqi ?? "—"}
-                  </dd>
-                  {aqi == null && pm25 != null ? (
-                    <p className="mt-1 text-xs font-bold text-current/70">
-                      Score unavailable; band uses the particle reading below
-                    </p>
-                  ) : (
-                    <p className="mt-1 text-xs font-bold text-current/70">
-                      The main number to glance at
-                    </p>
-                  )}
+              <section className={`mt-6 rounded-3xl border-2 p-5 sm:p-8 ${BAND_STYLE[guidance.airBand]}`} aria-labelledby="today-answer">
+                <div className="flex flex-wrap items-center gap-3">
+                  <Badge className="bg-white/80 text-current">{guidance.label}</Badge>
+                  <span className="text-sm font-extrabold">For {city}</span>
                 </div>
-                <div className="min-w-[9rem] rounded-xl border border-current/20 bg-white/75 px-4 py-3">
-                  <dt className="flex items-center gap-1.5 text-xs font-extrabold uppercase">
-                    Heat
-                    <DefinitionHelp label="Heat">
-                      Outdoor temperature used for heat context (effective or
-                      feels-like when the provider supplies it).
-                      <span className="mt-2 block text-xs">
-                        Source: {data.heat?.source || "Unavailable"} ·{" "}
-                        {provenanceText(data.heat?.provenance)}
-                      </span>
-                    </DefinitionHelp>
-                  </dt>
-                  <dd className="text-4xl font-extrabold tracking-tight">
-                    {effectiveHeat ?? "—"}
-                    {effectiveHeat != null ? (
-                      <span className="text-2xl">°C</span>
-                    ) : null}
-                  </dd>
-                  <p className="mt-1 text-xs font-bold text-current/70">
-                    How hot it feels outdoors
+                <h2 id="today-answer" className="mt-4 max-w-4xl text-3xl font-extrabold leading-tight sm:text-5xl">
+                  {guidance.outdoorAnswer}
+                </h2>
+                <p className="mt-4 max-w-3xl text-base font-bold sm:text-lg">{guidance.summary}</p>
+                <dl className="mt-6 flex flex-wrap gap-3">
+                  <div className="min-w-[9rem] rounded-xl border border-current/20 bg-white/75 px-4 py-3">
+                    <dt className="flex items-center gap-1.5 text-xs font-extrabold uppercase">
+                      Air score (AQI)
+                      <DefinitionHelp label="Air score (AQI)">
+                        A simple score other weather and air apps often show
+                        (roughly 0 toward 500). Lower is generally cleaner; higher
+                        means more caution.
+                        <span className="mt-2 block text-xs">
+                          Source: {data.air?.source || "Unavailable"} ·{" "}
+                          {provenanceText(data.air?.provenance)}
+                        </span>
+                      </DefinitionHelp>
+                    </dt>
+                    <dd className="text-4xl font-extrabold tracking-tight">
+                      {aqi ?? "—"}
+                    </dd>
+                    {aqi == null && pm25 != null ? (
+                      <p className="mt-1 text-xs font-bold text-current/70">
+                        Score unavailable; band uses the particle reading below
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-xs font-bold text-current/70">
+                        The main number to glance at
+                      </p>
+                    )}
+                  </div>
+                  <div className="min-w-[9rem] rounded-xl border border-current/20 bg-white/75 px-4 py-3">
+                    <dt className="flex items-center gap-1.5 text-xs font-extrabold uppercase">
+                      Heat
+                      <DefinitionHelp label="Heat">
+                        Outdoor temperature used for heat context (effective or
+                        feels-like when the provider supplies it).
+                        <span className="mt-2 block text-xs">
+                          Source: {data.heat?.source || "Unavailable"} ·{" "}
+                          {provenanceText(data.heat?.provenance)}
+                        </span>
+                      </DefinitionHelp>
+                    </dt>
+                    <dd className="text-4xl font-extrabold tracking-tight">
+                      {effectiveHeat ?? "—"}
+                      {effectiveHeat != null ? (
+                        <span className="text-2xl">°C</span>
+                      ) : null}
+                    </dd>
+                    <p className="mt-1 text-xs font-bold text-current/70">
+                      How hot it feels outdoors
+                    </p>
+                  </div>
+                </dl>
+                {pm25 != null ? (
+                  <p className="mt-3 text-sm text-current/80">
+                    Fine particles (PM2.5):{" "}
+                    <span className="font-extrabold">{pm25} µg/m³</span>
+                    {" · "}tiny pollution particles linked to the air score above
                   </p>
-                </div>
-              </dl>
-              {pm25 != null ? (
-                <p className="mt-3 text-sm text-current/80">
-                  Fine particles (PM2.5):{" "}
-                  <span className="font-extrabold">{pm25} µg/m³</span>
-                  {" · "}tiny pollution particles linked to the air score above
-                </p>
-              ) : null}
-            </section>
+                ) : null}
+              </section>
             </Reveal>
 
             <section className="mt-8" aria-labelledby="recommendations-title">
@@ -414,127 +357,161 @@ export function DashboardClient() {
                 <WeatherContext weather={data.weather?.weather} source={data.weather?.source} />
               </Reveal>
               <Reveal delay={0.08}>
-              <Card>
-                <CardKicker>Latest public broadcast</CardKicker>
-                {data.latestAlert?.source === "alert_broadcasts" ? (
-                  <>
-                    <h2 className="text-xl font-bold">
-                      {data.latestAlert.hazard_type || "Environmental"} alert · {data.latestAlert.level || "level not reported"}
-                    </h2>
-                    <p className="mt-2 text-sm text-muted">
-                      {data.latestAlert.city || city} · {data.latestAlert.timestamp
-                        ? new Date(data.latestAlert.timestamp).toLocaleString()
-                        : "Time unavailable"}
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="text-forest" aria-hidden />
-                    <h2 className="mt-2 text-xl font-bold">No stored broadcast to show</h2>
-                    <p className="mt-2 text-sm text-muted">
-                      {data.latestAlert?.message || "The latest-alert service returned no broadcast."}
-                    </p>
-                  </>
-                )}
-                <p className="mt-4 border-t border-border pt-3 text-xs text-muted">{guidance.operatorAlertNote}</p>
-              </Card>
+                <Card>
+                  <CardKicker>Latest public broadcast</CardKicker>
+                  {data.latestAlert?.source === "alert_broadcasts" ? (
+                    <>
+                      <h2 className="text-xl font-bold">
+                        {data.latestAlert.hazard_type || "Environmental"} alert · {data.latestAlert.level || "level not reported"}
+                      </h2>
+                      <p className="mt-2 text-sm text-muted">
+                        {data.latestAlert.city || city} · {data.latestAlert.timestamp
+                          ? new Date(data.latestAlert.timestamp).toLocaleString()
+                          : "Time unavailable"}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="text-forest" aria-hidden />
+                      <h2 className="mt-2 text-xl font-bold">No stored broadcast to show</h2>
+                      <p className="mt-2 text-sm text-muted">
+                        {data.latestAlert?.message || "The latest-alert service returned no broadcast."}
+                      </p>
+                    </>
+                  )}
+                  <p className="mt-4 border-t border-border pt-3 text-xs text-muted">{guidance.operatorAlertNote}</p>
+                </Card>
               </Reveal>
             </div>
 
             <section className="mt-8 grid gap-5 lg:grid-cols-2" aria-labelledby="trends-title">
               <Reveal className="lg:col-span-2">
-              <Card>
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <CardKicker>Trend and cases</CardKicker>
-                    <h2 id="trends-title" className="text-2xl font-bold">Respiratory cases this week</h2>
-                    <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted">
-                      <span>{data.cases?.note || "Case-series context is unavailable."}</span>
-                      <DefinitionHelp label="Case data">
-                        Source: {data.cases?.source || "Unavailable"} — labelled
-                        synthetic until a live health feed is connected.
-                      </DefinitionHelp>
-                    </p>
+                <Card>
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                      <CardKicker>Trend and cases</CardKicker>
+                      <h2
+                        id="trends-title"
+                        className="flex flex-wrap items-center gap-2 text-2xl font-bold"
+                      >
+                        Respiratory cases this week
+                        <DefinitionHelp label="Respiratory cases chart">
+                          Bars show illustrative respiratory case counts for the
+                          selected city over about seven days. The dashed line is an
+                          illustrative 3–5 day extension from a simple model on that
+                          series. This is demo data until a live health feed is
+                          connected — not observed clinical cases.
+                          <span className="mt-2 block text-xs">
+                            Source: {data.cases?.source || "Unavailable"}
+                          </span>
+                        </DefinitionHelp>
+                      </h2>
+                      <p className="mt-1 text-sm text-muted">
+                        {data.cases?.note || "Case-series context is unavailable."}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button size="sm" variant="secondary" onClick={() => exportCsv(data)}>
+                        <Download size={16} /> CSV
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() =>
+                          download(
+                            `${city.toLowerCase()}-climate-dashboard.json`,
+                            JSON.stringify(data, null, 2),
+                            "application/json",
+                          )
+                        }
+                      >
+                        <Download size={16} /> JSON
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button size="sm" variant="secondary" onClick={() => exportCsv(data)}>
-                      <Download size={16} /> CSV
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() =>
-                        download(
-                          `${city.toLowerCase()}-climate-dashboard.json`,
-                          JSON.stringify(data, null, 2),
-                          "application/json",
-                        )
-                      }
-                    >
-                      <Download size={16} /> JSON
-                    </Button>
-                  </div>
-                </div>
-                {caseDays.length > 0 ? (
-                  <>
-                    <DashboardTrendChart labels={dates} cases={caseDays} forecast={forecastValues} />
-                    <p className="mt-3 text-sm text-muted">
-                      Text summary: {caseDays.reduce((sum, value) => sum + value, 0)} synthetic
-                      cases over seven days. The latest day has {caseDays.at(-1)} cases,
-                      compared with {caseDays[0]} on the first day shown.
-                    </p>
-                  </>
-                ) : (
-                  <p className="mt-5 rounded-xl bg-surface p-4 text-muted">No case series is available to chart.</p>
-                )}
-              </Card>
+                  {caseDays.length > 0 ? (
+                    <>
+                      <DashboardTrendChart labels={dates} cases={caseDays} forecast={forecastValues} />
+                      <p className="mt-3 text-sm text-muted">
+                        Text summary: {caseDays.reduce((sum, value) => sum + value, 0)} synthetic
+                        cases over seven days. The latest day has {caseDays.at(-1)} cases,
+                        compared with {caseDays[0]} on the first day shown.
+                      </p>
+                    </>
+                  ) : (
+                    <p className="mt-5 rounded-xl bg-surface p-4 text-muted">No case series is available to chart.</p>
+                  )}
+                </Card>
               </Reveal>
 
               <Reveal delay={0.06}>
-              <Card>
-                <CardKicker>Illustrative forecast</CardKicker>
-                <h2 className="text-xl font-bold">Possible 3–5 day pressure</h2>
-                <p className="mt-3 text-3xl font-extrabold">
-                  {data.forecast?.surge_forecast?.risk_score_0_100 ?? "—"}
-                  <span className="text-base text-muted"> / 100 risk score</span>
-                </p>
-                <p className="mt-2 text-sm text-muted">
-                  {data.forecast?.surge_forecast?.disclaimer ||
-                    "No forecast explanation is available. Do not use this as a clinical prediction."}
-                </p>
-                <Badge className="mt-4">Synthetic input</Badge>
-              </Card>
+                <Card>
+                  <CardKicker>Illustrative forecast</CardKicker>
+                  <h2 className="flex flex-wrap items-center gap-2 text-xl font-bold">
+                    Possible 3–5 day pressure
+                    <DefinitionHelp label="Illustrative forecast">
+                      A 0–100 pressure score from a simple trend model on the
+                      synthetic case series for this city, looking about 3–5 days
+                      ahead. For discussion and training only — not a clinical,
+                      weather, or official forecast.
+                    </DefinitionHelp>
+                  </h2>
+                  <p className="mt-3 text-3xl font-extrabold">
+                    {data.forecast?.surge_forecast?.risk_score_0_100 ?? "—"}
+                    <span className="text-base text-muted"> / 100 risk score</span>
+                  </p>
+                  <p className="mt-2 text-sm text-muted">
+                    {data.forecast?.surge_forecast?.disclaimer ||
+                      "No forecast explanation is available. Do not use this as a clinical prediction."}
+                  </p>
+                  <Badge className="mt-4">Synthetic input</Badge>
+                </Card>
               </Reveal>
 
               <Reveal delay={0.1}>
-              <Card>
-                <CardKicker>City comparison</CardKicker>
-                <h2 className="text-xl font-bold">Weekly synthetic cases</h2>
-                {data.allCases?.cities ? (
-                  <div className="mt-4 overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                      <thead><tr className="border-b border-border"><th className="py-2">City</th><th className="py-2 text-right">Cases</th></tr></thead>
-                      <tbody>
-                        {Object.entries(data.allCases.cities)
-                          .sort(([, a], [, b]) => (b.total ?? 0) - (a.total ?? 0))
-                          .map(([name, value]) => (
-                            <tr className={name === city ? "bg-surface-tint font-extrabold" : "border-b border-border"} key={name}>
-                              <td className="px-2 py-2">{name}</td><td className="px-2 py-2 text-right">{value.total ?? "—"}</td>
-                            </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : <p className="mt-3 text-muted">Comparison data are unavailable.</p>}
-              </Card>
+                <Card>
+                  <CardKicker>City comparison</CardKicker>
+                  <h2 className="flex flex-wrap items-center gap-2 text-xl font-bold">
+                    Weekly synthetic cases
+                    <DefinitionHelp label="Weekly city comparison">
+                      Totals compare illustrative (synthetic) respiratory cases
+                      across cities for the week shown. Useful for demo and
+                      discussion — replace with real reporting when available.
+                    </DefinitionHelp>
+                  </h2>
+                  {data.allCases?.cities ? (
+                    <div className="mt-4 overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead><tr className="border-b border-border"><th className="py-2">City</th><th className="py-2 text-right">Cases</th></tr></thead>
+                        <tbody>
+                          {Object.entries(data.allCases.cities)
+                            .sort(([, a], [, b]) => (b.total ?? 0) - (a.total ?? 0))
+                            .map(([name, value]) => (
+                              <tr className={name === city ? "bg-surface-tint font-extrabold" : "border-b border-border"} key={name}>
+                                <td className="px-2 py-2">{name}</td><td className="px-2 py-2 text-right">{value.total ?? "—"}</td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : <p className="mt-3 text-muted">Comparison data are unavailable.</p>}
+                </Card>
               </Reveal>
 
-              <Reveal delay={0.08}>
-                <CityAirCompare cities={cityOptions} currentCity={city} />
+              <Reveal delay={0.08} className="h-full">
+                <FiveDayForecast
+                  city={city}
+                  pm25={pm25}
+                  weekTrend={data.forecast?.legacy_week_trend}
+                />
               </Reveal>
 
-              <Reveal delay={0.12}>
+              <Reveal delay={0.1} className="h-full">
                 <ScenarioSandbox key={city} city={city} livePm25={pm25} liveHeat={effectiveHeat} caseDays={caseDays} />
+              </Reveal>
+
+              <Reveal delay={0.12} className="lg:col-span-2">
+                <CityAirCompare cities={cityOptions} currentCity={city} />
               </Reveal>
             </section>
 

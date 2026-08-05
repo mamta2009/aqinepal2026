@@ -5,6 +5,7 @@ import { LoaderCircle, RefreshCw } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardKicker } from "@/components/ui/card";
+import { DefinitionHelp } from "@/components/ui/definition-help";
 import { browserApi } from "@/lib/api/browser";
 import {
   compareRowPm25,
@@ -132,11 +133,20 @@ export function CityAirCompare({ cities, currentCity }: CityAirCompareProps) {
   }
 
   return (
-    <Card className="lg:col-span-2">
+    <Card>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <CardKicker>Live air check</CardKicker>
-          <h2 className="text-2xl font-bold">Compare cities · air snapshot</h2>
+          <h2 className="flex flex-wrap items-center gap-2 text-2xl font-bold">
+            Compare cities · live PM2.5
+            <DefinitionHelp label="City air comparison chart">
+              Select cities to load live PM2.5 side by side. The bar chart shows
+              those readings; the dashed line is the operator PM2.5 alert
+              threshold ({threshold} µg/m³ when available). Requests run one city
+              at a time to limit upstream rate pressure. Use labels and the table
+              for exact values — colour alone is not the status.
+            </DefinitionHelp>
+          </h2>
           <p className="mt-1 max-w-3xl text-sm text-muted">
             Select cities to fetch live PM2.5 side by side. Requests run one at a
             time to limit upstream rate pressure. Threshold band uses{" "}

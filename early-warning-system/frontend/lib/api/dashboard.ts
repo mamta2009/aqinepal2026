@@ -49,8 +49,13 @@ export interface SurgeForecastResponse {
     [key: string]: unknown;
   };
   legacy_week_trend?: {
-    trend?: string;
+    model?: string;
+    next_day_estimate?: number;
+    week_total_estimate?: number;
+    confidence?: string;
+    r2_score?: number;
     predicted_next_day?: number;
+    trend?: string;
     risk_note?: string;
     [key: string]: unknown;
   };
