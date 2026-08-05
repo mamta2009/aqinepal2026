@@ -11,7 +11,13 @@ import type {
 
 export const api = {
   alerts: {
-    latest: () => browserApi<AlertLatest>("api/alerts/latest"),
+    latest: (city?: string) => {
+      const trimmed = city?.trim();
+      const path = trimmed
+        ? `api/alerts/latest?city=${encodeURIComponent(trimmed)}`
+        : "api/alerts/latest";
+      return browserApi<AlertLatest>(path);
+    },
   },
   cities: {
     list: () => browserApi<CitiesResponse>("api/cities"),

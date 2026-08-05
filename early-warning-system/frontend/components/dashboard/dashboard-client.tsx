@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import {
   AlertTriangle,
   Building2,
@@ -409,6 +410,14 @@ export function DashboardClient() {
                           ? new Date(data.latestAlert.timestamp).toLocaleString()
                           : "Time unavailable"}
                       </p>
+                      <p className="mt-4">
+                        <Link
+                          href="/alerts"
+                          className="text-sm font-extrabold text-link underline-offset-2 hover:underline"
+                        >
+                          View alert details
+                        </Link>
+                      </p>
                     </>
                   ) : (
                     <>
@@ -416,6 +425,14 @@ export function DashboardClient() {
                       <h2 className="mt-2 text-xl font-bold">No stored broadcast to show</h2>
                       <p className="mt-2 text-sm text-muted">
                         {data.latestAlert?.message || "The latest-alert service returned no broadcast."}
+                      </p>
+                      <p className="mt-4">
+                        <Link
+                          href="/alerts"
+                          className="text-sm font-extrabold text-link underline-offset-2 hover:underline"
+                        >
+                          Why alerts appear · open Alerts
+                        </Link>
                       </p>
                     </>
                   )}
