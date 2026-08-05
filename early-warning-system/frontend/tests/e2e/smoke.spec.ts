@@ -11,6 +11,8 @@ const publicRoutes = [
   "/parents",
   "/teachers",
   "/students",
+  "/government",
+  "/health-workers",
   "/registration",
   "/registration/contacts-directory",
   "/users",
@@ -42,7 +44,7 @@ test.describe("education-first homepage", () => {
       page.getByRole("link", { name: "Climate Compass" }).first(),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: /Check today’s air|today/i }).first(),
+      page.getByRole("link", { name: /Check today|conditions|today/i }).first(),
     ).toBeVisible();
     await expect(page.getByRole("heading").first()).toBeVisible();
   });

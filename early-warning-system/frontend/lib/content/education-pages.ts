@@ -1,5 +1,4 @@
 import {
-  Building2,
   ClipboardCheck,
   GraduationCap,
   HeartHandshake,
@@ -15,16 +14,16 @@ import {
 export const knownResources = [
   {
     audience: "Families",
-    title: "A family air-quality checklist",
+    title: "A family air and heat checklist",
     description:
-      "Quick prompts for outdoor activity and people who are sensitive to pollution.",
+      "Informational prompts families can discuss when outdoor conditions change.",
     href: "/guides/md/PARENT_AIR_QUALITY_CHECKLIST.md",
   },
   {
     audience: "Facilities",
-    title: "Plan outdoor activities with care",
+    title: "School air and heat information guide",
     description:
-      "Practical guidance for sites managing outdoor schedules and ventilation.",
+      "Reference material for sites reviewing outdoor schedules and ventilation options.",
     href: "/guides/md/SCHOOL_AIR_QUALITY_ACTION_GUIDE.md",
   },
   {
@@ -164,49 +163,113 @@ export const audiencePages = {
     resourceHref: "/guides/md/SCHOOL_AIR_QUALITY_ACTION_GUIDE.md",
     resourceLabel: "Open the school action guide",
   },
+  government: {
+    eyebrow: "For government officials",
+    title: "See climate conditions across places you serve",
+    lede: "Use Climate Compass to review air and heat status for major cities, share a shared picture with partners, and stay informed when conditions change — without replacing official monitoring or emergency systems.",
+    icon: Landmark,
+    accent: "bg-sky-soft",
+    facts: [
+      {
+        title: "One shared status view",
+        text: "Start with plain-language band and AQI score so teams compare places with the same vocabulary.",
+      },
+      {
+        title: "Air and heat together",
+        text: "Hot days and poor air often need attention at the same time. The dashboard and map surface both signals.",
+      },
+      {
+        title: "Information, not decree",
+        text: "Climate Compass is a decision-support product. Formal instructions still come from your organisation and competent authorities.",
+      },
+    ],
+    activityTitle: "Build a simple situational routine",
+    activitySteps: [
+      "Open the map or dashboard and note status for priority cities.",
+      "Record the plain-language band, AQI score, and heat reading.",
+      "Share the summary with the coordination channel your office already uses.",
+      "Register for alerts if you want updates when air or heat needs extra care.",
+    ],
+    primaryHref: "/map",
+    primaryLabel: "Open the Nepal map",
+    resourceHref: "/guides/md/DASHBOARD_FEATURES.md",
+    resourceLabel: "Read dashboard features",
+  },
+  healthWorkers: {
+    eyebrow: "For health workers",
+    title: "Monitor local air and heat for facility readiness",
+    lede: "Check conditions near your facility, register for alerts, and use informational guides alongside clinical judgement and local health authority instructions.",
+    icon: Stethoscope,
+    accent: "bg-violet-50",
+    facts: [
+      {
+        title: "Know the neighbourhood reading",
+        text: "A quick status check helps staff understand outdoor conditions before community outreach or outdoor clinic activity.",
+      },
+      {
+        title: "Alerts when things change",
+        text: "Registration can notify your team when air or heat moves into bands that need extra attention.",
+      },
+      {
+        title: "Support, not a diagnosis tool",
+        text: "Climate Compass does not replace clinical assessment, triage protocols, or official public-health orders.",
+      },
+    ],
+    activityTitle: "Set up a facility information habit",
+    activitySteps: [
+      "Check the nearest city status on the dashboard before outdoor or community activities.",
+      "Note the plain-language band, AQI score, and heat reading for the staff board or handover.",
+      "Register the facility contact channels you already use for alerts.",
+      "Review an informational guide with colleagues and follow official health guidance when acting.",
+    ],
+    primaryHref: "/registration",
+    primaryLabel: "Register for alerts",
+    resourceHref: "/guides/md/APPLICATION_OVERVIEW.md",
+    resourceLabel: "Open the application overview",
+  },
 } as const;
 
 export const audiencePathways = [
   {
-    title: "Health workers & doctors",
-    text: "Monitor local air quality, receive alerts, and log facility readiness actions.",
-    href: "/registration",
-    icon: Stethoscope,
+    title: "School administrators and teachers",
+    text: "Review local air and heat status and share clear information with staff and classrooms.",
+    href: "/schools",
+    icon: School,
+  },
+  {
+    title: "Parents and guardians",
+    text: "Check nearby air and heat conditions and register for alerts when you want updates.",
+    href: "/parents",
+    icon: HeartHandshake,
   },
   {
     title: "Government officials",
-    text: "Track conditions across selected places and stay informed when air quality worsens.",
-    href: "/dashboard",
+    text: "Track conditions across selected places and stay informed when air or heat worsens.",
+    href: "/government",
     icon: Landmark,
   },
   {
-    title: "Administrators",
-    text: "Manage enrolments, review system status, and coordinate response channels.",
-    href: "/admin",
-    icon: Building2,
-  },
-  {
-    title: "Parents & guardians",
-    text: "Check nearby air quality and get alerts that help plan outdoor time safely.",
-    href: "/registration",
-    icon: HeartHandshake,
+    title: "Health workers",
+    text: "Monitor local air and heat, receive alerts, and log facility readiness actions.",
+    href: "/health-workers",
+    icon: Stethoscope,
   },
 ] as const;
 
 export const processSteps = [
   {
     title: "Choose a place",
-    text: "Select the city or area you care about — home, workplace, or nearby community.",
+    text: "Select the city or area you care about — home, school, workplace, or nearby community.",
     icon: Users,
   },
   {
     title: "Read today’s status",
-    text: "Start with the plain-language condition, then explore AQI and pollutant readings.",
+    text: "Start with the plain-language condition, then look at the AQI score and heat reading.",
     icon: ClipboardCheck,
   },
   {
     title: "Get notified",
-    text: "Register for alerts so you hear when air quality or heat needs extra care.",
+    text: "Register for alerts so you hear when air or heat needs extra care.",
     icon: ShieldCheck,
   },
 ] as const;

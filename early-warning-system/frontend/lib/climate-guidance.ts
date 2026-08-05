@@ -65,7 +65,7 @@ export function heatBand(value?: number | null): HeatBand {
 const AIR_LABELS: Record<AirQualityBand, string> = {
   good: "Good",
   moderate: "Moderate",
-  sensitive: "Unhealthy for sensitive groups",
+  sensitive: "Use extra care",
   unhealthy: "Unhealthy",
   "no-data": "Air quality unavailable",
 };

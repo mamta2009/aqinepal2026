@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardKicker } from "@/components/ui/card";
+import { DefinitionHelp } from "@/components/ui/definition-help";
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -70,11 +71,19 @@ export function ScenarioSandbox({
   }
 
   return (
-    <Card className="lg:col-span-2">
+    <Card className="h-full">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <CardKicker>Explore, do not predict</CardKicker>
-          <h2 className="text-2xl font-bold">Stress scenario sandbox</h2>
+          <h2 className="flex flex-wrap items-center gap-2 text-2xl font-bold">
+            Stress scenario sandbox
+            <DefinitionHelp label="Stress scenario sandbox">
+              An interactive what-if tool for {city}. Drag PM2.5 and heat to apply
+              simple multipliers to the synthetic case baseline and discuss
+              possible pressure on services. Not a validated clinical or
+              operational forecast.
+            </DefinitionHelp>
+          </h2>
         </div>
         <Button variant="secondary" size="sm" onClick={reset} disabled={!changed}>
           Use current readings

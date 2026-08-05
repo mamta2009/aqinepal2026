@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { GuideLibrary } from "@/components/guides/guide-library";
+import { Reveal } from "@/components/ui/reveal";
 import { api } from "@/lib/api/endpoints";
 import { knownResources } from "@/lib/content/education-pages";
 import type { GuideResource } from "@/lib/api/types";
@@ -31,16 +32,18 @@ export function GuidesIndexClient() {
 
   return (
     <div className="page-shell py-16 sm:py-24">
-      <header className="max-w-4xl">
-        <p className="eyebrow">Learning centre</p>
-        <h1 className="text-5xl leading-[1.05] font-extrabold tracking-[-0.04em] sm:text-6xl">
-          Explore clean air with Climate Compass
-        </h1>
-        <p className="mt-6 max-w-3xl text-lg leading-8 text-muted">
-          Practical guides and technical documentation for using Climate Compass
-          and understanding air quality.
-        </p>
-      </header>
+      <Reveal>
+        <header className="max-w-4xl">
+          <p className="eyebrow">Learning centre</p>
+          <h1 className="text-5xl leading-[1.05] font-extrabold tracking-[-0.04em] sm:text-6xl">
+            Explore clean air with Climate Compass
+          </h1>
+          <p className="mt-6 max-w-3xl text-lg leading-8 text-muted">
+            Practical guides and technical documentation for using Climate Compass
+            and understanding air quality.
+          </p>
+        </header>
+      </Reveal>
       <section className="mt-12" aria-label="Climate Compass resources">
         {query.isPending ? (
           <p className="text-muted" role="status">

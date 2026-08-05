@@ -3,7 +3,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils/cn";
 
 export const buttonVariants = cva(
-  "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-extrabold transition-[background,color,transform,border-color] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-forest/25 disabled:pointer-events-none disabled:opacity-55 motion-safe:hover:-translate-y-0.5",
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-extrabold transition-[background,color,transform,border-color] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-forest/25 disabled:pointer-events-none disabled:opacity-55 motion-safe:hover:-translate-y-px",
   {
     variants: {
       variant: {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { TrustedGuideHtml } from "@/components/guides/trusted-guide-html";
+import { Reveal } from "@/components/ui/reveal";
 import { api } from "@/lib/api/endpoints";
 
 function sanitizeGuidePath(input: string[]) {
@@ -70,20 +71,26 @@ export function GuideDocumentClient() {
 
   return (
     <div className="page-shell py-12 sm:py-20">
-      <Link
-        href="/guides/"
-        className="inline-flex min-h-11 items-center font-extrabold text-link hover:text-forest-dark"
-      >
-        ← Back to guides
-      </Link>
-      <article className="mx-auto mt-5 max-w-4xl rounded-[2rem] border border-border bg-white p-6 shadow-sm sm:p-10">
-        <TrustedGuideHtml html={query.data.html} />
-      </article>
-      <aside className="mx-auto mt-6 max-w-4xl rounded-2xl bg-sky-soft p-5 text-sm leading-6 text-ink-soft">
-        <strong className="text-ink">About this resource:</strong> Guide HTML is
-        rendered and sanitized by the Climate Compass server. Educational
-        guidance does not replace medical advice or official alerts.
-      </aside>
+      <Reveal>
+        <Link
+          href="/guides/"
+          className="inline-flex min-h-11 items-center font-extrabold text-link hover:text-forest-dark"
+        >
+          ← Back to guides
+        </Link>
+      </Reveal>
+      <Reveal delay={0.06}>
+        <article className="mx-auto mt-5 max-w-4xl rounded-[2rem] border border-border bg-white p-6 shadow-sm sm:p-10">
+          <TrustedGuideHtml html={query.data.html} />
+        </article>
+      </Reveal>
+      <Reveal delay={0.12}>
+        <aside className="mx-auto mt-6 max-w-4xl rounded-2xl bg-sky-soft p-5 text-sm leading-6 text-ink-soft">
+          <strong className="text-ink">About this resource:</strong> Guide HTML is
+          rendered and sanitized by the Climate Compass server. Educational
+          guidance does not replace medical advice or official alerts.
+        </aside>
+      </Reveal>
     </div>
   );
 }

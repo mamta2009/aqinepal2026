@@ -46,15 +46,24 @@ export type HeatResponse = {
   provenance?: Record<string, unknown>;
 };
 
+export type AlertDeliveryChannelResult = {
+  sent?: number;
+  failed?: number;
+};
+
 export type AlertLatest = {
   ok?: boolean;
-  source?: string;
+  source?: "alert_broadcasts" | "none" | "empty" | string;
   message?: string;
   city?: string;
   level?: string;
+  severity_level?: string;
   aqi_level?: string;
   hazard_type?: string;
+  heat_headline_display?: string;
   timestamp?: string;
+  total_recipients?: number;
+  delivery_results?: Record<string, AlertDeliveryChannelResult>;
 };
 
 export type GuideResource = {

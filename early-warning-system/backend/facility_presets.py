@@ -16,32 +16,10 @@ FACILITY_PRESETS_BY_CITY: dict[str, list[str]] = {
         "Shukraraj Tropical & Infectious Disease Hospital (Teku)",
         "Municipal public health unit / ward clinic",
     ],
-    "Lalitpur": [
-        "Patan Academy of Health Sciences (PAHS)",
-        "Kist Medical College Hospital",
-        "Alka Hospital",
-        "Lalitpur Metropolitan Hospital / district hospital",
-        "Ward health post / municipal clinic (Lalitpur)",
-        "Urban PHC / sub-health post",
-    ],
-    "Bhaktapur": [
-        "Bhaktapur Cancer Hospital",
-        "Madhyapur Hospital",
-        "Bhaktapur municipal health post / ward clinic",
-    ],
-    "Banepa": [
-        "Dhulikhel Hospital (referral — nearby)",
-        "Banepa municipal health post",
-        "Primary health centre (PHC)",
-    ],
-    "Dhulikhel": [
-        "Dhulikhel Hospital",
-        "Kathmandu University Hospital (Dhulikhel)",
-        "Municipal health office / ward clinic",
-    ],
-    "Hetauda": [
-        "Hetauda Hospital",
-        "Chure Hills Hospital",
+    "Pokhara": [
+        "Manipal Teaching Hospital",
+        "Western Regional Hospital (Pokhara)",
+        "Gandaki Medical College Teaching Hospital",
         "Municipal health post / ward clinic",
     ],
     "Bharatpur": [
@@ -50,9 +28,29 @@ FACILITY_PRESETS_BY_CITY: dict[str, list[str]] = {
         "Chitwan Medical College Teaching Hospital",
         "Municipal health post / ward clinic",
     ],
-    "Narayanghad": [
-        "Bharatpur Hospital (Narayangarh area)",
-        "Chitwan Medical College Teaching Hospital",
+    "Birgunj": [
+        "Narayani Sub-Regional Hospital",
+        "National Medical College Teaching Hospital",
         "Municipal health post / ward clinic",
+    ],
+    "Biratnagar": [
+        "Koshi Hospital",
+        "Nobel Medical College Teaching Hospital",
+        "Municipal health post / ward clinic",
+    ],
+    "Janakpur": [
+        "Provincial Hospital Janakpur",
+        "Janaki Medical College Teaching Hospital",
+        "Municipal health post / ward clinic",
+    ],
+    "Nepalgunj": [
+        "Bheri Hospital",
+        "Nepalgunj Medical College Teaching Hospital",
+        "Municipal health post / ward clinic",
+    ],
+    "Dhangadhi": [
+        "Seti Provincial Hospital",
+        "Municipal health post / ward clinic",
+        "Urban PHC / sub-health post",
     ],
 }

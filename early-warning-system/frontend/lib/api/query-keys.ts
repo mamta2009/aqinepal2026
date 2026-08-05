@@ -1,7 +1,7 @@
 export const queryKeys = {
   runtimeConfig: ["runtime-config"] as const,
   cities: ["cities"] as const,
-  alertsLatest: ["alerts", "latest"] as const,
+  alertsLatest: (city = "") => ["alerts", "latest", city] as const,
   guides: ["guides"] as const,
   guide: (path: string) => ["guides", path] as const,
   environmentOverview: ["environment", "overview"] as const,
