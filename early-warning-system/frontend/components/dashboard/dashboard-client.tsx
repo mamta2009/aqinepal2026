@@ -18,6 +18,7 @@ import {
 import { ScenarioSandbox } from "./scenario-sandbox";
 import { CityAirCompare } from "./city-air-compare";
 import { FiveDayForecast } from "./five-day-forecast";
+import { AirQuality24h } from "./air-quality-24h";
 import { WeatherContext } from "@/components/weather/weather-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -386,6 +387,14 @@ export function DashboardClient() {
 
             <section className="mt-8 grid gap-5 lg:grid-cols-2" aria-labelledby="trends-title">
               <Reveal className="lg:col-span-2">
+                <AirQuality24h
+                  city={city}
+                  pm25={pm25}
+                  source={data.air?.source}
+                />
+              </Reveal>
+
+              <Reveal delay={0.04} className="lg:col-span-2">
                 <Card>
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
