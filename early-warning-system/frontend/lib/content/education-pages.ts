@@ -163,6 +163,70 @@ export const audiencePages = {
     resourceHref: "/guides/md/SCHOOL_AIR_QUALITY_ACTION_GUIDE.md",
     resourceLabel: "Open the school action guide",
   },
+  government: {
+    eyebrow: "For government officials",
+    title: "See climate conditions across places you serve",
+    lede: "Use Climate Compass to review air and heat status for major cities, share a shared picture with partners, and stay informed when conditions change — without replacing official monitoring or emergency systems.",
+    icon: Landmark,
+    accent: "bg-sky-soft",
+    facts: [
+      {
+        title: "One shared status view",
+        text: "Start with plain-language band and AQI score so teams compare places with the same vocabulary.",
+      },
+      {
+        title: "Air and heat together",
+        text: "Hot days and poor air often need attention at the same time. The dashboard and map surface both signals.",
+      },
+      {
+        title: "Information, not decree",
+        text: "Climate Compass is a decision-support product. Formal instructions still come from your organisation and competent authorities.",
+      },
+    ],
+    activityTitle: "Build a simple situational routine",
+    activitySteps: [
+      "Open the map or dashboard and note status for priority cities.",
+      "Record the plain-language band, AQI score, and heat reading.",
+      "Share the summary with the coordination channel your office already uses.",
+      "Register for alerts if you want updates when air or heat needs extra care.",
+    ],
+    primaryHref: "/map",
+    primaryLabel: "Open the Nepal map",
+    resourceHref: "/guides/md/DASHBOARD_FEATURES.md",
+    resourceLabel: "Read dashboard features",
+  },
+  healthWorkers: {
+    eyebrow: "For health workers",
+    title: "Monitor local air and heat for facility readiness",
+    lede: "Check conditions near your facility, register for alerts, and use informational guides alongside clinical judgement and local health authority instructions.",
+    icon: Stethoscope,
+    accent: "bg-violet-50",
+    facts: [
+      {
+        title: "Know the neighbourhood reading",
+        text: "A quick status check helps staff understand outdoor conditions before community outreach or outdoor clinic activity.",
+      },
+      {
+        title: "Alerts when things change",
+        text: "Registration can notify your team when air or heat moves into bands that need extra attention.",
+      },
+      {
+        title: "Support, not a diagnosis tool",
+        text: "Climate Compass does not replace clinical assessment, triage protocols, or official public-health orders.",
+      },
+    ],
+    activityTitle: "Set up a facility information habit",
+    activitySteps: [
+      "Check the nearest city status on the dashboard before outdoor or community activities.",
+      "Note the plain-language band, AQI score, and heat reading for the staff board or handover.",
+      "Register the facility contact channels you already use for alerts.",
+      "Review an informational guide with colleagues and follow official health guidance when acting.",
+    ],
+    primaryHref: "/registration",
+    primaryLabel: "Register for alerts",
+    resourceHref: "/guides/md/APPLICATION_OVERVIEW.md",
+    resourceLabel: "Open the application overview",
+  },
 } as const;
 
 export const audiencePathways = [
@@ -181,13 +245,13 @@ export const audiencePathways = [
   {
     title: "Government officials",
     text: "Track conditions across selected places and stay informed when air or heat worsens.",
-    href: "/dashboard",
+    href: "/government",
     icon: Landmark,
   },
   {
     title: "Health workers",
     text: "Monitor local air and heat, receive alerts, and log facility readiness actions.",
-    href: "/registration",
+    href: "/health-workers",
     icon: Stethoscope,
   },
 ] as const;

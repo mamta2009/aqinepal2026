@@ -14,10 +14,14 @@ type AudiencePageContent = {
   activitySteps: readonly string[];
   resourceHref: string;
   resourceLabel: string;
+  primaryHref?: string;
+  primaryLabel?: string;
 };
 
 export function AudiencePage({ content }: { content: AudiencePageContent }) {
   const Icon = content.icon;
+  const primaryHref = content.primaryHref ?? "/dashboard";
+  const primaryLabel = content.primaryLabel ?? "Check today's conditions";
 
   return (
     <>
@@ -32,8 +36,8 @@ export function AudiencePage({ content }: { content: AudiencePageContent }) {
               {content.lede}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <ButtonLink href="/dashboard" size="lg">
-                Check today&apos;s air
+              <ButtonLink href={primaryHref} size="lg">
+                {primaryLabel}
               </ButtonLink>
               <ButtonLink href={content.resourceHref} variant="secondary" size="lg">
                 {content.resourceLabel}
@@ -54,7 +58,7 @@ export function AudiencePage({ content }: { content: AudiencePageContent }) {
           <SectionHeading
             eyebrow="Know the basics"
             title="Three ideas to remember"
-            lede="Air-quality information is most useful when it leads to calm, practical decisions."
+            lede="Air and heat information is most useful when it supports calm, practical coordination alongside official guidance."
           />
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {content.facts.map((fact, index) => (
@@ -105,7 +109,7 @@ export function AudiencePage({ content }: { content: AudiencePageContent }) {
             <p className="text-sm font-extrabold tracking-widest text-sky-soft uppercase">
               Keep learning
             </p>
-            <h2 className="mt-2 text-3xl font-bold">Explore more clean-air resources</h2>
+            <h2 className="mt-2 text-3xl font-bold">Explore more climate resources</h2>
           </div>
           <ButtonLink
             href="/guides"

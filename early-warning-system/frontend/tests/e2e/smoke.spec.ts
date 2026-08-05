@@ -11,6 +11,8 @@ const publicRoutes = [
   "/parents",
   "/teachers",
   "/students",
+  "/government",
+  "/health-workers",
   "/registration",
   "/registration/contacts-directory",
   "/users",
