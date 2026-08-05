@@ -45,10 +45,10 @@ export default function AboutPage() {
               Environmental information people can use
             </h1>
             <p className="mt-6 max-w-3xl text-xl leading-9 text-muted">
-              Climate Compass is an open-source product that helps school
-              administrators, teachers, parents, health workers, and community
-              members check air and heat and respond when conditions need
-              attention.
+              Environmental information should be understandable, useful, and
+              available to everyone. Climate Compass is an open-source
+              demonstration that helps people check local air, heat, and rain
+              and get notified when conditions need attention.
             </p>
           </Reveal>
         </div>
