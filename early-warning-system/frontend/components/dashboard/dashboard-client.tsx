@@ -5,10 +5,14 @@ import {
   AlertTriangle,
   Building2,
   CheckCircle2,
+  CloudDrizzle,
+  CloudOff,
+  CloudRain,
   Download,
   HeartHandshake,
   RefreshCw,
   Stethoscope,
+  Sun,
 } from "lucide-react";
 import {
   useEffect,
@@ -31,6 +35,7 @@ import {
   getClimateGuidance,
   type AirQualityBand,
 } from "@/lib/climate-guidance";
+import { extractRainIndicator } from "@/lib/weather-rain";
 
 const DashboardTrendChart = dynamic(
   () => import("@/components/charts/dashboard-trend-chart"),
@@ -127,6 +132,10 @@ export function DashboardClient() {
   const pm25 = numberFrom(data?.air?.air_quality, "pm25_ug_m3", "pm25", "pm2_5");
   const aqi = numberFrom(data?.air?.air_quality, "aqi", "us_epa_aqi", "us_epa_index");
   const effectiveHeat = heatValue(data);
+  const rain = useMemo(
+    () => extractRainIndicator(data?.weather?.weather ?? null),
+    [data?.weather?.weather],
+  );
   const guidance = useMemo(
     () => getClimateGuidance({ aqi, pm25, effectiveTemperatureC: effectiveHeat }),
     [aqi, effectiveHeat, pm25],
@@ -299,6 +308,36 @@ export function DashboardClient() {
                     </dd>
                     <p className="mt-1 text-xs font-bold text-current/70">
                       How hot it feels outdoors
+                    </p>
+                  </div>
+                  <div className="min-w-[9rem] rounded-xl border border-current/20 bg-white/75 px-4 py-3">
+                    <dt className="flex items-center gap-1.5 text-xs font-extrabold uppercase">
+                      Rain
+                      <DefinitionHelp label="Rain">
+                        Whether it is raining at the selected place, based on
+                        the weather provider&apos;s current precipitation
+                        (rainfall amount in mm) and condition text. This is not
+                        a flood warning or river-level reading.
+                        <span className="mt-2 block text-xs">
+                          Source: {data.weather?.source || "Unavailable"} ·{" "}
+                          {provenanceText(data.weather?.provenance)}
+                        </span>
+                      </DefinitionHelp>
+                    </dt>
+                    <dd className="mt-1 flex items-center" aria-label={rain.status}>
+                      {rain.status === "Raining" ? (
+                        <CloudRain className="size-10" strokeWidth={2.25} aria-hidden />
+                      ) : rain.status === "Wet" ? (
+                        <CloudDrizzle className="size-10" strokeWidth={2.25} aria-hidden />
+                      ) : rain.status === "Dry" ? (
+                        <Sun className="size-10" strokeWidth={2.25} aria-hidden />
+                      ) : (
+                        <CloudOff className="size-10 opacity-50" strokeWidth={2.25} aria-hidden />
+                      )}
+                      <span className="sr-only">{rain.status}</span>
+                    </dd>
+                    <p className="mt-1 text-xs font-bold text-current/70">
+                      {rain.summary}
                     </p>
                   </div>
                 </dl>
