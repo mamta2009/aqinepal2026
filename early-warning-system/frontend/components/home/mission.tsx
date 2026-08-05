@@ -1,4 +1,4 @@
-import { Code2, Info, Scale } from "lucide-react";
+import { Compass, Info, Scale } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 
 export function Mission() {
@@ -8,18 +8,19 @@ export function Mission() {
         <div className="page-shell grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="rounded-[2rem] bg-sky-soft p-7 sm:p-10">
             <span className="mb-6 grid size-12 place-items-center rounded-2xl bg-white text-link">
-              <Code2 aria-hidden="true" className="size-6" />
+              <Compass aria-hidden="true" className="size-6" />
             </span>
-            <p className="eyebrow">Open knowledge for healthier communities</p>
+            <p className="eyebrow">From information to action</p>
             <h2 className="section-title">Why Climate Compass exists</h2>
             <p className="section-lede mt-5">
-              Environmental information should be understandable, useful, and
-              available to everyone. Climate Compass is an open-source
-              demonstration that helps people check local air quality and get
-              notified when conditions need attention.
+              Climate Compass helps people check local air and heat in plain
+              language, register for alerts when conditions need attention, and
+              decide next steps — adjust outdoor plans, share status with a
+              group, or follow up with official guidance. The goal is not only
+              to know the reading, but to act when it matters.
             </p>
             <ButtonLink href="/about" variant="secondary" className="mt-7">
-              Learn about the project
+              Learn about the product
             </ButtonLink>
           </div>
           <aside className="rounded-[2rem] bg-ink p-7 text-white sm:p-10">
@@ -49,7 +50,7 @@ export function Mission() {
               Ready to plan your day?
             </p>
             <h2 className="mt-2 max-w-2xl text-3xl font-bold">
-              See what today&apos;s air means where you are.
+              See what today&apos;s conditions mean where you are.
             </h2>
           </div>
           <ButtonLink
@@ -58,7 +59,7 @@ export function Mission() {
             size="lg"
             className="border-white bg-white"
           >
-            Check today&apos;s air
+            Check today&apos;s conditions
           </ButtonLink>
         </div>
       </section>

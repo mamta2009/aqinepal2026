@@ -77,7 +77,7 @@ class EnvironmentOverviewTest(unittest.IsolatedAsyncioTestCase):
             await enter()
             try:
                 await asyncio.sleep(0.001)
-                if city == "Banepa":
+                if city == "Pokhara":
                     raise RuntimeError("provider unavailable")
                 return {
                     "source": "test_air",
@@ -111,10 +111,10 @@ class EnvironmentOverviewTest(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(result["count"], len(next_frontend_api.CITIES_CONFIG))
         self.assertLessEqual(peak, 2)
-        banepa = next(city for city in result["cities"] if city["city"] == "Banepa")
-        self.assertEqual(banepa["status"], "partial")
-        self.assertEqual(banepa["air_quality"]["status"], "error")
-        self.assertEqual(banepa["heat"]["status"], "ok")
+        pokhara = next(city for city in result["cities"] if city["city"] == "Pokhara")
+        self.assertEqual(pokhara["status"], "partial")
+        self.assertEqual(pokhara["air_quality"]["status"], "error")
+        self.assertEqual(pokhara["heat"]["status"], "ok")
 
 
 if __name__ == "__main__":

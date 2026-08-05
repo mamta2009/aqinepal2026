@@ -4,18 +4,21 @@ import { EnvironmentOverview } from "@/components/maps/environment-overview";
 export const metadata: Metadata = {
   title: "Environmental Map",
   description:
-    "Accessible geographic overview of air quality and heat conditions across participating Bagmati cities.",
+    "Accessible geographic overview of air quality and heat conditions across major cities in Nepal.",
 };
 
 export default function MapPage() {
   return (
     <div className="page-shell py-8 sm:py-12">
       <header className="max-w-3xl">
-        <p className="eyebrow">Regional conditions</p>
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Air and heat across cities</h1>
+        <p className="eyebrow">National conditions</p>
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+          Air and heat across Nepal
+        </h1>
         <p className="mt-3 text-muted">
-          A schematic map and complete data table. This view uses the backend
-          environmental overview and never treats color as the only status signal.
+          A schematic map and complete data table for major cities. This view
+          uses the backend environmental overview and never treats color as the
+          only status signal.
         </p>
       </header>
       <div className="mt-7">

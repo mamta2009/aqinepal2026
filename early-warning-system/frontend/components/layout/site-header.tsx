@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils/cn";
 import { NavAlert } from "./nav-alert";
 
 const links = [
-  { href: "/dashboard", label: "Today’s air" },
+  { href: "/dashboard", label: "Today’s conditions" },
   { href: "/map", label: "Map" },
   { href: "/guides", label: "Guides" },
   { href: "/about", label: "About" },

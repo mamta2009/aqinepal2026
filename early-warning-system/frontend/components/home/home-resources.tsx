@@ -11,7 +11,7 @@ export function HomeResources() {
         <SectionHeading
           eyebrow="Optional guides"
           title="Go deeper when you need more detail"
-          lede="Short resources for families, facilities, and classrooms — useful alongside alerts, not a replacement for them."
+          lede="Short informational resources for families, facilities, and classrooms. They support learning alongside alerts and do not replace official guidance or professional advice."
         />
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {knownResources.map((resource) => (

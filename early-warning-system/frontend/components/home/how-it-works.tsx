@@ -32,7 +32,7 @@ export function HowItWorks() {
           })}
         </ol>
         <ButtonLink href="/dashboard" size="lg" className="mt-10">
-          See today&apos;s recommendations
+          See today&apos;s conditions
           <ArrowRight aria-hidden="true" className="size-4" />
         </ButtonLink>
       </div>

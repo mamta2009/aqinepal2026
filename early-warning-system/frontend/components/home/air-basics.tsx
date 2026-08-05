@@ -5,13 +5,13 @@ const terms = [
   {
     term: "AQI",
     explanation:
-      "A simple air-quality score. Lower is generally cleaner; higher means more caution may be needed.",
+      "A simple air-quality score (often from 0 toward 500). Use this number and its colour band first — lower is generally cleaner.",
     icon: Gauge,
   },
   {
     term: "PM2.5",
     explanation:
-      "Tiny pollution particles that can travel deep into the lungs, especially on smoky or dusty days.",
+      "Fine particle pollution measured in micrograms. Optional detail behind the AQI score for people who want more context.",
     icon: Wind,
   },
   {
@@ -38,7 +38,7 @@ const statuses = [
   {
     title: "Use extra care",
     text: "Consider shorter or gentler outdoor activity.",
-    className: "bg-orange-50 text-aq-sensitive",
+    className: "bg-orange-100 text-aq-sensitive",
     icon: Activity,
   },
   {
@@ -55,9 +55,9 @@ export function AirBasics() {
       <div className="page-shell grid gap-12 lg:grid-cols-2 lg:items-start">
         <div>
           <SectionHeading
-            eyebrow="Air quality made simple"
+            eyebrow="Climate conditions made simple"
             title="What are we measuring?"
-            lede="Air can look clean and still contain pollution. These measurements help explain whether conditions may affect outdoor activity and health."
+            lede="Air and heat can affect outdoor activity even when the sky looks fine. These readings help explain local conditions in plain language."
           />
           <ul className="mt-9 grid list-none gap-4 p-0">
             {terms.map((item) => {

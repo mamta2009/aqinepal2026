@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Learn why Climate Compass is being built as an open-source educational air-quality demonstration.",
+    "Learn why Climate Compass is built as an open-source climate-health product for air and heat awareness.",
 };
 
 const principles = [
@@ -18,12 +18,12 @@ const principles = [
   },
   {
     title: "Actionable context",
-    text: "Measurements are connected to everyday choices at home, work, and in the community.",
+    text: "Measurements are connected to everyday choices at home, school, work, and in the community.",
     icon: Compass,
   },
   {
     title: "Open-source",
-    text: "The project can be inspected, adapted, and improved by its community.",
+    text: "The product can be inspected, adapted, and improved by its community.",
     icon: Code2,
   },
   {
@@ -43,10 +43,10 @@ export default function AboutPage() {
             Environmental information people can use
           </h1>
           <p className="mt-6 max-w-3xl text-xl leading-9 text-muted">
-            Climate Compass is an open-source demonstration that helps health
-            workers, government officials, administrators, parents, and other
-            community members check air quality and respond when conditions
-            worsen.
+            Climate Compass is an open-source product that helps school
+            administrators, teachers, parents, health workers, and community
+            members check air and heat and respond when conditions need
+            attention.
           </p>
         </div>
       </section>
@@ -56,7 +56,7 @@ export default function AboutPage() {
           <SectionHeading
             eyebrow="Our approach"
             title="Clarity, usefulness, and trust"
-            lede="The project is designed to make environmental data easier to learn from without overstating what a digital service can know."
+            lede="The product is designed to make environmental data easier to learn from without overstating what a digital service can know."
           />
           <div className="mt-10 grid gap-5 sm:grid-cols-2">
             {principles.map((principle) => {
@@ -82,7 +82,7 @@ export default function AboutPage() {
           <div>
             <SectionHeading
               eyebrow="What it is"
-              title="A public-interest learning tool"
+              title="A public-interest climate solution"
             />
             <p className="section-lede mt-5">
               Climate Compass combines configured environmental data with clear
@@ -117,7 +117,7 @@ export default function AboutPage() {
               variant="secondary"
               className="border-white bg-transparent text-white hover:bg-white hover:text-forest"
             >
-              Check today&apos;s air
+              Check today&apos;s conditions
             </ButtonLink>
           </div>
         </div>

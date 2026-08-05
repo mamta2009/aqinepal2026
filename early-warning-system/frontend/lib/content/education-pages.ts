@@ -1,5 +1,4 @@
 import {
-  Building2,
   ClipboardCheck,
   GraduationCap,
   HeartHandshake,
@@ -15,16 +14,16 @@ import {
 export const knownResources = [
   {
     audience: "Families",
-    title: "A family air-quality checklist",
+    title: "A family air and heat checklist",
     description:
-      "Quick prompts for outdoor activity and people who are sensitive to pollution.",
+      "Informational prompts families can discuss when outdoor conditions change.",
     href: "/guides/md/PARENT_AIR_QUALITY_CHECKLIST.md",
   },
   {
     audience: "Facilities",
-    title: "Plan outdoor activities with care",
+    title: "School air and heat information guide",
     description:
-      "Practical guidance for sites managing outdoor schedules and ventilation.",
+      "Reference material for sites reviewing outdoor schedules and ventilation options.",
     href: "/guides/md/SCHOOL_AIR_QUALITY_ACTION_GUIDE.md",
   },
   {
@@ -168,45 +167,45 @@ export const audiencePages = {
 
 export const audiencePathways = [
   {
-    title: "Health workers & doctors",
-    text: "Monitor local air quality, receive alerts, and log facility readiness actions.",
-    href: "/registration",
-    icon: Stethoscope,
+    title: "School administrators and teachers",
+    text: "Review local air and heat status and share clear information with staff and classrooms.",
+    href: "/schools",
+    icon: School,
+  },
+  {
+    title: "Parents and guardians",
+    text: "Check nearby air and heat conditions and register for alerts when you want updates.",
+    href: "/parents",
+    icon: HeartHandshake,
   },
   {
     title: "Government officials",
-    text: "Track conditions across selected places and stay informed when air quality worsens.",
+    text: "Track conditions across selected places and stay informed when air or heat worsens.",
     href: "/dashboard",
     icon: Landmark,
   },
   {
-    title: "Administrators",
-    text: "Manage enrolments, review system status, and coordinate response channels.",
-    href: "/admin",
-    icon: Building2,
-  },
-  {
-    title: "Parents & guardians",
-    text: "Check nearby air quality and get alerts that help plan outdoor time safely.",
+    title: "Health workers",
+    text: "Monitor local air and heat, receive alerts, and log facility readiness actions.",
     href: "/registration",
-    icon: HeartHandshake,
+    icon: Stethoscope,
   },
 ] as const;
 
 export const processSteps = [
   {
     title: "Choose a place",
-    text: "Select the city or area you care about — home, workplace, or nearby community.",
+    text: "Select the city or area you care about — home, school, workplace, or nearby community.",
     icon: Users,
   },
   {
     title: "Read today’s status",
-    text: "Start with the plain-language condition, then explore AQI and pollutant readings.",
+    text: "Start with the plain-language condition, then look at the AQI score and heat reading.",
     icon: ClipboardCheck,
   },
   {
     title: "Get notified",
-    text: "Register for alerts so you hear when air quality or heat needs extra care.",
+    text: "Register for alerts so you hear when air or heat needs extra care.",
     icon: ShieldCheck,
   },
 ] as const;

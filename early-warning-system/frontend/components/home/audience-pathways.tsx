@@ -10,8 +10,8 @@ export function AudiencePathways() {
       <div className="page-shell">
         <SectionHeading
           eyebrow="Who uses Climate Compass"
-          title="Built for people who need timely air information"
-          lede="Schools are one important setting — not the whole story. The same tools support clinics, offices, families, and public agencies."
+          title="Built for people who need timely air and heat information"
+          lede="Schools are one important setting — but not the whole story. The same tools support clinics, offices, families, and public agencies."
           align="center"
         />
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">

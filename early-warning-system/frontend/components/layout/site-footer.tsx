@@ -3,7 +3,7 @@ import Link from "next/link";
 
 const links = [
   ["/", "Home"],
-  ["/dashboard", "Today’s air"],
+  ["/dashboard", "Today’s conditions"],
   ["/guides", "Learning resources"],
   ["/registration", "Register alerts"],
   ["/about", "About"],
@@ -26,7 +26,8 @@ export function SiteFooter() {
               Climate Compass
             </div>
             <p className="text-sm leading-relaxed text-white/75">
-              Place-based air quality checks and alerts for communities.
+              Place-based air and heat checks and alerts for communities across
+              Nepal.
             </p>
           </div>
           <nav className="flex max-w-xl flex-wrap gap-x-5 gap-y-2" aria-label="Footer">

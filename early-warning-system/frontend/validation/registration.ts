@@ -2,13 +2,13 @@ import { z } from "zod";
 
 export const CITIES = [
   "Kathmandu",
-  "Lalitpur",
-  "Bhaktapur",
-  "Banepa",
-  "Dhulikhel",
-  "Hetauda",
+  "Pokhara",
   "Bharatpur",
-  "Narayanghad",
+  "Birgunj",
+  "Biratnagar",
+  "Janakpur",
+  "Nepalgunj",
+  "Dhangadhi",
 ] as const;
 
 export const CONTACT_TYPES = [

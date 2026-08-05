@@ -7,9 +7,9 @@ import { HowItWorks } from "@/components/home/how-it-works";
 import { Mission } from "@/components/home/mission";
 
 export const metadata: Metadata = {
-  title: "Air quality checks and alerts",
+  title: "Climate checks and alerts",
   description:
-    "Check air quality for selected places and get notifications when conditions change. For health workers, government officials, administrators, families, and communities.",
+    "Check air and heat for selected places and get notifications when conditions change. For school administrators, teachers, parents, and health workers.",
 };
 
 export default function HomePage() {
