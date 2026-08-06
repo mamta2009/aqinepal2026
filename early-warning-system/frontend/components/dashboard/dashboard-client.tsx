@@ -266,35 +266,44 @@ export function DashboardClient() {
                 <p className="mt-4 max-w-3xl text-base font-bold sm:text-lg">{guidance.summary}</p>
                 <dl className="mt-6 flex flex-wrap gap-3">
                   <div className="min-w-[9rem] rounded-xl border border-current/20 bg-white/75 px-4 py-3">
-                    <dt className="flex items-center gap-1.5 text-xs font-extrabold uppercase">
-                      Air score (AQI)
-                      <DefinitionHelp label="Air score (AQI)">
-                        A simple score other weather and air apps often show
-                        (roughly 0 toward 500). Lower is generally cleaner; higher
-                        means more caution.
+                    <dt className="flex w-full items-center justify-between gap-2 text-xs font-extrabold uppercase">
+                      Air quality
+                      <DefinitionHelp label="Air quality" align="end">
+                        A plain-language level for how clean or dirty the air is
+                        right now: Good, Moderate, Use extra care, or Unhealthy.
+                        It comes from the air score (AQI) when available, or from
+                        fine particle (PM2.5) readings if the score is missing.
+                        <span className="mt-2 block text-xs">
+                          The small number is the air score (AQI), roughly 0
+                          toward 500 — lower is generally cleaner.
+                        </span>
                         <span className="mt-2 block text-xs">
                           Source: {data.air?.source || "Unavailable"} ·{" "}
                           {provenanceText(data.air?.provenance)}
                         </span>
                       </DefinitionHelp>
                     </dt>
-                    <dd className="text-4xl font-extrabold tracking-tight">
-                      {aqi ?? "—"}
+                    <dd className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+                      {guidance.airBand === "no-data" ? "—" : guidance.label}
                     </dd>
-                    {aqi == null && pm25 != null ? (
+                    {aqi != null ? (
                       <p className="mt-1 text-xs font-bold text-current/70">
-                        Score unavailable; band uses the particle reading below
+                        Air score (AQI) {aqi}
+                      </p>
+                    ) : pm25 != null ? (
+                      <p className="mt-1 text-xs font-bold text-current/70">
+                        Level from particles · score unavailable
                       </p>
                     ) : (
                       <p className="mt-1 text-xs font-bold text-current/70">
-                        The main number to glance at
+                        Reading unavailable for this place
                       </p>
                     )}
                   </div>
                   <div className="min-w-[9rem] rounded-xl border border-current/20 bg-white/75 px-4 py-3">
-                    <dt className="flex items-center gap-1.5 text-xs font-extrabold uppercase">
+                    <dt className="flex w-full items-center justify-between gap-2 text-xs font-extrabold uppercase">
                       Heat
-                      <DefinitionHelp label="Heat">
+                      <DefinitionHelp label="Heat" align="end">
                         Outdoor temperature used for heat context (effective or
                         feels-like when the provider supplies it).
                         <span className="mt-2 block text-xs">
@@ -314,9 +323,9 @@ export function DashboardClient() {
                     </p>
                   </div>
                   <div className="min-w-[9rem] rounded-xl border border-current/20 bg-white/75 px-4 py-3">
-                    <dt className="flex items-center gap-1.5 text-xs font-extrabold uppercase">
+                    <dt className="flex w-full items-center justify-between gap-2 text-xs font-extrabold uppercase">
                       Rain
-                      <DefinitionHelp label="Rain">
+                      <DefinitionHelp label="Rain" align="end">
                         Whether it is raining at the selected place, based on
                         the weather provider&apos;s current precipitation
                         (rainfall amount in mm) and condition text. This is not
