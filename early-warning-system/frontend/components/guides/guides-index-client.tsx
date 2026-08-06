@@ -39,8 +39,8 @@ export function GuidesIndexClient() {
             Explore clean air with Climate Compass
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted">
-            Practical guides and technical documentation for using Climate Compass
-            and understanding air quality.
+            Practical guides for using Climate Compass and understanding air
+            quality at school and at home.
           </p>
         </header>
       </Reveal>
