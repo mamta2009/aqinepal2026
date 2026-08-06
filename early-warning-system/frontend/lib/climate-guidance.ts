@@ -12,6 +12,8 @@ export type Audience = "everyone" | "school" | "parent" | "student";
 export interface GuidanceInput {
   aqi?: number | null;
   pm25?: number | null;
+  /** WeatherAPI US EPA bucket 1–6 — not a 0–500 AQI score. */
+  usEpaIndex?: number | null;
   effectiveTemperatureC?: number | null;
 }
 
@@ -35,10 +37,19 @@ function finite(value: number | null | undefined): value is number {
   return typeof value === "number" && Number.isFinite(value);
 }
 
+function airBandFromUsEpaIndex(index: number): AirQualityBand {
+  if (index <= 1) return "good";
+  if (index === 2) return "moderate";
+  if (index === 3) return "sensitive";
+  return "unhealthy";
+}
+
 export function airQualityBand({
   aqi,
   pm25,
-}: Pick<GuidanceInput, "aqi" | "pm25">): AirQualityBand {
+  usEpaIndex,
+}: Pick<GuidanceInput, "aqi" | "pm25" | "usEpaIndex">): AirQualityBand {
+  // Prefer continuous AQI (e.g. WAQI 0–500), never treat US EPA 1–6 as AQI.
   if (finite(aqi)) {
     if (aqi <= 50) return "good";
     if (aqi <= 100) return "moderate";
@@ -50,6 +61,9 @@ export function airQualityBand({
     if (pm25 <= 35.4) return "moderate";
     if (pm25 <= 55.4) return "sensitive";
     return "unhealthy";
+  }
+  if (finite(usEpaIndex) && usEpaIndex >= 1 && usEpaIndex <= 6) {
+    return airBandFromUsEpaIndex(usEpaIndex);
   }
   return "no-data";
 }

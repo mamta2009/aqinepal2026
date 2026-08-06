@@ -41,11 +41,12 @@ export function AirQuality24h({
           <h2 className="flex flex-wrap items-center gap-2 text-2xl font-bold">
             Air quality — 24h — {city}
             <DefinitionHelp label="Air quality 24h chart">
-              Uses the latest live PM2.5 for {city}, then draws 24 hourly-looking
-              points as deterministic variation around that reading (± about 38%),
-              seeded by city and calendar day. The current reading is
-              place-based; the hourly shape is illustrative — not observed
-              hourly station history.
+              Starts from today&apos;s live PM2.5 for {city}, then draws a
+              day-long wavy line so you can picture how levels might vary hour to
+              hour.
+              <span className="mt-2 block text-xs">
+                The shape is an illustration — not a real hour-by-hour history.
+              </span>
             </DefinitionHelp>
           </h2>
           <p className="mt-1 text-sm text-muted">

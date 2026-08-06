@@ -20,6 +20,15 @@ describe("climate guidance", () => {
     expect(airQualityBand({})).toBe("no-data");
   });
 
+  it("maps WeatherAPI US EPA 1-6 index only when AQI and PM2.5 are missing", () => {
+    expect(airQualityBand({ usEpaIndex: 1 })).toBe("good");
+    expect(airQualityBand({ usEpaIndex: 2 })).toBe("moderate");
+    expect(airQualityBand({ usEpaIndex: 3 })).toBe("sensitive");
+    expect(airQualityBand({ usEpaIndex: 4 })).toBe("unhealthy");
+    // Continuous AQI still wins over EPA bucket.
+    expect(airQualityBand({ aqi: 160, usEpaIndex: 1 })).toBe("unhealthy");
+  });
+
   it("classifies heat independently from operator thresholds", () => {
     expect(heatBand(26)).toBe("comfortable");
     expect(heatBand(34)).toBe("high");

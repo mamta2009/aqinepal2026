@@ -140,11 +140,12 @@ export function CityAirCompare({ cities, currentCity }: CityAirCompareProps) {
           <h2 className="flex flex-wrap items-center gap-2 text-2xl font-bold">
             Compare cities · live PM2.5
             <DefinitionHelp label="City air comparison chart">
-              Select cities to load live PM2.5 side by side. The bar chart shows
-              those readings; the dashed line is the operator PM2.5 alert
-              threshold ({threshold} µg/m³ when available). Requests run one city
-              at a time to limit upstream rate pressure. Use labels and the table
-              for exact values — colour alone is not the status.
+              Pick cities to compare their live PM2.5 (tiny pollution particles)
+              side by side. The dashed line is an alert guide line at about{" "}
+              {threshold} µg/m³.
+              <span className="mt-2 block text-xs">
+                Read the numbers in the table too — do not rely on colour alone.
+              </span>
             </DefinitionHelp>
           </h2>
           <p className="mt-1 max-w-3xl text-sm text-muted">

@@ -78,10 +78,11 @@ export function ScenarioSandbox({
           <h2 className="flex flex-wrap items-center gap-2 text-2xl font-bold">
             Stress scenario sandbox
             <DefinitionHelp label="Stress scenario sandbox">
-              An interactive what-if tool for {city}. Drag PM2.5 and heat to apply
-              simple multipliers to the synthetic case baseline and discuss
-              possible pressure on services. Not a validated clinical or
-              operational forecast.
+              Try &quot;what if&quot; changes for {city}: move the PM2.5 and heat
+              sliders to see how the demo case numbers might change.
+              <span className="mt-2 block text-xs">
+                For learning and discussion only — not a real prediction.
+              </span>
             </DefinitionHelp>
           </h2>
         </div>

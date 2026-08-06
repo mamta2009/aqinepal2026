@@ -37,10 +37,12 @@ export function FiveDayForecast({
           <h2 className="flex flex-wrap items-center gap-2 text-2xl font-bold">
             5-day forecast
             <DefinitionHelp label="5-day forecast">
-              Day cards show illustrative PM2.5 and respiratory case estimates
-              for the next five days, grown gently from the week-trend model and
-              today&apos;s live PM2.5 when available. For discussion and demo only
-              — not a validated clinical or official forecast.
+              Cards for the next five days with example PM2.5 and breathing-related
+              case guesses for {city}, starting from today&apos;s reading when we
+              have one.
+              <span className="mt-2 block text-xs">
+                Demo / discussion only — not an official forecast.
+              </span>
             </DefinitionHelp>
           </h2>
           <p className="mt-1 max-w-3xl text-sm text-muted">

@@ -38,6 +38,10 @@ import {
   type AirQualityBand,
 } from "@/lib/climate-guidance";
 import { DEFAULT_SELECTED_CITY } from "@/lib/store/location-slice";
+import {
+  briefAirMeasurement,
+  explainAirMeasurement,
+} from "@/lib/pm25-aqi";
 import { extractRainIndicator } from "@/lib/weather-rain";
 
 const DashboardTrendChart = dynamic(
@@ -133,15 +137,23 @@ export function DashboardClient() {
   }, [data?.cities]);
 
   const pm25 = numberFrom(data?.air?.air_quality, "pm25_ug_m3", "pm25", "pm2_5");
-  const aqi = numberFrom(data?.air?.air_quality, "aqi", "us_epa_aqi", "us_epa_index");
+  // Continuous 0–500-style score only — never WeatherAPI us_epa_index (1–6).
+  const aqiScore = numberFrom(data?.air?.air_quality, "aqi");
+  const usEpaIndex = numberFrom(data?.air?.air_quality, "us_epa_index");
   const effectiveHeat = heatValue(data);
   const rain = useMemo(
     () => extractRainIndicator(data?.weather?.weather ?? null),
     [data?.weather?.weather],
   );
   const guidance = useMemo(
-    () => getClimateGuidance({ aqi, pm25, effectiveTemperatureC: effectiveHeat }),
-    [aqi, effectiveHeat, pm25],
+    () =>
+      getClimateGuidance({
+        aqi: aqiScore,
+        pm25,
+        usEpaIndex,
+        effectiveTemperatureC: effectiveHeat,
+      }),
+    [aqiScore, effectiveHeat, pm25, usEpaIndex],
   );
   const caseDays = data?.cases?.days ?? [];
   const dates =
@@ -154,6 +166,14 @@ export function DashboardClient() {
       (value): value is number | null => value === null || typeof value === "number",
     )
     : [];
+  const airMeasurementBrief = useMemo(
+    () => briefAirMeasurement({ pm25, aqiScore }),
+    [aqiScore, pm25],
+  );
+  const airMeasurementHelp = useMemo(
+    () => explainAirMeasurement({ pm25, aqiScore }),
+    [aqiScore, pm25],
+  );
 
   return (
     <div className="page-shell py-6 sm:py-10">
@@ -269,14 +289,19 @@ export function DashboardClient() {
                     <dt className="flex w-full items-center justify-between gap-2 text-xs font-extrabold uppercase">
                       Air quality
                       <DefinitionHelp label="Air quality" align="end">
-                        A plain-language level for how clean or dirty the air is
-                        right now: Good, Moderate, Use extra care, or Unhealthy.
-                        It comes from the air score (AQI) when available, or from
-                        fine particle (PM2.5) readings if the score is missing.
+                        The big word here is a simple level for how clean or
+                        dirty the air is: Good, Moderate, Use extra care, or
+                        Unhealthy.
                         <span className="mt-2 block text-xs">
-                          The small number is the air score (AQI), roughly 0
-                          toward 500 — lower is generally cleaner.
+                          The small line may show PM2.5 (tiny pollution particles
+                          in the air) and ~AQI (a common air score from about 0 to
+                          500). Higher PM2.5 or AQI usually means dirtier air.
                         </span>
+                        {airMeasurementHelp ? (
+                          <span className="mt-2 block text-xs">
+                            {airMeasurementHelp}
+                          </span>
+                        ) : null}
                         <span className="mt-2 block text-xs">
                           Source: {data.air?.source || "Unavailable"} ·{" "}
                           {provenanceText(data.air?.provenance)}
@@ -286,26 +311,27 @@ export function DashboardClient() {
                     <dd className="text-2xl font-extrabold tracking-tight sm:text-3xl">
                       {guidance.airBand === "no-data" ? "—" : guidance.label}
                     </dd>
-                    {aqi != null ? (
+                    {airMeasurementBrief ? (
                       <p className="mt-1 text-xs font-bold text-current/70">
-                        Air score (AQI) {aqi}
+                        {airMeasurementBrief}
                       </p>
-                    ) : pm25 != null ? (
-                      <p className="mt-1 text-xs font-bold text-current/70">
-                        Level from particles · score unavailable
-                      </p>
-                    ) : (
+                    ) : guidance.airBand === "no-data" ? (
                       <p className="mt-1 text-xs font-bold text-current/70">
                         Reading unavailable for this place
                       </p>
-                    )}
+                    ) : null}
                   </div>
                   <div className="min-w-[9rem] rounded-xl border border-current/20 bg-white/75 px-4 py-3">
                     <dt className="flex w-full items-center justify-between gap-2 text-xs font-extrabold uppercase">
                       Heat
                       <DefinitionHelp label="Heat" align="end">
-                        Outdoor temperature used for heat context (effective or
-                        feels-like when the provider supplies it).
+                        The big number is how warm it feels outside in °C
+                        (Celsius). We use a feels-like temperature when the
+                        weather source provides one.
+                        <span className="mt-2 block text-xs">
+                          Higher numbers mean hotter conditions. Plan shade,
+                          water, and rest when it feels especially hot.
+                        </span>
                         <span className="mt-2 block text-xs">
                           Source: {data.heat?.source || "Unavailable"} ·{" "}
                           {provenanceText(data.heat?.provenance)}
@@ -326,10 +352,13 @@ export function DashboardClient() {
                     <dt className="flex w-full items-center justify-between gap-2 text-xs font-extrabold uppercase">
                       Rain
                       <DefinitionHelp label="Rain" align="end">
-                        Whether it is raining at the selected place, based on
-                        the weather provider&apos;s current precipitation
-                        (rainfall amount in mm) and condition text. This is not
-                        a flood warning or river-level reading.
+                        The icon shows if it looks rainy, a little wet, or dry
+                        at the place you selected right now.
+                        <span className="mt-2 block text-xs">
+                          The small text may show how much rain was reported (in
+                          mm) or a short weather note such as light rain or clear
+                          skies.
+                        </span>
                         <span className="mt-2 block text-xs">
                           Source: {data.weather?.source || "Unavailable"} ·{" "}
                           {provenanceText(data.weather?.provenance)}
@@ -353,13 +382,6 @@ export function DashboardClient() {
                     </p>
                   </div>
                 </dl>
-                {pm25 != null ? (
-                  <p className="mt-3 text-sm text-current/80">
-                    Fine particles (PM2.5):{" "}
-                    <span className="font-extrabold">{pm25} µg/m³</span>
-                    {" · "}tiny pollution particles linked to the air score above
-                  </p>
-                ) : null}
               </section>
             </Reveal>
 
@@ -472,11 +494,13 @@ export function DashboardClient() {
                       >
                         Respiratory cases this week
                         <DefinitionHelp label="Respiratory cases chart">
-                          Bars show illustrative respiratory case counts for the
-                          selected city over about seven days. The dashed line is an
-                          illustrative 3–5 day extension from a simple model on that
-                          series. This is demo data until a live health feed is
-                          connected — not observed clinical cases.
+                          The bars show an example count of breathing-related
+                          clinic visits for about the last week in this city.
+                          The dashed line is a simple guess for the next few days.
+                          <span className="mt-2 block text-xs">
+                            This is practice / demo data for now — not live
+                            hospital numbers.
+                          </span>
                           <span className="mt-2 block text-xs">
                             Source: {data.cases?.source || "Unavailable"}
                           </span>
@@ -526,10 +550,13 @@ export function DashboardClient() {
                   <h2 className="flex flex-wrap items-center gap-2 text-xl font-bold">
                     Possible 3–5 day pressure
                     <DefinitionHelp label="Illustrative forecast">
-                      A 0–100 pressure score from a simple trend model on the
-                      synthetic case series for this city, looking about 3–5 days
-                      ahead. For discussion and training only — not a clinical,
-                      weather, or official forecast.
+                      A simple 0–100 score that guesses how busy next few days
+                      might look using the example case chart above. Higher means
+                      more pressure in the demo model.
+                      <span className="mt-2 block text-xs">
+                        For learning and discussion only — not a real health or
+                        weather forecast.
+                      </span>
                     </DefinitionHelp>
                   </h2>
                   <p className="mt-3 text-3xl font-extrabold">
@@ -550,9 +577,9 @@ export function DashboardClient() {
                   <h2 className="flex flex-wrap items-center gap-2 text-xl font-bold">
                     Weekly synthetic cases
                     <DefinitionHelp label="Weekly city comparison">
-                      Totals compare illustrative (synthetic) respiratory cases
-                      across cities for the week shown. Useful for demo and
-                      discussion — replace with real reporting when available.
+                      Compares example (demo) breathing-related case totals for
+                      each city this week. Helpful for practice conversations —
+                      real counts can replace this later.
                     </DefinitionHelp>
                   </h2>
                   {data.allCases?.cities ? (
