@@ -18,7 +18,7 @@ export function SiteFooter() {
           <div className="max-w-md">
             <div className="mb-4 flex items-center gap-3 font-heading text-xl font-bold">
               <Image
-                src="/climate-compass-logo-192.png"
+                src="/logo-white.png"
                 alt=""
                 width={44}
                 height={44}

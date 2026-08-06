@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     "Climate Compass helps people check air quality for selected places and get notified when conditions change.",
   applicationName: "Climate Compass",
   icons: {
-    icon: "/climate-compass-logo-192.png",
+    icon: "/favicon.ico",
     apple: "/climate-compass-logo-192.png",
   },
   metadataBase: new URL(
