@@ -1,6 +1,6 @@
 # ai_models.py
 """
-AI Models for Early Warning System
+AI Models for Climate Compass
 
 Simple, explainable machine learning models that health workers can understand.
 No complex neural networks - interpretability is key for healthcare.
@@ -25,7 +25,7 @@ class AirQualityForecast:
     
     Why simple regression?
     - Health workers understand it (trend-based)
-    - 78% accuracy is good enough for early warning
+    - 78% accuracy is good enough for Climate Compass alerting
     - Requires minimal data (no need for 5 years of history)
     - Doesn't overfit on noise
     """

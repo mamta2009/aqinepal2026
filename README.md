@@ -1,6 +1,6 @@
-# AQI Nepal 2026 — Early warning platform
+# AQI Nepal 2026 — Climate Compass
 
-Public repository for the **Nepal air quality & respiratory early-warning demo**: FastAPI backend, static landing, **guides** hub (`/guides`), registration flows, Mongo-backed notifications, and an operator admin console.
+Public repository for the **Nepal air quality & respiratory Climate Compass demo**: FastAPI backend, static landing, **guides** hub (`/guides`), registration flows, Mongo-backed notifications, and an operator admin console.
 
 **Upstream:** [https://github.com/mamta2009/aqinepal2026](https://github.com/mamta2009/aqinepal2026)
 

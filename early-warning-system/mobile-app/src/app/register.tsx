@@ -20,7 +20,7 @@ export default function RegisterScreen() {
         </View>
 
         <Text className="mb-1 text-2xl font-bold text-neutral-900 dark:text-white">
-          Early Warning Registration
+          Climate Compass Registration
         </Text>
         <Text className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
           Join our network and receive real-time air quality alerts for your facility

@@ -11,13 +11,13 @@ class HealthDataGenerator:
 
     BASE_CASES = {
         "Kathmandu": 18,
-        "Lalitpur": 12,
-        "Bhaktapur": 10,
-        "Banepa": 6,
-        "Dhulikhel": 4,
-        "Hetauda": 8,
-        "Bharatpur": 7,
-        "Narayanghad": 5,
+        "Pokhara": 12,
+        "Bharatpur": 10,
+        "Birgunj": 9,
+        "Biratnagar": 10,
+        "Janakpur": 7,
+        "Nepalgunj": 6,
+        "Dhangadhi": 5,
     }
 
     SEASONAL = {

@@ -1,4 +1,4 @@
-# 📦 Nepal AQI early-warning — package summary
+# 📦 Climate Compass (Nepal AQI) — package summary
 
 ## ✅ What you have
 
@@ -35,28 +35,28 @@ python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 
 Use **`http://127.0.0.1:8000`** in the browser (avoid **`http://0.0.0.0:8000`** — often blank).
 
-| Page | URL |
-|------|-----|
-| Marketing landing | `http://127.0.0.1:8000/` |
-| Guides hub | `http://127.0.0.1:8000/guides` |
-| Registration | `http://127.0.0.1:8000/registration` |
-| Dashboard | `http://127.0.0.1:8000/frontend/index.html` |
-| Operator admin | `http://127.0.0.1:8000/admin/dashboard` |
-| OpenAPI | `http://127.0.0.1:8000/docs` |
+| Page              | URL                                         |
+| ----------------- | ------------------------------------------- |
+| Marketing landing | `http://127.0.0.1:8000/`                    |
+| Guides hub        | `http://127.0.0.1:8000/guides`              |
+| Registration      | `http://127.0.0.1:8000/registration`        |
+| Dashboard         | `http://127.0.0.1:8000/frontend/index.html` |
+| Operator admin    | `http://127.0.0.1:8000/admin/dashboard`     |
+| OpenAPI           | `http://127.0.0.1:8000/docs`                |
 
 ---
 
 ## 📚 Documentation index (in-repo)
 
-| File | Purpose |
-|------|---------|
-| [`README.md`](../../../README.md) | Repository root — points into `early-warning-system/` |
-| [`../../README.md`](../../README.md) | App **`early-warning-system/README.md`** stub (links here) |
-| [`IMPLEMENTATION_SNAPSHOT.md`](IMPLEMENTATION_SNAPSHOT.md) | Canonical APIs, env, Mongo, AQ resolver, **`/api/admin/*`** |
-| [`CURSOR_SETUP_GUIDE.md`](CURSOR_SETUP_GUIDE.md) | Cursor-centric setup |
-| [`README.md`](README.md) | **Guides index** — lists every **`docs/guides/*.md`** topic |
-| [`blockchain-ai/README.md`](blockchain-ai/README.md) | Polygon / on-chain Markdown (companion **`docs/blockchain-ai/*.py`** stubs) |
-| [`../blockchain-ai/README.md`](../blockchain-ai/README.md) | Short pointer from **`docs/blockchain-ai/`** into this folder |
+| File                                                       | Purpose                                                                     |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------- |
+| [`README.md`](../../../README.md)                          | Repository root — points into `early-warning-system/`                       |
+| [`../../README.md`](../../README.md)                       | App **`early-warning-system/README.md`** stub (links here)                  |
+| [`IMPLEMENTATION_SNAPSHOT.md`](IMPLEMENTATION_SNAPSHOT.md) | Canonical APIs, env, Mongo, AQ resolver, **`/api/admin/*`**                 |
+| [`CURSOR_SETUP_GUIDE.md`](CURSOR_SETUP_GUIDE.md)           | Cursor-centric setup                                                        |
+| [`README.md`](README.md)                                   | **Guides index** — lists every **`docs/guides/*.md`** topic                 |
+| [`blockchain-ai/README.md`](blockchain-ai/README.md)       | Polygon / on-chain Markdown (companion **`docs/blockchain-ai/*.py`** stubs) |
+| [`../blockchain-ai/README.md`](../blockchain-ai/README.md) | Short pointer from **`docs/blockchain-ai/`** into this folder               |
 
 Older “`/outputs`” or duplicate guides elsewhere may exist from packaging history; **`IMPLEMENTATION_SNAPSHOT.md`** wins when wording conflicts with the running code.
 
@@ -114,12 +114,12 @@ curl "http://127.0.0.1:8000/api/air-quality/current?city=Kathmandu"
 
 ## 🔧 Troubleshooting (short)
 
-| Problem | Fix |
-|---------|-----|
-| “Module not found” | Activate **`backend/.venv`**; `pip install -r backend/requirements.txt` |
-| Port **8000** in use | `python -m uvicorn main:app --reload --host 127.0.0.1 --port 8001` |
-| Blank browser page | Use **`127.0.0.1`** or **`localhost`**, not **`0.0.0.0`** |
-| CORS | Prefer **`http://127.0.0.1:8000/frontend/index.html`** (same origin as API) |
+| Problem                      | Fix                                                                                      |
+| ---------------------------- | ---------------------------------------------------------------------------------------- |
+| “Module not found”           | Activate **`backend/.venv`**; `pip install -r backend/requirements.txt`                  |
+| Port **8000** in use         | `python -m uvicorn main:app --reload --host 127.0.0.1 --port 8001`                       |
+| Blank browser page           | Use **`127.0.0.1`** or **`localhost`**, not **`0.0.0.0`**                                |
+| CORS                         | Prefer **`http://127.0.0.1:8000/frontend/index.html`** (same origin as API)              |
 | Admin JSON **401** / **403** | Set **`NOTIFICATION_API_KEY`** in **`backend/.env`**; send **`Authorization: Bearer …`** |
 
 ---

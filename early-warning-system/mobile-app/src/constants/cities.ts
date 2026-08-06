@@ -5,13 +5,13 @@
  */
 export const CITY_NAMES = [
   "Kathmandu",
-  "Lalitpur",
-  "Bhaktapur",
-  "Banepa",
-  "Dhulikhel",
-  "Hetauda",
+  "Pokhara",
   "Bharatpur",
-  "Narayanghad",
+  "Birgunj",
+  "Biratnagar",
+  "Janakpur",
+  "Nepalgunj",
+  "Dhangadhi",
 ] as const;
 
 export type CityName = (typeof CITY_NAMES)[number];

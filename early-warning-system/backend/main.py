@@ -1,5 +1,5 @@
 """
-Early Warning System - FastAPI Backend
+Climate Compass - FastAPI Backend
 Nepal Respiratory Health Surge Prediction
 Open-Source | Blockchain-Verified | AI-Powered
 """
@@ -23,7 +23,7 @@ import httpx
 from dotenv import load_dotenv
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -34,7 +34,7 @@ import dashboard_settings_store
 import db_state
 import external_integrations
 import guide_documents
-import web_pages
+import next_frontend_api
 import onchain_hooks
 from cities_config import CITIES_CONFIG
 from facility_presets import FACILITY_PRESETS_BY_CITY
@@ -200,9 +200,14 @@ async def lifespan(app: FastAPI):
     except Exception as exc:  # noqa: BLE001
         logger.warning("Polygon on-chain logger startup: %s", exc)
         onchain_tx_logger = None
-    logger.info(
-        "Browser URLs: landing http://127.0.0.1:8000/ — do NOT use http://0.0.0.0:8000 (often blank)."
-    )
+    out = _frontend_out_dir()
+    if out is not None:
+        logger.info("Static UI: serving Next.js export from %s (OpenAPI at /docs)", out)
+    else:
+        logger.info(
+            "API mode: OpenAPI at /docs — build frontend/ (npm run build) to serve UI from /"
+        )
+
     try:
         import aqi_help as _aqi_help_boot
 
@@ -225,15 +230,15 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Early Warning System API",
-    description="Nepal Respiratory Health Early Warning System",
+    title="Climate Compass API",
+    description="Climate Compass — Nepal Respiratory Health",
     version="3.0.0",
     lifespan=lifespan,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=next_frontend_api.cors_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -350,7 +355,7 @@ class OpenRouterChatIn(BaseModel):
 
 
 _DEFAULT_OPENROUTER_SYSTEM = (
-    "You help explain early warning and environmental health topics for technical and policy audiences "
+    "You help explain Climate Compass and environmental health topics for technical and policy audiences "
     "working in Nepal. Be concise and cautious. You are not providing medical advice, diagnoses, or "
     "official public-health guidance."
 )
@@ -821,6 +826,14 @@ async def heat_current(
             "severe_at_or_above": sev_c,
         },
     }
+
+
+app.include_router(
+    next_frontend_api.create_router(
+        air_fetcher=air_quality_current,
+        heat_fetcher=heat_current,
+    )
+)
 
 
 @app.get("/api/air-quality/{city}")
@@ -1892,26 +1905,36 @@ async def submit_daily_report(
     }
 
 
-_landing_root = os.path.normpath(os.path.join(_backend_root, "..", "landing"))
-_intelladapt_logo_path = Path(_landing_root) / "assets" / "intelladapt-logo.png"
 _docs_root = os.path.normpath(os.path.join(_backend_root, "..", "docs"))
 _docs_technology_dir = os.path.join(_docs_root, "tech")
-_frontend_dir = os.path.normpath(os.path.join(_backend_root, "..", "frontend"))
 
 
 def _system_discovery_payload() -> dict:
+    frontend = (os.getenv("PUBLIC_FRONTEND_ORIGIN") or "").strip().rstrip("/")
     return {
-        "system": "Early Warning System - Nepal Respiratory Health",
+        "system": "Climate Compass - Nepal Respiratory Health",
         "version": "3.0.0",
         "status": "🟢 Running",
+        "mode": "api_only",
         "features": ["Open-Source MIT", "Blockchain Verified (Polygon)", "AI-Powered (78% accuracy)"],
-        "landing": "/",
-        "guides": "/guides",
-        "guides_markdown_preview": "/guides/md/{filepath}",
-        "documentation_legacy_redirect": "/documentation",
-        "dashboard": "/dashboard",
         "docs": "/docs",
         "api_base": "/api",
+        "frontend_origin": frontend or None,
+        "frontend_paths": {
+            "home": "/",
+            "guides": "/guides",
+            "dashboard": "/dashboard",
+            "map": "/map",
+            "registration": "/registration",
+            "contacts_directory": "/registration/contacts-directory",
+            "users_account": "/users",
+            "admin": "/admin",
+            "admin_dashboard_legacy": "/admin/dashboard",
+            "delete_account": "/delete-account",
+            "privacy_policy": "/privacy-policy",
+            "aqi_help": "/help/aqi-help",
+            "documentation_legacy": "/documentation",
+        },
         "endpoints": {
             "runtime_config": "/api/runtime-config",
             "health": "/api/health",
@@ -1942,14 +1965,11 @@ def _system_discovery_payload() -> dict:
             "ai_openrouter": "POST /api/ai/openrouter",
             "aqi_help_meta": "GET /api/help/aqi/meta",
             "aqi_help_chat": "POST /api/help/aqi/chat",
-            "aqi_help_page": "/help/aqi-help",
+            "environment_overview": "GET /api/environment/overview",
+            "guides_index": "GET /api/guides",
+            "guides_document": "GET /api/guides/{filepath}",
             "dhis2": "/api/dhis2/system-check",
             "daily_report": "POST /api/health/cases/daily-report",
-            "registration_portal": "/registration",
-            "admin_dashboard": "/admin/dashboard",
-            "users_account": "/users",
-            "delete_account": "/delete-account",
-            "privacy_policy": "/privacy-policy",
             "auth_delete_account": "POST /api/auth/delete-account",
             "auth_delete_account_request": "POST /api/auth/delete-account/request",
             "auth_delete_account_confirm": "POST /api/auth/delete-account/confirm",
@@ -1963,6 +1983,8 @@ def _system_discovery_payload() -> dict:
             "contacts_verify": "POST /api/contacts/verify",
             "contacts_verify_with_email": "POST /api/contacts/verify-with-email",
             "dashboard_login": "POST /api/auth/login",
+            "facility_login": "POST /api/auth/facility-login",
+            "facility_token": "POST /api/auth/facility-token",
             "dashboard_me": "GET /api/auth/me",
             "dashboard_profile": "GET /api/auth/profile",
             "dashboard_notification_inbox": "GET /api/auth/notification-inbox",
@@ -1976,147 +1998,82 @@ def _system_discovery_payload() -> dict:
             "notifications_send": "POST /api/notifications/send",
             "twilio_test": "POST /api/notifications/twilio/test",
             "whatsapp_sandbox_info": "/api/notifications/whatsapp/sandbox-info",
-            "guides_hub": "/guides",
-            "guides_markdown": "/guides/md/…",
-            "documentation_page": "/guides",
         },
     }
 
 
 @app.get("/api/system-discovery")
 async def system_discovery():
-    """Machine-readable index (formerly served at `/`)."""
+    """Machine-readable index of API capabilities."""
     return _system_discovery_payload()
 
 
-@app.get("/")
-async def landing_page(request: Request):
-    """Public marketing landing (Jinja marketing layout)."""
-    try:
-        return web_pages.render(request, "pages/home.html", active="home")
-    except Exception:
-        logger.exception("Landing template failed — falling back to JSON discovery")
-        return JSONResponse(_system_discovery_payload())
+def _frontend_out_dir() -> Path | None:
+    configured = (os.getenv("FRONTEND_OUT_DIR") or "").strip()
+    candidates: list[Path] = []
+    if configured:
+        candidates.append(Path(configured).expanduser())
+    candidates.append(Path(_backend_root).resolve().parent / "frontend" / "out")
+    for candidate in candidates:
+        if candidate.is_dir() and (candidate / "index.html").is_file():
+            return candidate
+    return None
 
 
-@app.get("/guides", response_class=HTMLResponse)
-async def guides_hub(request: Request):
-    """Public guides hub."""
-    return web_pages.render(request, "pages/guides.html", active="guides")
-
-
-@app.get("/guides/md/{filepath:path}", response_class=HTMLResponse)
-async def guides_markdown_page(request: Request, filepath: str):
-    """Render a *.md file from docs/guides/ inside the public layout."""
-    gp = guide_documents.safe_markdown_under(guide_documents.GUIDES_MARKDOWN_ROOT, filepath)
-    if gp is None:
-        raise HTTPException(status_code=404, detail="Guide markdown not found")
-    title, fragment = guide_documents.render_markdown_page(gp)
-    return web_pages.render(
-        request,
-        "pages/guide_md.html",
-        active="guides",
-        title=title,
-        content=fragment,
-    )
+def _frontend_out() -> Path | None:
+    """Resolve on each use so a fresh `npm run build` is picked up after reload."""
+    return _frontend_out_dir()
 
 
 @app.get("/documentation")
-async def documentation_legacy_redirect():
-    """Old path; Guides hub moved to `/guides`."""
-    return RedirectResponse(url="/guides", status_code=307)
+@app.get("/documentation/")
+async def redirect_documentation():
+    return RedirectResponse(url="/guides/", status_code=308)
 
 
-@app.get("/documentation/media/tech/{path:path}")
-async def documentation_technology_media_redirect(path: str):
-    """Old media URL under /documentation; tech SVGs live at /guides/media/tech/…."""
-    if ".." in path:
-        raise HTTPException(status_code=400, detail="invalid path")
-    return RedirectResponse(url=f"/guides/media/tech/{path}", status_code=307)
+@app.get("/frontend/index.html")
+async def redirect_legacy_frontend():
+    return RedirectResponse(url="/dashboard/", status_code=308)
 
 
-@app.get("/admin/dashboard", response_class=HTMLResponse)
-async def admin_dashboard_page(request: Request):
-    """Operator HTML console."""
-    return web_pages.render(request, "pages/admin.html", active="admin")
+@app.get("/privacy-policy.html")
+@app.get("/landing-assets/privacy.html")
+async def redirect_privacy_aliases():
+    return RedirectResponse(url="/privacy-policy/", status_code=308)
 
 
-@app.get("/users", response_class=HTMLResponse)
-async def users_account_page(request: Request):
-    """Registrant account UI."""
-    return web_pages.render(request, "pages/users.html", active="users")
+@app.get("/admin/dashboard")
+@app.get("/admin/dashboard/")
+async def redirect_admin_dashboard():
+    return RedirectResponse(url="/admin/", status_code=307)
 
 
-@app.get("/delete-account", response_class=HTMLResponse)
-async def delete_account_page(request: Request):
-    """Public account-deletion page (Google Play / App Store web resource)."""
-    return web_pages.render(request, "pages/delete_account.html", active="delete")
+def _resolve_frontend_file(full_path: str) -> Path | None:
+    root = _frontend_out()
+    if root is None:
+        return None
+    relative = (full_path or "").lstrip("/")
+    if not relative or relative.startswith("api/"):
+        return None
+    target = (root / relative).resolve()
+    try:
+        target.relative_to(root.resolve())
+    except ValueError:
+        return None
+    if target.is_file():
+        return target
+    if target.is_dir():
+        index = target / "index.html"
+        if index.is_file():
+            return index
+    index = root / relative / "index.html"
+    if index.is_file():
+        return index
+    html_file = root / f"{relative}.html"
+    if html_file.is_file():
+        return html_file
+    return None
 
-
-@app.get("/privacy-policy", response_class=HTMLResponse)
-async def privacy_policy_page(request: Request):
-    """Public privacy policy (Google Play User Data / privacy policy URL)."""
-    return web_pages.render(request, "pages/privacy.html", active="privacy")
-
-
-@app.get("/privacy-policy.html", include_in_schema=False)
-async def privacy_policy_html_redirect():
-    return RedirectResponse(url="/privacy-policy", status_code=301)
-
-
-@app.get("/landing-assets/privacy.html", include_in_schema=False)
-async def privacy_policy_legacy_asset_redirect():
-    """Redirect the old static privacy asset to the canonical clean URL."""
-    return RedirectResponse(url="/privacy-policy", status_code=301)
-
-
-@app.get("/help/aqi-help", response_class=HTMLResponse)
-async def aqi_help_page(request: Request, embed: int = Query(0)):
-    """Interactive aqiHelp chat. Pass embed=1 for the floating-widget iframe (chat only)."""
-    return web_pages.render(
-        request,
-        "pages/aqi_help.html",
-        active="aqi-help",
-        embed=bool(embed),
-    )
-
-
-@app.get("/dashboard", response_class=HTMLResponse)
-async def dashboard_page(request: Request):
-    """Product readiness dashboard (canonical clean URL)."""
-    return web_pages.render(request, "pages/dashboard.html", active="dashboard")
-
-
-@app.get("/frontend/index.html", include_in_schema=False)
-async def dashboard_legacy_html_redirect():
-    """Legacy static dashboard path → clean /dashboard."""
-    return RedirectResponse(url="/dashboard", status_code=301)
-
-
-@app.get("/favicon.ico", include_in_schema=False)
-async def favicon_legacy_path():
-    """Browsers probe ``/favicon.ico`` automatically; reuse the PNG logo mounted under landing-assets."""
-    return RedirectResponse("/landing-assets/favicon.ico", status_code=302)
-
-
-@app.get("/intelladapt-logo.png")
-async def intelladapt_logo_root_alias():
-    """
-    Some browsers or cached pages request the logo at the site root.
-    Canonical path remains ``/landing-assets/intelladapt-logo.png``.
-    """
-    if _intelladapt_logo_path.is_file():
-        return FileResponse(_intelladapt_logo_path, media_type="image/png")
-    raise HTTPException(status_code=404, detail="intelladapt-logo.png not found under landing/assets")
-
-
-_landing_assets_dir = os.path.join(_landing_root, "assets")
-if os.path.isdir(_landing_assets_dir):
-    app.mount(
-        "/landing-assets",
-        StaticFiles(directory=_landing_assets_dir),
-        name="landing_assets",
-    )
 
 if os.path.isdir(_docs_technology_dir):
     app.mount(
@@ -2125,8 +2082,47 @@ if os.path.isdir(_docs_technology_dir):
         name="guides_technology_media",
     )
 
-if os.path.isdir(_frontend_dir):
-    app.mount("/frontend", StaticFiles(directory=_frontend_dir), name="frontend")
+
+
+@app.get("/")
+async def site_root():
+    root = _frontend_out()
+    if root is not None:
+        return FileResponse(root / "index.html")
+    return {
+        "service": "Climate Compass API",
+        "docs": "/docs",
+        "redoc": "/redoc",
+        "openapi": "/openapi.json",
+        "system_discovery": "/api/system-discovery",
+        "health": "/api/health",
+        "note": (
+            "Build the Next.js static export (cd frontend && npm run build) so this "
+            "host can serve the UI from frontend/out. OpenAPI docs remain at /docs."
+        ),
+    }
+
+
+@app.get("/{full_path:path}")
+async def frontend_static(full_path: str):
+    """Serve exported Next.js pages/assets for non-API routes when frontend/out exists."""
+    if full_path.startswith("api/") or full_path.split("/", 1)[0] in {
+        "docs",
+        "redoc",
+        "openapi.json",
+    }:
+        raise HTTPException(status_code=404, detail="Not found")
+    root = _frontend_out()
+    if root is None:
+        raise HTTPException(status_code=404, detail="Frontend export not built")
+    resolved = _resolve_frontend_file(full_path)
+    if resolved is not None:
+        return FileResponse(resolved)
+    # Prefer real 404 for missing hashed assets under /_next/
+    if full_path.startswith("_next/"):
+        raise HTTPException(status_code=404, detail="Not found")
+    return FileResponse(root / "index.html")
+
 
 
 if __name__ == "__main__":

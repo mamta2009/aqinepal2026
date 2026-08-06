@@ -4,7 +4,7 @@
 
 This guide shows you exactly how to add blockchain logging and AI predictions to your existing FastAPI backend.
 
-> **Nepal Early Warning repo alignment:** [**`github.com/mamta2009/aqinepal2026`**](https://github.com/mamta2009/aqinepal2026). Live **air quality, weather, provenance, env, Mongo, notifications, and admin APIs** live in **[`../IMPLEMENTATION_SNAPSHOT.md`](../IMPLEMENTATION_SNAPSHOT.md)** — treat that file as authoritative. Sample `main.py` fragments in this guide are educational; routes may diverge from current [`main.py`](../../../backend/main.py) (e.g. prefer `/api/air-quality/current`, `/api/models/predict/week/{city}`, `/api/admin/*`).
+> **Climate Compass repo alignment:** [**`github.com/mamta2009/aqinepal2026`**](https://github.com/mamta2009/aqinepal2026). Live **air quality, weather, provenance, env, Mongo, notifications, and admin APIs** live in **[`../IMPLEMENTATION_SNAPSHOT.md`](../IMPLEMENTATION_SNAPSHOT.md)** — treat that file as authoritative. Sample `main.py` fragments in this guide are educational; routes may diverge from current [`main.py`](../../../backend/main.py) (e.g. prefer `/api/air-quality/current`, `/api/models/predict/week/{city}`, `/api/admin/*`).
 
 ---
 
@@ -34,6 +34,7 @@ numpy==1.24.3
 ```
 
 Then install:
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -46,8 +47,8 @@ Replace your current `main.py` with this enhanced version:
 
 ```python
 """
-Early Warning System Backend - FastAPI + MongoDB + Blockchain + AI
-Nepal Respiratory Health Alerts
+Climate Compass Backend - FastAPI + MongoDB + Blockchain + AI
+Climate-Health Alerts
 """
 
 from fastapi import FastAPI, HTTPException, Query
@@ -128,8 +129,8 @@ class ActionLog(BaseModel):
 # ===== FASTAPI APP =====
 
 app = FastAPI(
-    title="Early Warning System API",
-    description="Nepal Respiratory Health Alerts - Open Source, Blockchain, AI-Powered",
+    title="Climate Compass API",
+    description="Climate-Health Alerts - Open Source, Blockchain, AI-Powered",
     version="2.0.0"
 )
 
@@ -156,7 +157,7 @@ anomaly_detector: AnomalyDetection = None
 async def startup_event():
     """Initialize all systems on startup"""
     global db, scheduler, blockchain, forecast_model, respiratory_predictor, anomaly_detector
-    
+
     try:
         # MongoDB connection
         client = AsyncIOMotorClient(MONGODB_URL)
@@ -164,7 +165,7 @@ async def startup_event():
         await db.command("ping")
         logger.info("✓ Connected to MongoDB")
         await create_indexes()
-        
+
         # Blockchain initialization
         blockchain = BlockchainLogger(
             network=BLOCKCHAIN_NETWORK,
@@ -177,20 +178,20 @@ async def startup_event():
             logger.info(f"  Balance: {blockchain.get_balance()}")
         else:
             logger.info("⚠️ Blockchain disabled (development mode)")
-        
+
         # AI Models initialization
         forecast_model = AirQualityForecast(degree=2)
         respiratory_predictor = RespiratoryPrediction()
         anomaly_detector = AnomalyDetection(sensitivity=0.3)
         logger.info("✓ AI models initialized")
-        
+
         # Scheduler
         scheduler = AsyncIOScheduler()
         scheduler.add_job(scheduled_data_collection, 'interval', hours=6)
         scheduler.add_job(scheduled_model_training, 'interval', hours=12)
         scheduler.start()
         logger.info("✓ Scheduler started")
-        
+
     except Exception as e:
         logger.error(f"✗ Startup failed: {e}")
         raise
@@ -216,7 +217,7 @@ async def create_indexes():
 async def scheduled_data_collection():
     """Collect air quality data every 6 hours"""
     logger.info("📊 Running data collection...")
-    
+
     for city in CITY_COORDS.keys():
         try:
             # Fetch air quality
@@ -224,17 +225,17 @@ async def scheduled_data_collection():
             if "error" not in aq_data:
                 await db.air_quality.insert_one(AirQualityData(**aq_data).dict())
                 logger.info(f"  ✓ {city}: PM2.5 = {aq_data.get('pm25', 'N/A')}")
-                
+
                 # Calculate risk and create alert if needed
                 await check_and_create_alert(city, aq_data)
-                
+
         except Exception as e:
             logger.error(f"Data collection for {city} failed: {e}")
 
 async def scheduled_model_training():
     """Train AI models every 12 hours"""
     logger.info("🤖 Training AI models...")
-    
+
     try:
         # Get last 30 days of data for each city
         for city in CITY_COORDS.keys():
@@ -245,11 +246,11 @@ async def scheduled_model_training():
             ).sort("timestamp", 1):
                 if doc.get("pm25"):
                     data.append(doc["pm25"])
-            
+
             if len(data) > 10:
                 forecast_model.train(data)
                 logger.info(f"  ✓ {city} model trained ({len(data)} data points)")
-                
+
     except Exception as e:
         logger.error(f"Model training failed: {e}")
 
@@ -259,16 +260,16 @@ async def fetch_iqair_data(city: str) -> dict:
     """Fetch real-time air quality from IQAir API"""
     if city not in CITY_COORDS:
         return {"error": "City not found"}
-    
+
     try:
         coord = CITY_COORDS[city]
         url = f"https://api.waqi.info/feed/geo:{coord['lat']};{coord['lon']}/?token={IQAIR_API_KEY}"
-        
+
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(url)
             response.raise_for_status()
             data = response.json()
-            
+
             if data['status'] == 'ok':
                 aq_data = data['data']
                 return {
@@ -292,14 +293,14 @@ async def check_and_create_alert(city: str, aq_data: dict):
     """Check if alert should be triggered and log to blockchain"""
     try:
         pm25 = aq_data.get("pm25", 0)
-        
+
         # Calculate risk score
         risk_score = calculate_risk_score(pm25)
         alert_level = determine_alert_level(risk_score)
-        
+
         # Get facilities in this city
         facilities = await db.facilities.find({"city": city}).to_list(None)
-        
+
         for facility in facilities:
             # Get predicted cases using AI
             predicted_cases = respiratory_predictor.predict_cases(
@@ -307,7 +308,7 @@ async def check_and_create_alert(city: str, aq_data: dict):
                 season=get_season(),
                 facility_capacity=facility.get('pediatric_beds', 20)
             )['predicted_cases']
-            
+
             # Create alert
             alert = Alert(
                 facility_id=facility['facility_id'],
@@ -317,10 +318,10 @@ async def check_and_create_alert(city: str, aq_data: dict):
                 predicted_cases=predicted_cases,
                 alert_message=generate_alert_message(city, alert_level, pm25)
             )
-            
+
             # Save to MongoDB
             result = await db.alerts.insert_one(alert.dict())
-            
+
             # Log to blockchain
             tx_hash = blockchain.log_alert(
                 city=city,
@@ -329,17 +330,17 @@ async def check_and_create_alert(city: str, aq_data: dict):
                 risk_score=risk_score,
                 facility_id=facility['facility_id']
             )
-            
+
             if tx_hash:
                 alert.blockchain_tx = tx_hash['tx_hash']
                 await db.alerts.update_one(
                     {"_id": result.inserted_id},
                     {"$set": {"blockchain_tx": tx_hash['tx_hash']}}
                 )
-                
+
                 logger.info(f"✓ Alert created and logged to blockchain")
                 logger.info(f"  TX: {tx_hash['explorer_url']}")
-    
+
     except Exception as e:
         logger.error(f"Alert creation failed: {e}")
 
@@ -421,7 +422,7 @@ async def get_air_quality(city: str):
 async def get_air_quality_forecast(city: str, days_ahead: int = 5):
     """
     AI Endpoint: Forecast PM2.5 for next N days
-    
+
     Example response:
     {
         "city": "Kathmandu",
@@ -447,7 +448,7 @@ async def get_air_quality_forecast(city: str, days_ahead: int = 5):
 async def get_respiratory_forecast(facility_id: str, days_ahead: int = 5):
     """
     AI Endpoint: Predict respiratory cases for next N days
-    
+
     Example response:
     {
         "facility_id": "ktm_hospital_01",
@@ -467,17 +468,17 @@ async def get_respiratory_forecast(facility_id: str, days_ahead: int = 5):
         facility = await db.facilities.find_one({"facility_id": facility_id})
         if not facility:
             raise HTTPException(status_code=404, detail="Facility not found")
-        
+
         forecast = forecast_model.forecast(days_ahead)
         predictions = []
-        
+
         for i, pm25 in enumerate(forecast):
             pred = respiratory_predictor.predict_cases(
                 pm25=pm25,
                 season=get_season(),
                 facility_capacity=facility.get('pediatric_beds', 20)
             )
-            
+
             predictions.append({
                 "day": i + 1,
                 "predicted_pm25": pm25,
@@ -486,7 +487,7 @@ async def get_respiratory_forecast(facility_id: str, days_ahead: int = 5):
                 "alert_level": pred['alert_level'],
                 "recommendation": pred['recommendation']
             })
-        
+
         return {
             "facility_id": facility_id,
             "facility_name": facility['name'],
@@ -501,7 +502,7 @@ async def get_respiratory_forecast(facility_id: str, days_ahead: int = 5):
 async def log_action(action: ActionLog):
     """
     Log facility action and blockchain confirmation
-    
+
     Example:
     {
         "facility_id": "ktm_hospital_01",
@@ -512,7 +513,7 @@ async def log_action(action: ActionLog):
     try:
         # Save to MongoDB
         result = await db.action_logs.insert_one(action.dict())
-        
+
         # Log to blockchain
         tx_hash = blockchain.log_action(
             facility_id=action.facility_id,
@@ -520,14 +521,14 @@ async def log_action(action: ActionLog):
             verified=True,
             details=action.notes
         )
-        
+
         if tx_hash:
             action.blockchain_tx = tx_hash['tx_hash']
             await db.action_logs.update_one(
                 {"_id": result.inserted_id},
                 {"$set": {"blockchain_tx": tx_hash['tx_hash']}}
             )
-            
+
             return {
                 "action_id": str(result.inserted_id),
                 "blockchain_tx": tx_hash['tx_hash'],
@@ -539,7 +540,7 @@ async def log_action(action: ActionLog):
                 "action_id": str(result.inserted_id),
                 "status": "saved (blockchain unavailable)"
             }
-    
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -548,7 +549,7 @@ async def verify_blockchain_transaction(tx_hash: str):
     """Verify a transaction on blockchain"""
     if not blockchain.enable:
         return {"error": "Blockchain disabled"}
-    
+
     return blockchain.verify_event(tx_hash)
 
 @app.get("/api/blockchain/explorer")
@@ -556,7 +557,7 @@ async def get_blockchain_info():
     """Get blockchain explorer info"""
     if not blockchain.enable:
         return {"error": "Blockchain disabled"}
-    
+
     return {
         "network": blockchain.network_name,
         "address": blockchain.get_address(),
@@ -569,7 +570,7 @@ async def get_blockchain_info():
 async def root():
     """API info"""
     return {
-        "name": "Early Warning System API",
+        "name": "Climate Compass API",
         "version": "2.0.0",
         "features": ["Open-Source", "Blockchain", "AI-Powered"],
         "docs_url": "/docs",
@@ -656,29 +657,29 @@ In `dashboard.html`, update API endpoints to call new AI endpoints:
 // Add to dashboard.html, around line 540
 
 async function loadAIForecasts() {
-    // Load 5-day air quality forecast
-    const aqResponse = await fetch(
-        `${API_BASE}/forecast/air-quality/Kathmandu?days_ahead=5`
-    );
-    const aqForecast = await aqResponse.json();
-    
-    // Load respiratory case predictions
-    const respResponse = await fetch(
-        `${API_BASE}/forecast/respiratory/facility-123?days_ahead=5`
-    );
-    const respForecast = await respResponse.json();
-    
-    // Display in dashboard
-    displayAIForecasts(aqForecast, respForecast);
+  // Load 5-day air quality forecast
+  const aqResponse = await fetch(
+    `${API_BASE}/forecast/air-quality/Kathmandu?days_ahead=5`,
+  );
+  const aqForecast = await aqResponse.json();
+
+  // Load respiratory case predictions
+  const respResponse = await fetch(
+    `${API_BASE}/forecast/respiratory/facility-123?days_ahead=5`,
+  );
+  const respForecast = await respResponse.json();
+
+  // Display in dashboard
+  displayAIForecasts(aqForecast, respForecast);
 }
 
 function displayAIForecasts(aqForecast, respForecast) {
-    // Show predicted PM2.5 and respiratory cases
-    console.log('Air Quality Forecast:', aqForecast.forecast);
-    console.log('Respiratory Forecast:', respForecast.forecast);
-    
-    // Update dashboard charts
-    // ... implementation
+  // Show predicted PM2.5 and respiratory cases
+  console.log("Air Quality Forecast:", aqForecast.forecast);
+  console.log("Respiratory Forecast:", respForecast.forecast);
+
+  // Update dashboard charts
+  // ... implementation
 }
 
 // Call on page load
@@ -696,35 +697,38 @@ loadAIForecasts();
 ✅ `/api/forecast/respiratory/facility-123` returns case predictions  
 ✅ Alerts are logged to blockchain with verifiable TX hashes  
 ✅ Dashboard shows AI forecasts  
-✅ Can verify transactions on https://mumbai.polygonscan.com  
+✅ Can verify transactions on https://mumbai.polygonscan.com
 
 ---
 
 ## Cost
 
-| Component | Cost |
-|-----------|------|
+| Component            | Cost                                        |
+| -------------------- | ------------------------------------------- |
 | Blockchain (Polygon) | $0 (testnet) or $0.01-0.10 per TX (mainnet) |
-| Render hosting | $7/month |
-| MongoDB | $0 (free tier) |
-| External APIs | $0 (free tiers) |
-| **Total** | **$7/month** |
+| Render hosting       | $7/month                                    |
+| MongoDB              | $0 (free tier)                              |
+| External APIs        | $0 (free tiers)                             |
+| **Total**            | **$7/month**                                |
 
 ---
 
 ## Troubleshooting
 
 **"Blockchain connection failed"**
+
 - Check internet connection
 - Verify RPC URL is correct
 - Try testnet instead of mainnet
 
 **"POLYGON_PRIVATE_KEY not found"**
+
 - Create `.env` file
 - Add your private key (without 0x)
 - Restart FastAPI
 
 **"AI models not predicting correctly"**
+
 - Train on more data (need 10+ days minimum)
 - Check PM2.5 values are reasonable (0-500)
 

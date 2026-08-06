@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start the Early Warning backend: free PORT, clear caches, run uvicorn, open the landing page in Chrome.
+# Start the Climate Compass backend: free PORT, clear caches, run uvicorn, open the landing page in Chrome.
 # Loads MONGODB_URL like FastAPI (backend/.env then config/.env) and pings local Mongo if applicable.
 #
 # Usage:

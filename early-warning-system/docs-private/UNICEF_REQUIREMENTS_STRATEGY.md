@@ -613,7 +613,7 @@ loadRespiratoryForecast();
 > "In Nepal, respiratory illnesses are the 2nd leading cause of death in children under 5. Health facilities lack predictive capabilities to prepare for air quality crises. Decisions are reactive, not proactive."
 
 **Solution (Open-Source, Blockchain, AI):**
-> "We built an open-source (MIT), AI-powered early warning system that forecasts respiratory surges 5 days ahead. All critical events are logged immutably to blockchain for accountability. Any organization can deploy this system using our open-source code on GitHub."
+> "We built an open-source (MIT), AI-powered Climate Compass that forecasts respiratory surges 5 days ahead. All critical events are logged immutably to blockchain for accountability. Any organization can deploy this system using our open-source code on GitHub."
 
 **Key Statistics:**
 - ✅ **Open-Source**: MIT license, deployable in 15 minutes

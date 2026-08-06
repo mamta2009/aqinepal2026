@@ -25,8 +25,7 @@ from pathlib import Path
 
 import httpx
 from bson import ObjectId
-from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, Request, Response
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
 import db_state
@@ -36,7 +35,6 @@ import facility_auth
 import onchain_hooks
 import registrant_auth
 import twilio_notify
-import web_pages
 from cities_config import CITIES_CONFIG
 from notification_auth import (
     require_notification_api_key,
@@ -82,6 +80,7 @@ class ContactType(str, Enum):
     PARENT = "parent"
     ADMIN = "admin"
     GOVERNMENT = "government"
+    SCHOOL_ADMIN = "school_admin"
 
 
 class NotificationChannel(str, Enum):
@@ -137,6 +136,31 @@ class ContactRegistration(BaseModel):
             "Omit or null to default to both. Empty list declines environmental SMS/email pushes."
         ),
     )
+    school_contact: Optional[str] = Field(
+        None,
+        max_length=200,
+        description="School phone or outreach contact (school_admin registrations).",
+    )
+    school_address: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="School address (school_admin registrations).",
+    )
+    school_information: Optional[str] = Field(
+        None,
+        max_length=2000,
+        description="Brief information about the school (school_admin registrations).",
+    )
+
+    @model_validator(mode="after")
+    def _school_admin_requires_school_name(self) -> "ContactRegistration":
+        if self.contact_type != ContactType.SCHOOL_ADMIN:
+            return self
+        names, _ = _normalize_facility_names(self.facility_names, self.facility_name)
+        if not names:
+            raise ValueError("School name is required for school administrators.")
+        return self
+
 
 
 def _validated_environment_topics(raw: Optional[list[str]], *, default_both: bool) -> list[str]:
@@ -408,7 +432,7 @@ class AlertBroadcast(BaseModel):
     aqi_level: AlertLevel
     recipient_type: str = Field(
         "health_worker",
-        description="health_worker | parent | admin | government | all",
+        description="health_worker | parent | admin | government | school_admin | all",
     )
     message_override: Optional[str] = None
     filter_city: Optional[str] = Field(
@@ -423,7 +447,7 @@ class AlertEvaluateIn(BaseModel):
     city: str
     recipient_type: str = Field(
         "health_worker",
-        description="health_worker | parent | admin | government | all",
+        description="health_worker | parent | admin | government | school_admin | all",
     )
     filter_city: Optional[str] = Field(
         None,
@@ -754,7 +778,7 @@ def _email_shell(
     title: str,
     accent: str,
     body_html: str,
-    footer_note: str = "You received this because you subscribed to Early Warning alerts.",
+    footer_note: str = "You received this because you subscribed to Climate Compass alerts.",
 ) -> str:
     """Table-based HTML shell with inline styles for email clients."""
     safe_title = html.escape(title)
@@ -769,7 +793,7 @@ def _email_shell(
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #d7dde5;">
         <tr>
           <td style="background:{accent};padding:18px 24px;">
-            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.85);">AQI Nepal · Early Warning</p>
+            <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.85);">Climate Compass</p>
             <h1 style="margin:6px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:20px;line-height:1.3;font-weight:700;color:#ffffff;">{safe_title}</h1>
           </td>
         </tr>
@@ -931,7 +955,7 @@ def _render_shared_alert_email_html(
 
     Returns ``(html_content, plain_text)`` for SendGrid multipart delivery.
     """
-    safe_sender = html.escape((sender_name or "Early Warning user").strip() or "Early Warning user")
+    safe_sender = html.escape((sender_name or "Climate Compass user").strip() or "Climate Compass user")
     safe_msg = html.escape((message or "").strip()).replace("\n", "<br>\n")
     greeting_name = (recipient_display_name or "").strip()
     greeting = (
@@ -940,12 +964,12 @@ def _render_shared_alert_email_html(
         else "Hello,"
     )
     accent = "#1565c0"
-    title = "Personal message via Early Warning"
+    title = "Personal message via Climate Compass"
     body = f"""
       <p style="margin:0 0 14px;font-size:15px;color:#374151;">{greeting}</p>
       <p style="margin:0 0 16px;font-size:15px;color:#374151;">
         <strong>{safe_sender}</strong> sent you a message through the
-        <strong>AQI Nepal Early Warning</strong> friends &amp; family tool.
+        <strong>Climate Compass</strong> friends &amp; family tool.
         This is a personal note from someone who listed you as an emergency contact —
         it is <em>not</em> an automated air-quality or heat broadcast from the platform.
       </p>
@@ -965,22 +989,22 @@ def _render_shared_alert_email_html(
         accent=accent,
         body_html=body,
         footer_note=(
-            "Sent via AQI Nepal Early Warning · Friends & family alerts. "
+            "Sent via Climate Compass · Friends & family alerts. "
             "This message was initiated by a registered user, not by an automatic alert rule."
         ),
     )
     plain_name = greeting_name or "there"
-    plain_sender = (sender_name or "Early Warning user").strip() or "Early Warning user"
+    plain_sender = (sender_name or "Climate Compass user").strip() or "Climate Compass user"
     plain_msg = (message or "").strip()
     plain_text = (
         f"Hello {plain_name},\n\n"
-        f"{plain_sender} sent you a message through the AQI Nepal Early Warning "
+        f"{plain_sender} sent you a message through the Climate Compass "
         f"friends & family tool. This is a personal note — not an automated "
         f"air-quality or heat broadcast.\n\n"
         f"Message:\n{plain_msg}\n\n"
         f"If you did not expect this, ask the sender to remove you from their list. "
         f"Do not reply to this email for emergencies.\n\n"
-        f"— AQI Nepal Early Warning"
+        f"— Climate Compass"
     )
     return html_content, plain_text
 
@@ -1005,7 +1029,7 @@ async def send_email(
     content.append({"type": "text/html", "value": html_content})
     payload = {
         "personalizations": [{"to": [{"email": to_email}]}],
-        "from": {"email": from_email, "name": "AQI Nepal Early Warning"},
+        "from": {"email": from_email, "name": "Climate Compass"},
         "subject": subject,
         "content": content,
     }
@@ -1050,7 +1074,7 @@ async def _dispatch_verification_email(
     safe_code = html.escape(code)
     body = f"""
       <p style="margin:0 0 12px;">Hi {safe_name},</p>
-      <p style="margin:0 0 18px;color:#374151;">Use this code to verify your Early Warning registration:</p>
+      <p style="margin:0 0 18px;color:#374151;">Use this code to verify your Climate Compass registration:</p>
       <p style="margin:0 0 18px;text-align:center;font-family:Consolas,Monaco,monospace;font-size:32px;letter-spacing:0.28em;font-weight:700;color:#0f4c5c;">{safe_code}</p>
       <p style="margin:0;font-size:13px;color:#6b7280;">This code expires in 24 hours. If you did not request registration, you can ignore this email.</p>
     """
@@ -1058,16 +1082,16 @@ async def _dispatch_verification_email(
         title="Verify your registration",
         accent="#0f4c5c",
         body_html=body,
-        footer_note="AQI Nepal Early Warning System",
+        footer_note="Climate Compass",
     )
     plain = (
         f"Hi {name},\n\n"
-        f"Your Early Warning verification code is: {code}\n\n"
+        f"Your Climate Compass verification code is: {code}\n\n"
         f"This code expires in 24 hours.\n"
     )
     result = await send_email(
         email,
-        "Verify your Early Warning registration",
+        "Verify your Climate Compass registration",
         html_content,
         plain_text=plain,
     )
@@ -1097,7 +1121,7 @@ async def _dispatch_verification_sms(
 ) -> dict[str, Any]:
     result = await send_sms(
         phone_number,
-        f"Early Warning verification code: {code}. Valid 24 hours.",
+        f"Climate Compass verification code: {code}. Valid 24 hours.",
     )
     if result.get("success"):
         await db.notification_logs.insert_one(
@@ -1125,7 +1149,7 @@ async def _dispatch_verification_whatsapp(
 ) -> dict[str, Any]:
     result = await send_whatsapp(
         whatsapp_number,
-        f"Early Warning verification code: {code}. Valid 24 hours.",
+        f"Climate Compass verification code: {code}. Valid 24 hours.",
     )
     if result.get("success"):
         await db.notification_logs.insert_one(
@@ -1203,7 +1227,7 @@ async def _send_facility_login_code(db: Any, doc: dict[str, Any], code: str) -> 
     chans = doc.get("preferred_channels") or []
     name = str(doc.get("name") or "")
     ttl = facility_auth.facility_login_code_ttl_minutes()
-    hint = f"Early Warning facility dashboard code: {code}. Valid {ttl} minutes."
+    hint = f"Climate Compass facility dashboard code: {code}. Valid {ttl} minutes."
 
     try:
         if "email" in chans:
@@ -1273,7 +1297,7 @@ async def _send_account_deletion_code(db: Any, doc: dict[str, Any], code: str) -
     name = str(doc.get("name") or "")
     ttl = _ACCOUNT_DELETION_CODE_TTL_MINUTES
     hint = (
-        f"Early Warning account deletion code: {code}. "
+        f"Climate Compass account deletion code: {code}. "
         f"Valid {ttl} minutes. If you did not request this, ignore this message."
     )
 
@@ -1285,7 +1309,7 @@ async def _send_account_deletion_code(db: Any, doc: dict[str, Any], code: str) -
                 body = f"""
                   <p style="margin:0 0 12px;">Hi {safe_name},</p>
                   <p style="margin:0 0 18px;color:#374151;">
-                    Use this code to confirm permanent deletion of your Early Warning account
+                    Use this code to confirm permanent deletion of your Climate Compass account
                     and associated personal data:
                   </p>
                   <p style="margin:0 0 18px;text-align:center;font-family:Consolas,Monaco,monospace;font-size:32px;letter-spacing:0.28em;font-weight:700;color:#9b1c1c;">{safe_code}</p>
@@ -1298,17 +1322,17 @@ async def _send_account_deletion_code(db: Any, doc: dict[str, Any], code: str) -
                     title="Confirm account deletion",
                     accent="#9b1c1c",
                     body_html=body,
-                    footer_note="AQI Nepal Early Warning System",
+                    footer_note="Climate Compass",
                 )
                 plain = (
                     f"Hi {name or 'there'},\n\n"
-                    f"Your Early Warning account deletion code is: {code}\n\n"
+                    f"Your Climate Compass account deletion code is: {code}\n\n"
                     f"This code expires in {ttl} minutes.\n"
                     f"If you did not request this, ignore this email.\n"
                 )
                 er = await send_email(
                     doc["email"],
-                    "Confirm Early Warning account deletion",
+                    "Confirm Climate Compass account deletion",
                     html_content,
                     plain_text=plain,
                 )
@@ -1421,7 +1445,7 @@ async def _send_session_reverification_code(
     chans = doc.get("preferred_channels") or []
     name = str(doc.get("name") or "")
     hint = (
-        f"Early Warning periodic renewal code: {code}. Valid {ttl_minutes} minutes. "
+        f"Climate Compass periodic renewal code: {code}. Valid {ttl_minutes} minutes. "
         "Use it when signing in with your current password and a NEW dashboard password."
     )
 
@@ -1430,7 +1454,7 @@ async def _send_session_reverification_code(
             if _sendgrid_configured():
                 er = await send_email(
                     doc["email"],
-                    "Security code — Early Warning dashboard",
+                    "Security code — Climate Compass dashboard",
                     f"<p>{name or 'Hello'},</p><p>{hint}</p>",
                 )
                 if not er.get("success"):
@@ -1499,6 +1523,37 @@ def _approval_status_after_contact_verified(existing_approval_lower: str) -> str
     return "pending"
 
 
+async def _reject_if_verified_channel_taken(
+    db: Any,
+    *,
+    field_label: str,
+    values: list[str],
+    exclude_id: ObjectId | None,
+) -> None:
+    """Block registration when another verified contact already owns phone/WhatsApp."""
+    cleaned = [v for v in dict.fromkeys(values) if v]
+    if not cleaned:
+        return
+    query: dict[str, Any] = {
+        "verification_status": "verified",
+        "$or": [
+            {"phone_number": {"$in": cleaned}},
+            {"whatsapp_number": {"$in": cleaned}},
+        ],
+    }
+    if exclude_id is not None:
+        query["_id"] = {"$ne": exclude_id}
+    conflict = await db.contacts.find_one(query, {"_id": 1})
+    if conflict:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                f"This {field_label} is already registered as verified. Delete the contact "
+                f"(or archive) if you intend to recreate it, or choose a different {field_label}."
+            ),
+        )
+
+
 async def persist_contact_registration(
     contact: ContactRegistration,
     *,
@@ -1563,10 +1618,24 @@ async def persist_contact_registration(
             raise HTTPException(
                 status_code=409,
                 detail=(
-                    "This email is already registered as verified. Delete the contact "
-                    "(or archive) if you intend to recreate it, or choose a different email."
+                    "This email is already registered as verified. Please choose a different email."
                 ),
             )
+
+    exclude_id = existing["_id"] if existing else None
+    await _reject_if_verified_channel_taken(
+        db,
+        field_label="phone number",
+        values=[normalized_phone],
+        exclude_id=exclude_id,
+    )
+    if normalized_whatsapp != normalized_phone:
+        await _reject_if_verified_channel_taken(
+            db,
+            field_label="WhatsApp number",
+            values=[normalized_whatsapp],
+            exclude_id=exclude_id,
+        )
 
     consent_ts = contact.consent_timestamp or datetime.utcnow()
     topics = _validated_environment_topics(contact.environmental_topics, default_both=True)
@@ -1594,6 +1663,22 @@ async def persist_contact_registration(
         "active": True,
         "password_hash": registrant_auth.hash_password(contact.password),
     }
+
+    if contact.contact_type == ContactType.SCHOOL_ADMIN:
+        profile_core["school_contact"] = (
+            (contact.school_contact or "").strip() or None
+        )
+        profile_core["school_address"] = (
+            (contact.school_address or "").strip() or None
+        )
+        profile_core["school_information"] = (
+            (contact.school_information or "").strip() or None
+        )
+    else:
+        profile_core["school_contact"] = None
+        profile_core["school_address"] = None
+        profile_core["school_information"] = None
+
 
     if dispatch_verification:
         profile_core["verification_status"] = "pending"
@@ -1944,7 +2029,7 @@ async def _log_registrant_unverified_login_attempt(email_key: str, doc: dict[str
     if not alert_to:
         return
     name = str(doc.get("name") or "")
-    subj = f"[Early warning] Unverified login attempt: {email_key}"
+    subj = f"[Climate Compass] Unverified login attempt: {email_key}"
     body = (
         f"<p>Someone entered the correct password but <strong>verification_status</strong> is not verified yet.</p>"
         f"<p>Email: {email_key}<br/>Name: {name}<br/>Contact id: {cid_str}</p>"
@@ -1958,7 +2043,11 @@ async def _log_registrant_unverified_login_attempt(email_key: str, doc: dict[str
 
 
 @router.post("/api/auth/login")
-async def registrant_dashboard_login(body: RegistrantLoginIn):
+async def registrant_dashboard_login(
+    body: RegistrantLoginIn,
+    request: Request,
+    response: Response,
+):
     """
     Email + password → registrant session JWT (used for dashboard and, when eligible, facility actions).
 
@@ -2082,8 +2171,10 @@ async def registrant_dashboard_login(body: RegistrantLoginIn):
     scopes = registrant_auth.compute_registrant_scopes(doc)
     cov = doc.get("cities")
     eff_fac = facility_auth.effective_facility_id(doc)
+    registrant_auth.set_registrant_session_cookie(response, request, token, ttl)
     return {
         "access_token": token,
+        "authenticated": True,
         "token_type": "bearer",
         "expires_in": ttl,
         "scopes": scopes,
@@ -2096,6 +2187,13 @@ async def registrant_dashboard_login(body: RegistrantLoginIn):
         "facility_id": eff_fac,
         "facility_reporting_ready": registrant_auth.registrant_can_facility_actions(doc),
     }
+
+
+@router.post("/api/auth/logout")
+async def registrant_dashboard_logout(response: Response):
+    """Clear the HttpOnly registrant/facility session cookie used by the web UI."""
+    registrant_auth.clear_registrant_session_cookie(response)
+    return {"success": True}
 
 
 @router.get("/api/auth/me")
@@ -2126,10 +2224,24 @@ async def registrant_profile(
     return out
 
 
-def _authorization_bearer_raw(authorization: str | None) -> str | None:
-    if authorization and authorization.strip().lower().startswith("bearer "):
-        return authorization.strip()[7:].strip()
-    return None
+def _authorization_bearer_raw(
+    authorization: str | None = None,
+    request: Request | None = None,
+) -> str | None:
+    return registrant_auth.token_from_authorization_or_cookie(authorization, request)
+
+
+async def require_dashboard_access_token(
+    request: Request,
+    authorization: str | None = Header(None),
+) -> str:
+    raw = _authorization_bearer_raw(authorization, request)
+    if not raw:
+        raise HTTPException(
+            status_code=401,
+            detail="Sign in required — use password or OTP under Facility Actions, then retry.",
+        )
+    return raw
 
 
 def _contact_id_from_dashboard_bearer_token(token: str | None) -> str | None:
@@ -2148,16 +2260,18 @@ def _contact_id_from_dashboard_bearer_token(token: str | None) -> str | None:
 
 
 @router.get("/api/auth/profile")
-async def dashboard_registration_profile(authorization: str | None = Header(None)):
+async def dashboard_registration_profile(
+    token: str = Depends(require_dashboard_access_token),
+):
     """
     Full enrolment record for the signed-in user (same shape as ``GET /api/auth/me``).
 
     Accepts **either** a registrant session token (``POST /api/auth/login``) **or**
     a facility reporting token (``POST /api/auth/facility-token`` after OTP) so dashboard
-    users can read their profile regardless of sign-in method.
+    users can read their profile regardless of sign-in method. Browser sessions may use
+    the HttpOnly ``cc_registrant_token`` cookie instead of an Authorization header.
     """
-    raw = _authorization_bearer_raw(authorization)
-    cid = _contact_id_from_dashboard_bearer_token(raw)
+    cid = _contact_id_from_dashboard_bearer_token(token)
     if not cid:
         raise HTTPException(
             status_code=401,
@@ -2335,13 +2449,13 @@ async def public_delete_account_confirm(body: DeleteAccountConfirmIn):
 @router.patch("/api/auth/preferences")
 async def registrant_patch_own_preferences(
     body: RegistrantSelfPrefsPatch,
-    authorization: str | None = Header(None),
+    token: str = Depends(require_dashboard_access_token),
 ):
     """
     Update notification channels, optional facility name, and per-site PM2.5 thresholds on your own contact.
     Accepts the same ``Authorization: Bearer`` as ``GET /api/auth/profile`` (password or facility OTP session).
     """
-    raw = _authorization_bearer_raw(authorization)
+    raw = token
     cid = _contact_id_from_dashboard_bearer_token(raw)
     if not cid:
         raise HTTPException(status_code=401, detail="Sign in required.")
@@ -2556,10 +2670,10 @@ def _merge_shared_contact_updates(
 
 @router.get("/api/auth/shared-contacts")
 async def registrant_list_shared_contacts(
-    authorization: str | None = Header(None),
+    token: str = Depends(require_dashboard_access_token),
 ):
     """Friends & family list for optional SMS / email / WhatsApp from the dashboard (not included in profile JSON)."""
-    raw = _authorization_bearer_raw(authorization)
+    raw = token
     cid = _contact_id_from_dashboard_bearer_token(raw)
     if not cid:
         raise HTTPException(status_code=401, detail="Sign in required.")
@@ -2615,9 +2729,9 @@ async def registrant_list_shared_contacts(
 @router.post("/api/auth/shared-contacts")
 async def registrant_create_shared_contact(
     body: SharedAlertContactCreate,
-    authorization: str | None = Header(None),
+    token: str = Depends(require_dashboard_access_token),
 ):
-    raw = _authorization_bearer_raw(authorization)
+    raw = token
     cid = _contact_id_from_dashboard_bearer_token(raw)
     if not cid:
         raise HTTPException(status_code=401, detail="Sign in required.")
@@ -2675,10 +2789,10 @@ async def registrant_create_shared_contact(
 @router.post("/api/auth/shared-contacts/notify")
 async def registrant_notify_shared_contacts(
     body: SharedNotifyIn,
-    authorization: str | None = Header(None),
+    token: str = Depends(require_dashboard_access_token),
 ):
     """Send a one-off message to selected saved contacts (SMS / WhatsApp / email). Rate-limited per day."""
-    raw = _authorization_bearer_raw(authorization)
+    raw = token
     cid = _contact_id_from_dashboard_bearer_token(raw)
     if not cid:
         raise HTTPException(status_code=401, detail="Sign in required.")
@@ -2712,7 +2826,7 @@ async def registrant_notify_shared_contacts(
             ),
         )
 
-    sender_name = str(doc.get("name") or "Early Warning user").strip() or "Early Warning user"
+    sender_name = str(doc.get("name") or "Climate Compass user").strip() or "Climate Compass user"
     msg = body.message.strip()
     results: list[dict[str, Any]] = []
     for rid in ordered_ids:
@@ -2765,7 +2879,7 @@ async def registrant_notify_shared_contacts(
                 results.append({"contact_id": rid, "ok": False, "error": "missing_email"})
                 await _log_line(ch="email", status="failed", ok=False, err="missing_email")
                 continue
-            subj = f"{sender_name} shared a message via AQI Nepal Early Warning"
+            subj = f"{sender_name} shared a message via Climate Compass"
             recipient_label = str(row.get("display_name") or "").strip() or None
             html_body, plain_body = _render_shared_alert_email_html(
                 sender_name=sender_name,
@@ -2840,12 +2954,12 @@ async def registrant_notify_shared_contacts(
 async def registrant_update_shared_contact(
     contact_row_id: str,
     body: SharedAlertContactUpdate,
-    authorization: str | None = Header(None),
+    token: str = Depends(require_dashboard_access_token),
 ):
     payload = body.model_dump(exclude_unset=True)
     if not payload:
         raise HTTPException(status_code=400, detail="No fields to update")
-    raw = _authorization_bearer_raw(authorization)
+    raw = token
     cid = _contact_id_from_dashboard_bearer_token(raw)
     if not cid:
         raise HTTPException(status_code=401, detail="Sign in required.")
@@ -2907,9 +3021,9 @@ async def registrant_update_shared_contact(
 @router.delete("/api/auth/shared-contacts/{contact_row_id}")
 async def registrant_delete_shared_contact(
     contact_row_id: str,
-    authorization: str | None = Header(None),
+    token: str = Depends(require_dashboard_access_token),
 ):
-    raw = _authorization_bearer_raw(authorization)
+    raw = token
     cid = _contact_id_from_dashboard_bearer_token(raw)
     if not cid:
         raise HTTPException(status_code=401, detail="Sign in required.")
@@ -2936,7 +3050,7 @@ async def registrant_delete_shared_contact(
 
 @router.get("/api/auth/notification-inbox")
 async def registrant_notification_inbox(
-    authorization: str | None = Header(None),
+    token: str = Depends(require_dashboard_access_token),
     limit: int = Query(50, ge=1, le=200),
     skip: int = Query(0, ge=0, le=10_000),
 ):
@@ -2944,7 +3058,7 @@ async def registrant_notification_inbox(
     Recent outbound attempts to this contact (SMS / email / WhatsApp) from ``notification_logs``.
     Helps when a device did not receive SMS or email — the same sends are listed here.
     """
-    raw = _authorization_bearer_raw(authorization)
+    raw = token
     cid = _contact_id_from_dashboard_bearer_token(raw)
     if not cid:
         raise HTTPException(
@@ -3060,7 +3174,11 @@ async def facility_dashboard_login_challenge(body: FacilityLoginEmailIn):
 
 
 @router.post("/api/auth/facility-token")
-async def facility_dashboard_token(body: FacilityTokenExchangeIn):
+async def facility_dashboard_token(
+    body: FacilityTokenExchangeIn,
+    request: Request,
+    response: Response,
+):
     """Exchange OTP from ``POST /api/auth/facility-login`` for an access JWT."""
     db = db_state.require_mongo_db()
     email_key = str(body.email).strip()
@@ -3094,8 +3212,10 @@ async def facility_dashboard_token(body: FacilityTokenExchangeIn):
     city_live = row.get("city")
     cov = row.get("cities")
     out_cov = cov if isinstance(cov, list) else None
+    registrant_auth.set_registrant_session_cookie(response, request, token, ttl_s)
     return {
         "access_token": token,
+        "authenticated": True,
         "token_type": "bearer",
         "expires_in": ttl_s,
         "contact_id": str(doc["_id"]),
@@ -3403,7 +3523,7 @@ async def send_notification(
         html_content = f"<p>{request.message}</p>"
         result = await send_email(
             recipient["email"],
-            request.subject or "Early Warning Alert",
+            request.subject or "Climate Compass Alert",
             html_content,
         )
 
@@ -3430,7 +3550,7 @@ async def send_notification(
 
 
 def _broadcast_allowed_types() -> set[str]:
-    return {"health_worker", "parent", "admin", "government", "all"}
+    return {"health_worker", "parent", "admin", "government", "school_admin", "all"}
 
 
 async def broadcast_to_recipients(
@@ -4134,18 +4254,6 @@ async def get_contact_analytics(
     }
 
 
-@router.get("/registration", response_class=HTMLResponse)
-async def registration_portal_page(request: Request):
-    """Health worker self-registration UI."""
-    return web_pages.render(request, "pages/registration.html", active="registration")
-
-
-@router.get("/registration/contacts-directory", response_class=HTMLResponse)
-async def contacts_directory_page(request: Request):
-    """PIN-protected viewer: calls ``GET /api/contacts/directory`` with ``X-Registration-Directory-Secret``."""
-    return web_pages.render(request, "pages/contacts_directory.html", active="contacts")
-
-
 # ---------------------------------------------------------------------------
 # Twilio test + sandbox
 # ---------------------------------------------------------------------------
@@ -4154,7 +4262,7 @@ async def contacts_directory_page(request: Request):
 class TwilioTestIn(BaseModel):
     to: str = Field(..., min_length=8, max_length=40)
     body: str = Field(
-        default="Early Warning System: test notification.",
+        default="Climate Compass: test notification.",
         min_length=1,
         max_length=1600,
     )
@@ -4167,7 +4275,7 @@ class TwilioTestIn(BaseModel):
 class ResendTestIn(BaseModel):
     to: EmailStr
     subject: str = Field(
-        default="Early Warning — SendGrid connectivity test",
+        default="Climate Compass — SendGrid connectivity test",
         min_length=1,
         max_length=200,
     )
@@ -4221,7 +4329,7 @@ async def notifications_resend_test(
     result = await send_email(
         str(payload.to),
         payload.subject.strip(),
-        "<p>Early Warning backend: SendGrid connectivity test succeeded.</p>",
+        "<p>Climate Compass backend: SendGrid connectivity test succeeded.</p>",
     )
     if not result.get("success"):
         err = result.get("error") or "sendgrid_failed"

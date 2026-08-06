@@ -12,16 +12,62 @@ from typing import Any
 import bcrypt
 import jwt
 from bson import ObjectId
-from fastapi import Header, HTTPException
+from fastapi import Header, HTTPException, Request, Response
 
 import db_state
 import facility_auth
+from notification_auth import cookie_secure_for_request
 
 logger = logging.getLogger(__name__)
 
 JWT_ALG = "HS256"
 REGISTRANT_JWT_ISS = "early-warning-system"
 REGISTRANT_JWT_AUD = "registrant-session"
+DEFAULT_REGISTRANT_COOKIE = "cc_registrant_token"
+
+
+def registrant_session_cookie_name() -> str:
+    name = (os.getenv("REGISTRANT_SESSION_COOKIE_NAME") or DEFAULT_REGISTRANT_COOKIE).strip()
+    return name or DEFAULT_REGISTRANT_COOKIE
+
+
+def set_registrant_session_cookie(
+    response: Response,
+    request: Request,
+    token: str,
+    max_age: int,
+) -> None:
+    response.set_cookie(
+        key=registrant_session_cookie_name(),
+        value=token,
+        max_age=int(max_age),
+        httponly=True,
+        samesite="lax",
+        secure=cookie_secure_for_request(request),
+        path="/",
+    )
+
+
+def clear_registrant_session_cookie(response: Response) -> None:
+    response.delete_cookie(
+        key=registrant_session_cookie_name(),
+        path="/",
+    )
+
+
+def token_from_authorization_or_cookie(
+    authorization: str | None,
+    request: Request | None = None,
+) -> str | None:
+    if authorization and authorization.strip().lower().startswith("bearer "):
+        token = authorization.strip()[7:].strip()
+        if token:
+            return token
+    if request is not None:
+        cookie = (request.cookies.get(registrant_session_cookie_name()) or "").strip()
+        if cookie:
+            return cookie
+    return None
 
 
 def hash_password(password: str) -> str:
@@ -171,9 +217,8 @@ async def resolve_registrant_session(*, bearer_token: str | None) -> RegistrantS
 
 
 async def load_registrant_session(
+    request: Request,
     authorization: str | None = Header(None),
 ) -> RegistrantSession:
-    token: str | None = None
-    if authorization and authorization.strip().lower().startswith("bearer "):
-        token = authorization.strip()[7:].strip()
+    token = token_from_authorization_or_cookie(authorization, request)
     return await resolve_registrant_session(bearer_token=token)

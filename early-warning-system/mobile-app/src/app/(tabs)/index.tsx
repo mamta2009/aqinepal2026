@@ -85,11 +85,11 @@ export default function DashboardScreen() {
             <View className="flex-row items-center gap-2">
               <Text className="text-2xl font-bold text-primary">▲</Text>
               <Text className="font-mono text-2xl font-bold uppercase tracking-tight text-primary">
-                EARLY WARNING
+                CLIMATE COMPASS
               </Text>
             </View>
             <Text className="mt-0.5 text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-              Nepal Respiratory Health Alerts
+              Climate-Health Alerts
             </Text>
           </View>
           <DashboardMenuButton onPress={() => setSidebarOpen(true)} />
