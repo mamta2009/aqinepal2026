@@ -394,33 +394,26 @@ export default function HomeScreen() {
 
         {showDetails ? (
           <View className="mt-1 gap-4 px-4">
-            <CityInfoPanel
-              city={selectedCityInfo}
-              isLoading={cities.isLoading}
-            />
             <AirQualityChart
               pm25={pm25}
               cityLabel={selectedCity}
               sourceLabel={airQuality.data?.source ?? "API"}
             />
-            <FiveDayForecastCard
-              cityLabel={selectedCity}
-              pm25={pm25}
-              data={weekForecast.data}
-              isLoading={weekForecast.isLoading}
-              isError={weekForecast.isError}
-              error={weekForecast.error}
-            />
-            <RecentAlertsCard
-              cityLabel={selectedCity}
-              pm25={pm25}
-              thresholdUgM3={
-                runtimeConfig.data?.dashboard.pm25_alert_threshold_ugm3 ?? 55
+            <CasesWeekCard
+              data={casesWeek.data}
+              isLoading={casesWeek.isLoading}
+              forecast={
+                surgeForecast.data?.surge_forecast?.predicted_cases_by_horizon_day
+                  ? Object.values(
+                    surgeForecast.data.surge_forecast
+                      .predicted_cases_by_horizon_day,
+                  ).filter(
+                    (value): value is number | null =>
+                      value === null || typeof value === "number",
+                  )
+                  : []
               }
-              latestAlert={latestAlert.data}
-              isLoadingLatestAlert={latestAlert.isLoading}
             />
-            <CasesWeekCard data={casesWeek.data} isLoading={casesWeek.isLoading} />
             <IllustrativeForecastCard
               data={surgeForecast.data}
               isLoading={surgeForecast.isLoading}
@@ -431,6 +424,14 @@ export default function HomeScreen() {
               selectedCity={selectedCity}
               data={allCases.data}
               isLoading={allCases.isLoading}
+            />
+            <FiveDayForecastCard
+              cityLabel={selectedCity}
+              pm25={pm25}
+              data={weekForecast.data}
+              isLoading={weekForecast.isLoading}
+              isError={weekForecast.isError}
+              error={weekForecast.error}
             />
             <StressSandboxCard
               cityLabel={selectedCity}
