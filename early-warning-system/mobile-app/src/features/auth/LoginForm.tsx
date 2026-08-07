@@ -1,13 +1,14 @@
-import { useState } from 'react';
-import { View } from 'react-native';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
+import { useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import {
-  Banner,
+  AuthModeTabs,
   AuthTextField,
+  Banner,
   PrimaryButton,
-} from '@/features/auth/FormFields';
+} from "@/features/auth/FormFields";
 import {
   loginSchema,
   otpExchangeSchema,
@@ -15,16 +16,16 @@ import {
   type LoginFormValues,
   type OtpExchangeFormValues,
   type SignupVerifyFormValues,
-} from '@/features/auth/schemas';
+} from "@/features/auth/schemas";
 import {
   exchangeFacilityOtp,
   loginWithPassword,
   requestFacilityOtp,
-} from '@/services/api/auth';
-import { verifyWithEmail } from '@/services/api/contacts';
-import { toApiError } from '@/services/api/client';
-import { useAuthStore } from '@/store/authStore';
-import { toastError, toastInfo, toastSuccess } from '@/utils/toast';
+} from "@/services/api/auth";
+import { verifyWithEmail } from "@/services/api/contacts";
+import { toApiError } from "@/services/api/client";
+import { useAuthStore } from "@/store/authStore";
+import { toastError, toastInfo, toastSuccess } from "@/utils/toast";
 
 interface LoginFormProps {
   onLoggedIn?: () => void;
@@ -32,22 +33,23 @@ interface LoginFormProps {
 
 export function LoginForm({ onLoggedIn }: LoginFormProps) {
   const setSession = useAuthStore((s) => s.setSession);
-  const [showSignupVerify, setShowSignupVerify] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
+  const [mode, setMode] = useState<"password" | "otp">("password");
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [notice, setNotice] = useState("");
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: "", password: "" },
   });
 
   const otpForm = useForm<OtpExchangeFormValues>({
     resolver: zodResolver(otpExchangeSchema),
-    defaultValues: { email: '', code: '' },
+    defaultValues: { email: "", code: "" },
   });
 
   const signupForm = useForm<SignupVerifyFormValues>({
     resolver: zodResolver(signupVerifySchema),
-    defaultValues: { email: '', verification_code: '' },
+    defaultValues: { email: "", verification_code: "" },
   });
 
   const passwordMutation = useMutation({
@@ -64,8 +66,8 @@ export function LoginForm({ onLoggedIn }: LoginFormProps) {
           scopes: data.scopes,
         },
       });
-      toastSuccess('Signed in successfully.');
-      setShowSignupVerify(false);
+      setNotice("Signed in securely.");
+      toastSuccess("Signed in successfully.");
       onLoggedIn?.();
     },
     onError: (error) => {
@@ -73,29 +75,28 @@ export function LoginForm({ onLoggedIn }: LoginFormProps) {
       toastError(apiErr.message);
       if (
         apiErr.status === 403 &&
-        typeof apiErr.message === 'string' &&
-        apiErr.message.toLowerCase().includes('verify')
+        typeof apiErr.message === "string" &&
+        apiErr.message.toLowerCase().includes("verify")
       ) {
-        setShowSignupVerify(true);
-        const email = loginForm.getValues('email');
-        signupForm.setValue('email', email);
+        setVerifyOpen(true);
+        signupForm.setValue("email", loginForm.getValues("email"));
       }
     },
   });
 
   const otpRequestMutation = useMutation({
-    mutationFn: async () => {
-      const email = (otpForm.getValues('email') || loginForm.getValues('email')).trim().toLowerCase();
-      if (!email) throw new Error('Enter your email first');
-      otpForm.setValue('email', email);
-      return requestFacilityOtp(email);
-    },
-    onSuccess: (data) => {
+    mutationFn: async (email: string) =>
+      requestFacilityOtp(email.trim().toLowerCase()),
+    onSuccess: (data, email) => {
+      otpForm.setValue("email", email.trim().toLowerCase());
+      const message = data.message || "If eligible, a code was sent.";
+      setNotice(message);
       if (data.code_ttl_minutes != null) {
-        setOtpSent(true);
-        toastSuccess(`OTP sent (valid ~${data.code_ttl_minutes} min). Check your channels.`);
+        toastSuccess(
+          `OTP sent (valid ~${data.code_ttl_minutes} min). Check your channels.`,
+        );
       } else {
-        toastInfo(data.message || 'If eligible, a code was sent.');
+        toastInfo(message);
       }
     },
     onError: (error) => toastError(toApiError(error).message),
@@ -115,7 +116,8 @@ export function LoginForm({ onLoggedIn }: LoginFormProps) {
           scopes: data.scope ? [data.scope] : [],
         },
       });
-      toastSuccess('Facility session started.');
+      setNotice("OTP accepted. Your secure session is ready.");
+      toastSuccess("Signed in with facility OTP.");
       onLoggedIn?.();
     },
     onError: (error) => toastError(toApiError(error).message),
@@ -128,100 +130,201 @@ export function LoginForm({ onLoggedIn }: LoginFormProps) {
         verification_code: values.verification_code.trim(),
       }),
     onSuccess: (data) => {
-      toastSuccess(data.message || 'Verified. Sign in with your password.');
-      setShowSignupVerify(false);
+      const message =
+        data.message || "Registration verified. You can sign in now.";
+      setNotice(message);
+      toastSuccess(message);
+      setVerifyOpen(false);
     },
     onError: (error) => toastError(toApiError(error).message),
   });
 
+  const syncEmail = (email: string) => {
+    loginForm.setValue("email", email);
+    otpForm.setValue("email", email);
+    signupForm.setValue("email", email);
+  };
+
   return (
-    <View className="gap-2">
-      <Controller
-        control={loginForm.control}
-        name="email"
-        render={({ field: { value, onChange }, fieldState }) => (
-          <AuthTextField
-            label="Email"
-            value={value}
-            onChangeText={(t) => {
-              onChange(t);
-              otpForm.setValue('email', t);
-              signupForm.setValue('email', t);
-            }}
-            error={fieldState.error?.message}
-            keyboardType="email-address"
-            placeholder="you@example.com"
-          />
-        )}
-      />
-      <Controller
-        control={loginForm.control}
-        name="password"
-        render={({ field: { value, onChange }, fieldState }) => (
-          <AuthTextField
-            label="Password"
-            value={value}
-            onChangeText={onChange}
-            error={fieldState.error?.message}
-            secureTextEntry
-            placeholder="••••••••"
-          />
-        )}
-      />
-      <PrimaryButton
-        label={passwordMutation.isPending ? 'Signing in…' : 'Sign in'}
-        variant="action"
-        disabled={passwordMutation.isPending}
-        onPress={loginForm.handleSubmit((values) => passwordMutation.mutate(values))}
-      />
+    <View className="gap-4">
+      <AuthModeTabs mode={mode} onChange={setMode} />
 
-      {showSignupVerify ? (
-        <View className="mt-4 rounded-2xl border border-neutral-200 p-3 dark:border-neutral-800">
-          <Banner
-            message="Verify your registration code, then sign in again."
-            tone="info"
-          />
-          <Controller
-            control={signupForm.control}
-            name="verification_code"
-            render={({ field: { value, onChange }, fieldState }) => (
-              <AuthTextField
-                label="Registration verification code"
-                value={value}
-                onChangeText={onChange}
-                error={fieldState.error?.message}
-                keyboardType="number-pad"
-              />
-            )}
-          />
-          <PrimaryButton
-            label={signupVerifyMutation.isPending ? 'Verifying…' : 'Verify registration'}
-            variant="action"
-            disabled={signupVerifyMutation.isPending}
-            onPress={signupForm.handleSubmit((values) => signupVerifyMutation.mutate(values))}
-          />
-        </View>
-      ) : null}
-
-      <View className="mt-6 border-t border-neutral-200 pt-4 dark:border-neutral-800">
-        <Banner
-          message="Facility OTP is for approved facility reporters only."
-          tone="info"
-        />
-        <PrimaryButton
-          label={otpRequestMutation.isPending ? 'Sending OTP…' : 'Send facility OTP'}
-          variant="secondary"
-          disabled={otpRequestMutation.isPending}
-          onPress={() => otpRequestMutation.mutate()}
-        />
-        {otpSent ? (
-          <View className="mt-3 gap-2">
+      <View className="rounded-2xl border border-border bg-white p-4">
+        {mode === "password" ? (
+          <View className="gap-1">
+            <Text className="mb-2 text-xl font-extrabold text-ink">
+              Account login
+            </Text>
             <Controller
-              control={otpForm.control}
-              name="code"
+              control={loginForm.control}
+              name="email"
               render={({ field: { value, onChange }, fieldState }) => (
                 <AuthTextField
-                  label="OTP code"
+                  label="Email"
+                  value={value}
+                  onChangeText={(t) => {
+                    onChange(t);
+                    syncEmail(t);
+                  }}
+                  error={fieldState.error?.message}
+                  keyboardType="email-address"
+                  placeholder="you@example.com"
+                />
+              )}
+            />
+            <Controller
+              control={loginForm.control}
+              name="password"
+              render={({ field: { value, onChange }, fieldState }) => (
+                <AuthTextField
+                  label="Current password"
+                  value={value}
+                  onChangeText={onChange}
+                  error={fieldState.error?.message}
+                  secureTextEntry
+                  showSecureToggle
+                  placeholder="••••••••"
+                />
+              )}
+            />
+            <PrimaryButton
+              label={
+                passwordMutation.isPending ? "Signing in…" : "Sign in"
+              }
+              variant="action"
+              disabled={passwordMutation.isPending}
+              onPress={loginForm.handleSubmit((values) =>
+                passwordMutation.mutate(values),
+              )}
+            />
+          </View>
+        ) : (
+          <View className="gap-4">
+            <View className="gap-1">
+              <Text className="mb-2 text-xl font-extrabold text-ink">
+                Request a facility code
+              </Text>
+              <Controller
+                control={otpForm.control}
+                name="email"
+                render={({ field: { value, onChange }, fieldState }) => (
+                  <AuthTextField
+                    label="Registration email"
+                    value={value}
+                    onChangeText={(t) => {
+                      onChange(t);
+                      syncEmail(t);
+                    }}
+                    error={fieldState.error?.message}
+                    keyboardType="email-address"
+                    placeholder="you@example.com"
+                  />
+                )}
+              />
+              <PrimaryButton
+                label={
+                  otpRequestMutation.isPending ? "Requesting…" : "Send OTP"
+                }
+                variant="action"
+                disabled={otpRequestMutation.isPending}
+                onPress={() => {
+                  const email =
+                    otpForm.getValues("email") ||
+                    loginForm.getValues("email");
+                  if (!email.trim()) {
+                    otpForm.setError("email", {
+                      message: "Valid email is required",
+                    });
+                    return;
+                  }
+                  otpRequestMutation.mutate(email);
+                }}
+              />
+            </View>
+
+            <View className="border-t border-border pt-4">
+              <Text className="mb-2 font-extrabold text-ink">Exchange OTP</Text>
+              <Controller
+                control={otpForm.control}
+                name="email"
+                render={({ field: { value, onChange }, fieldState }) => (
+                  <AuthTextField
+                    label="Email"
+                    value={value}
+                    onChangeText={(t) => {
+                      onChange(t);
+                      syncEmail(t);
+                    }}
+                    error={fieldState.error?.message}
+                    keyboardType="email-address"
+                  />
+                )}
+              />
+              <Controller
+                control={otpForm.control}
+                name="code"
+                render={({ field: { value, onChange }, fieldState }) => (
+                  <AuthTextField
+                    label="One-time code"
+                    value={value}
+                    onChangeText={onChange}
+                    error={fieldState.error?.message}
+                    keyboardType="number-pad"
+                  />
+                )}
+              />
+              <PrimaryButton
+                label={
+                  otpExchangeMutation.isPending
+                    ? "Checking…"
+                    : "Sign in with OTP"
+                }
+                variant="action"
+                disabled={otpExchangeMutation.isPending}
+                onPress={otpForm.handleSubmit((values) =>
+                  otpExchangeMutation.mutate(values),
+                )}
+              />
+            </View>
+          </View>
+        )}
+      </View>
+
+      <View className="overflow-hidden rounded-2xl border border-border bg-white">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ expanded: verifyOpen }}
+          onPress={() => setVerifyOpen((v) => !v)}
+          className="min-h-11 flex-row items-center justify-between px-4 py-3.5 active:opacity-80">
+          <Text className="font-extrabold text-ink">
+            Verify a new registration
+          </Text>
+          <Text className="text-lg text-muted">{verifyOpen ? "▾" : "▸"}</Text>
+        </Pressable>
+        {verifyOpen ? (
+          <View className="border-t border-border px-4 pb-4 pt-3">
+            <Controller
+              control={signupForm.control}
+              name="email"
+              render={({ field: { value, onChange }, fieldState }) => (
+                <AuthTextField
+                  label="Registration email"
+                  value={value}
+                  onChangeText={(t) => {
+                    onChange(t);
+                    syncEmail(t);
+                  }}
+                  error={fieldState.error?.message}
+                  keyboardType="email-address"
+                />
+              )}
+            />
+            <Controller
+              control={signupForm.control}
+              name="verification_code"
+              render={({ field: { value, onChange }, fieldState }) => (
+                <AuthTextField
+                  label="Signup verification code"
                   value={value}
                   onChangeText={onChange}
                   error={fieldState.error?.message}
@@ -230,14 +333,22 @@ export function LoginForm({ onLoggedIn }: LoginFormProps) {
               )}
             />
             <PrimaryButton
-              label={otpExchangeMutation.isPending ? 'Exchanging…' : 'Exchange OTP'}
+              label={
+                signupVerifyMutation.isPending
+                  ? "Verifying…"
+                  : "Verify registration"
+              }
               variant="action"
-              disabled={otpExchangeMutation.isPending}
-              onPress={otpForm.handleSubmit((values) => otpExchangeMutation.mutate(values))}
+              disabled={signupVerifyMutation.isPending}
+              onPress={signupForm.handleSubmit((values) =>
+                signupVerifyMutation.mutate(values),
+              )}
             />
           </View>
         ) : null}
       </View>
+
+      {notice ? <Banner message={notice} tone="success" /> : null}
     </View>
   );
 }

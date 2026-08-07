@@ -6,14 +6,10 @@ import {
   AlertTriangle,
   Building2,
   CheckCircle2,
-  CloudDrizzle,
-  CloudOff,
-  CloudRain,
   Download,
   HeartHandshake,
   RefreshCw,
   Stethoscope,
-  Sun,
 } from "lucide-react";
 import {
   useEffect,
@@ -24,6 +20,7 @@ import { ScenarioSandbox } from "./scenario-sandbox";
 import { CityAirCompare } from "./city-air-compare";
 import { FiveDayForecast } from "./five-day-forecast";
 import { AirQuality24h } from "./air-quality-24h";
+import { RainStatusIcon } from "./rain-status-icon";
 import { WeatherContext } from "@/components/weather/weather-context";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -366,17 +363,11 @@ export function DashboardClient() {
                         </span>
                       </DefinitionHelp>
                     </dt>
-                    <dd className="mt-1 flex items-center" aria-label={rain.status}>
-                      {rain.status === "Raining" ? (
-                        <CloudRain className="size-10" strokeWidth={2.25} aria-hidden />
-                      ) : rain.status === "Wet" ? (
-                        <CloudDrizzle className="size-10" strokeWidth={2.25} aria-hidden />
-                      ) : rain.status === "Dry" ? (
-                        <Sun className="size-10" strokeWidth={2.25} aria-hidden />
-                      ) : (
-                        <CloudOff className="size-10 opacity-50" strokeWidth={2.25} aria-hidden />
-                      )}
-                      <span className="sr-only">{rain.status}</span>
+                    <dd className="mt-1 flex items-center gap-2">
+                      <RainStatusIcon status={rain.status} />
+                      <span className="text-sm font-extrabold text-current/80">
+                        {rain.status}
+                      </span>
                     </dd>
                     <p className="mt-1 text-xs font-bold text-current/70">
                       {rain.summary}

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, Text, View, useColorScheme } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { BrandColors } from '@/constants/brand';
+import { InfoSheet, InfoSheetParagraph } from '@/components/ui';
 import {
   DashboardSection,
   DashboardSectionAccent,
@@ -31,14 +32,14 @@ function OutcomeCard({
   sub: string;
 }) {
   return (
-    <View className="min-w-[45%] flex-1 rounded-xl border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-700 dark:bg-neutral-950">
-      <Text className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+    <View className="min-w-[45%] flex-1 rounded-xl border border-border bg-neutral-50 p-3 dark:border-neutral-700 dark:bg-neutral-950">
+      <Text className="text-[10px] font-semibold uppercase tracking-wide text-muted">
         {kicker}
       </Text>
-      <Text className="mt-1 font-mono text-lg font-bold text-neutral-900 dark:text-white">
+      <Text className="mt-1 font-mono text-lg font-bold text-ink dark:text-white">
         {value}
       </Text>
-      <Text className="mt-1 text-[11px] leading-4 text-neutral-500 dark:text-neutral-400">
+      <Text className="mt-1 text-[11px] leading-4 text-muted">
         {sub}
       </Text>
     </View>
@@ -94,34 +95,44 @@ export function StressSandboxCard({
   return (
     <DashboardSection accent={DashboardSectionAccent.scenario}>
       <View className="mb-2 flex-row flex-wrap items-center justify-between gap-2">
-        <Text className="text-sm font-semibold text-neutral-900 dark:text-white">
-          Scenario A · Stress sandbox
-        </Text>
+        <View className="flex-1 flex-row flex-wrap items-center gap-2">
+          <Text className="text-sm font-semibold text-ink dark:text-white">
+            Stress scenario sandbox
+          </Text>
+          <InfoSheet label="Stress scenario sandbox">
+            <InfoSheetParagraph>
+              Try "what if" changes for {cityLabel}: move the PM2.5 and heat
+              sliders to see how the demo case numbers might change.
+            </InfoSheetParagraph>
+            <InfoSheetParagraph>
+              For learning and discussion only — not a real prediction.
+            </InfoSheetParagraph>
+          </InfoSheet>
+        </View>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Use live readings"
+          accessibilityLabel="Use current readings"
           onPress={useLiveReadings}
           className="rounded-md border px-3 py-1.5 active:opacity-70"
           style={{ borderColor: 'rgba(124, 58, 237, 0.45)' }}>
-          <Text className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">
-            Use live readings
+          <Text className="text-xs font-semibold text-neutral-800">
+            Use current readings
           </Text>
         </Pressable>
       </View>
 
-      <Text className="mb-4 text-xs leading-5 text-neutral-500 dark:text-neutral-400">
-        Move the sliders to explore illustrative respiratory load if pollution and heat stayed at
-        the values you dial in. The baseline comes from this week synthetic case curve for{' '}
-        {cityLabel} (until DHIS2 is connected). Numbers are a simple multiplied scenario for
-        discussion — not validated forecasting.
+      <Text className="mb-4 text-xs leading-5 text-muted">
+        Change pollution and heat to discuss possible pressure on services in{' '}
+        {cityLabel}. This applies simple multipliers to synthetic case data; it is
+        not a validated clinical forecast.
       </Text>
 
       <View className="mb-4">
         <View className="mb-1 flex-row items-baseline justify-between">
-          <Text className="text-xs font-semibold text-neutral-600 dark:text-neutral-300">
+          <Text className="text-xs font-semibold text-neutral-600">
             Simulated PM2.5 burden (µg/m³)
           </Text>
-          <Text className="font-mono text-sm font-bold text-neutral-900 dark:text-white">
+          <Text className="font-mono text-sm font-bold text-ink dark:text-white">
             {Math.round(pm25)}
           </Text>
         </View>
@@ -142,10 +153,10 @@ export function StressSandboxCard({
 
       <View className="mb-4">
         <View className="mb-1 flex-row items-baseline justify-between">
-          <Text className="text-xs font-semibold text-neutral-600 dark:text-neutral-300">
+          <Text className="text-xs font-semibold text-neutral-600">
             Simulated heat (effective °C)
           </Text>
-          <Text className="font-mono text-sm font-bold text-neutral-900 dark:text-white">
+          <Text className="font-mono text-sm font-bold text-ink dark:text-white">
             {heatC}
           </Text>
         </View>

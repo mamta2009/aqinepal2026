@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { BrandColors } from '@/constants/brand';
+import { InfoSheet, InfoSheetParagraph } from '@/components/ui';
 import {
   DashboardSection,
   DashboardSectionAccent,
@@ -37,7 +38,7 @@ export function FiveDayForecastCard({
   return (
     <DashboardSection accent={DashboardSectionAccent.forecast}>
       <View className="mb-1 flex-row flex-wrap items-center gap-2">
-        <Text className="text-sm font-semibold text-neutral-900 dark:text-white">
+        <Text className="text-sm font-semibold text-ink dark:text-white">
           5-Day Forecast
         </Text>
         <View
@@ -49,22 +50,33 @@ export function FiveDayForecastCard({
             AI Powered
           </Text>
         </View>
+        <InfoSheet label="5-day forecast">
+          <InfoSheetParagraph>
+            Cards for the next five days with example PM2.5 and breathing-related
+            case guesses for {cityLabel}, starting from today{"'"}s reading when we
+            have one.
+          </InfoSheetParagraph>
+          <InfoSheetParagraph>
+            Demo / discussion only — not an official forecast.
+          </InfoSheetParagraph>
+        </InfoSheet>
       </View>
 
-      <Text className="mb-3 text-xs text-neutral-500 dark:text-neutral-400">
-        Predicted respiratory cases based on air quality forecast
+      <Text className="mb-3 text-xs text-muted">
+        Predicted respiratory cases based on air quality and the weekly case trend
+        for {cityLabel}.
       </Text>
 
       {isLoading && !data ? (
         <ActivityIndicator className="my-6 self-center" color={BrandColors.ai} />
       ) : isError && !data ? (
-        <Text className="py-4 text-sm text-neutral-500 dark:text-neutral-400">
+        <Text className="py-4 text-sm text-muted">
           Forecast unavailable
           {error ? `: ${toApiError(error).message}` : ''}
         </Text>
       ) : (
         <>
-          <Text className="mb-2 text-[11px] text-neutral-400 dark:text-neutral-500">
+          <Text className="mb-2 text-[11px] text-neutral-400">
             {cityLabel}
             {modelLabel}
           </Text>
@@ -80,13 +92,13 @@ export function FiveDayForecastCard({
                   borderColor: 'rgba(6, 182, 212, 0.35)',
                   backgroundColor: 'rgba(6, 182, 212, 0.06)',
                 }}>
-                <Text className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                <Text className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
                   Day {day.day}
                 </Text>
-                <Text className="font-mono text-2xl font-bold text-neutral-900 dark:text-white">
+                <Text className="font-mono text-2xl font-bold text-ink dark:text-white">
                   {day.pm25}
                 </Text>
-                <Text className="text-[10px] text-neutral-400 dark:text-neutral-500">µg/m³</Text>
+                <Text className="text-[10px] text-neutral-400">µg/m³</Text>
                 <Text className="mt-2 text-xs font-semibold" style={{ color: BrandColors.ai }}>
                   {day.cases} cases
                 </Text>

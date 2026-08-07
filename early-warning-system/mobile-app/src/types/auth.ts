@@ -1,6 +1,11 @@
 /** Auth / session types mirroring backend login + profile responses. */
 
-export type ContactType = "health_worker" | "parent" | "admin" | "government";
+export type ContactType =
+  | "health_worker"
+  | "parent"
+  | "admin"
+  | "government"
+  | "school_admin";
 
 export type NotificationChannel = "sms" | "whatsapp" | "email";
 
@@ -69,6 +74,9 @@ export interface AuthProfile {
   scopes?: string[];
   facility_site_pm25_thresholds?: Record<string, number>;
   consent_given?: boolean;
+  school_contact?: string | null;
+  school_address?: string | null;
+  school_information?: string | null;
   [key: string]: unknown;
 }
 

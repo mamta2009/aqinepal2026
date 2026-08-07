@@ -20,12 +20,12 @@ const PREPAREDNESS_ACTIONS = [
   },
   {
     type: 'staff_called',
-    label: 'Staff Called',
+    label: 'Staff called',
     details: '✓ Pediatric staff briefed',
   },
   {
     type: 'protocol_reviewed',
-    label: 'Protocol OK',
+    label: 'Protocol reviewed',
     details: '✓ Rapid triage protocol reviewed',
   },
 ] as const;
@@ -112,33 +112,33 @@ export function FacilityActionsPanel({ profile }: FacilityActionsPanelProps) {
 
   const statusBanner = !ready
     ? 'Signed in — reporting may stay locked until an operator approves and links your facility.'
-    : `Reporting ready${profile?.facility_name ? ` as ${profile.facility_name}` : ''}${profile?.facility_id ? ` (${profile.facility_id})` : ''
-    }. Authenticated — log actions per facility below.`;
+    : `Reporting ready${profile?.facility_name ? ` as ${profile.facility_name}` : ''}. Authenticated — log actions per facility below.`;
 
   return (
     <View className="gap-3">
-      <Text className="text-lg font-bold text-neutral-900 dark:text-white">Facility Actions</Text>
-      <Text className="text-xs leading-5 text-neutral-500 dark:text-neutral-400">
-        Preparedness buttons (O₂, Staff, …) require a verified account that is operator-approved with a
-        facility / site linked. Password sign-in can succeed sooner — actions stay disabled until ready.
-      </Text>
-
       <Banner message={statusBanner} tone={ready ? 'success' : 'info'} />
+      {!ready ? (
+        <Banner
+          message="Action logging requires a verified, approved account with a linked facility."
+          tone="info"
+        />
+      ) : null}
 
       <FeatureSection accent={AccountSectionAccent.sites}>
-        <Text className="mb-1 text-sm font-semibold text-neutral-900 dark:text-white">
-          Sites you cover
+        <Text className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+          Facilities and sites
         </Text>
-        <Text className="mb-3 text-xs leading-4 text-neutral-500">
-          Add each facility or site name (your enrolment), set a PM2.5 alert threshold per site, then log
-          preparedness actions for that site.
+        <Text className="mb-2 text-lg font-extrabold text-ink">Sites you cover</Text>
+        <Text className="mb-3 text-xs leading-4 text-muted">
+          Add a facility or site, set a PM2.5 alert threshold, then log preparedness
+          actions for that site.
         </Text>
 
         <AuthTextField
-          label="Add facility / site name"
+          label="Facility or site name"
           value={newSite}
           onChangeText={setNewSite}
-          placeholder="e.g. Ward 12 municipal clinic"
+          placeholder="Add a facility or site"
           autoCapitalize="words"
         />
         <PrimaryButton
@@ -148,22 +148,22 @@ export function FacilityActionsPanel({ profile }: FacilityActionsPanelProps) {
         />
 
         {sites.length === 0 ? (
-          <Text className="mt-3 text-sm text-neutral-500">No facilities on file yet.</Text>
+          <Text className="mt-3 text-sm text-muted">
+            Add a facility before logging preparedness actions.
+          </Text>
         ) : (
           <View className="mt-4 gap-3">
             {sites.map((site) => (
               <View
                 key={site}
-                className="rounded-xl border border-neutral-200 p-3 dark:border-neutral-700"
+                className="rounded-xl border border-border p-3"
                 style={{ opacity: ready ? 1 : 0.55 }}>
-                <Text className="mb-2 text-sm font-semibold text-neutral-900 dark:text-white">
-                  {site}
-                </Text>
-                <Text className="mb-1 text-xs font-medium text-neutral-600 dark:text-neutral-300">
-                  PM2.5 alert (µg/m³)
+                <Text className="mb-2 text-sm font-extrabold text-ink">{site}</Text>
+                <Text className="mb-1 text-xs font-medium text-muted">
+                  PM2.5 threshold (µg/m³)
                 </Text>
                 <TextInput
-                  className="mb-3 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-base text-neutral-900 dark:border-neutral-600 dark:bg-neutral-900 dark:text-white"
+                  className="mb-3 rounded-lg border border-border bg-white px-3 py-2 text-base text-ink"
                   keyboardType="number-pad"
                   editable={ready}
                   value={thresholds[site] ?? ''}
@@ -174,6 +174,41 @@ export function FacilityActionsPanel({ profile }: FacilityActionsPanelProps) {
                     }))
                   }
                 />
+              </View>
+            ))}
+
+            <PrimaryButton
+              label={saveThresholdsMutation.isPending ? 'Saving…' : 'Save thresholds'}
+              disabled={!ready || saveThresholdsMutation.isPending || sites.length === 0}
+              onPress={() => saveThresholdsMutation.mutate()}
+            />
+          </View>
+        )}
+      </FeatureSection>
+
+      <FeatureSection accent={AccountSectionAccent.actionLog}>
+        <Text className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+          Operational readiness
+        </Text>
+        <Text className="mb-2 text-lg font-extrabold text-ink">
+          Preparedness actions
+        </Text>
+        <Text className="mb-3 text-xs leading-4 text-muted">
+          Log a completed action against the correct facility. Each entry is kept in
+          the server audit trail.
+        </Text>
+        {sites.length === 0 ? (
+          <Text className="text-sm text-muted">
+            Add a facility before logging preparedness actions.
+          </Text>
+        ) : (
+          <View className="gap-3">
+            {sites.map((site) => (
+              <View
+                key={`actions-${site}`}
+                className="rounded-xl border border-border p-3"
+                style={{ opacity: ready ? 1 : 0.55 }}>
+                <Text className="mb-2 text-sm font-extrabold text-ink">{site}</Text>
                 <View className="flex-row flex-wrap gap-2">
                   {PREPAREDNESS_ACTIONS.map((action) => (
                     <View key={action.type} className="min-w-[30%] flex-1">
@@ -194,19 +229,13 @@ export function FacilityActionsPanel({ profile }: FacilityActionsPanelProps) {
                 </View>
               </View>
             ))}
-
-            <PrimaryButton
-              label={saveThresholdsMutation.isPending ? 'Saving…' : 'Save thresholds'}
-              disabled={!ready || saveThresholdsMutation.isPending || sites.length === 0}
-              onPress={() => saveThresholdsMutation.mutate()}
-            />
           </View>
         )}
       </FeatureSection>
 
       {ready ? (
         <FeatureSection accent={AccountSectionAccent.actionLog}>
-          <Text className="mb-2 text-sm font-semibold text-neutral-900 dark:text-white">
+          <Text className="mb-2 text-sm font-semibold text-ink">
             Recent facility actions
           </Text>
           {actionLogs.isLoading ? (

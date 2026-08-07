@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Text, View, useColorScheme } from 'react-native';
 import { LineChart } from 'react-native-gifted-charts';
 import { BrandColors } from '@/constants/brand';
+import { InfoSheet, InfoSheetParagraph } from '@/components/ui';
 import {
   DashboardSection,
   DashboardSectionAccent,
@@ -29,9 +30,21 @@ export function AirQualityChart({ pm25, cityLabel, sourceLabel }: AirQualityChar
 
   return (
     <DashboardSection accent={DashboardSectionAccent.airQuality}>
-      <Text className="mb-3 text-sm font-semibold text-neutral-900 dark:text-white">
-        Air quality — 24h
-      </Text>
+      <View className="mb-3 flex-row flex-wrap items-center gap-2">
+        <Text className="text-sm font-semibold text-ink dark:text-white">
+          Air quality — 24h
+        </Text>
+        <InfoSheet label="Air quality 24h chart">
+          <InfoSheetParagraph>
+            Starts from today{"'"}s live PM2.5 for {cityLabel}, then draws a
+            day-long wavy line so you can picture how levels might vary hour to
+            hour.
+          </InfoSheetParagraph>
+          <InfoSheetParagraph>
+            The shape is an illustration — not a real hour-by-hour history.
+          </InfoSheetParagraph>
+        </InfoSheet>
+      </View>
 
       {points.length > 0 ? (
         <LineChart
@@ -57,15 +70,15 @@ export function AirQualityChart({ pm25, cityLabel, sourceLabel }: AirQualityChar
         />
       ) : (
         <View className="h-[180px] items-center justify-center">
-          <Text className="text-sm text-neutral-500 dark:text-neutral-400">
+          <Text className="text-sm text-muted">
             No PM2.5 reading yet for {cityLabel}.
           </Text>
         </View>
       )}
 
-      <Text className="mt-3 text-xs text-neutral-500 dark:text-neutral-400">
-        Deterministic intra-day variation around the latest {sourceLabel} reading — not observed
-        hourly AQ.
+      <Text className="mt-3 text-xs text-muted">
+        Illustrative intra-day shape around the current live PM2.5 for {cityLabel}
+        {' '}({sourceLabel}).
       </Text>
     </DashboardSection>
   );

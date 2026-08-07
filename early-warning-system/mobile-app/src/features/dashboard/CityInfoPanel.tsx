@@ -22,7 +22,7 @@ function formatPopulation(population: number): string {
 function InfoCell({ label, value }: { label: string; value: string }) {
   return (
     <View className="min-w-[45%] flex-1 py-1">
-      <Text className="text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+      <Text className="text-xs uppercase tracking-wide text-muted">
         {label}
       </Text>
       <Text

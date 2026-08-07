@@ -21,3 +21,14 @@ export interface CasesWeekResponse {
   generated_at: string;
   verification?: unknown;
 }
+
+/** `GET /api/cases/all-cities` response (`main.py`). */
+export interface CasesAllCitiesResponse {
+  region?: string;
+  timestamp?: string;
+  total_cases_week?: number;
+  cities: Record<string, CasesWeekResponse>;
+  deployment_mode?: string;
+  status?: string;
+  verification?: unknown;
+}

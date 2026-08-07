@@ -1,54 +1,62 @@
-import { Text, View } from 'react-native';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
-import { CITY_NAMES } from '@/constants/cities';
+import { Text, View } from "react-native";
+import { useForm, Controller, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
+import { openBrowserAsync, WebBrowserPresentationStyle } from "expo-web-browser";
+
+import { CITY_NAMES } from "@/constants/cities";
+import { API_BASE_URL } from "@/constants/api";
 import {
   ChipMultiSelect,
   ConsentToggle,
   AuthTextField,
   FormSection,
   PrimaryButton,
-} from '@/features/auth/FormFields';
+} from "@/features/auth/FormFields";
 import {
   registerSchema,
   toRegisterPayload,
   type RegisterFormValues,
-} from '@/features/auth/schemas';
-import { registerContact } from '@/services/api/contacts';
-import { toApiError } from '@/services/api/client';
-import { savePendingRegistration } from '@/utils/pendingRegistration';
-import { toastError, toastSuccess } from '@/utils/toast';
+} from "@/features/auth/schemas";
+import { registerContact } from "@/services/api/contacts";
+import { toApiError } from "@/services/api/client";
+import { savePendingRegistration } from "@/utils/pendingRegistration";
+import { toastError, toastSuccess } from "@/utils/toast";
 
 const CONTACT_TYPES = [
-  { value: 'health_worker', label: 'Health Worker / Doctor' },
-  { value: 'parent', label: 'Parent / Guardian' },
-  { value: 'admin', label: 'Administrator' },
-  { value: 'government', label: 'Government Official' },
-];
+  { value: "health_worker", label: "Health worker / doctor" },
+  { value: "parent", label: "Parent / guardian" },
+  { value: "admin", label: "Administrator" },
+  { value: "government", label: "Government official" },
+  { value: "school_admin", label: "School administrator" },
+] as const;
 
 const LANGUAGE_OPTIONS = [
-  { value: 'en', label: 'English' },
-  { value: 'ne', label: 'नेपाली (Nepali)' },
+  { value: "en", label: "English" },
+  { value: "ne", label: "नेपाली (Nepali)" },
 ];
 
 const DEFAULT_VALUES: RegisterFormValues = {
-  name: '',
-  email: '',
-  phone_number: '+977',
-  whatsapp_number: '',
-  contact_type: 'health_worker',
-  facility_names_text: '',
+  name: "",
+  email: "",
+  phone_number: "+977",
+  whatsapp_number: "",
+  contact_type: "health_worker",
+  facility_names_text: "",
+  school_name: "",
+  school_contact: "",
+  school_address: "",
+  school_information: "",
   cities: [],
-  preferred_channels: ['sms', 'whatsapp', 'email'],
-  environmental_topics: ['air', 'heat'],
-  language: 'en',
+  preferred_channels: ["sms", "whatsapp", "email"],
+  environmental_topics: ["air", "heat"],
+  language: "en",
   consent_given: false,
   privacy_agreed: false,
   data_use: false,
-  password: '',
-  password_confirm: '',
+  password: "",
+  password_confirm: "",
 };
 
 export function RegisterForm() {
@@ -59,19 +67,25 @@ export function RegisterForm() {
     defaultValues: DEFAULT_VALUES,
   });
 
+  const contactType = useWatch({ control: form.control, name: "contact_type" });
+  const isSchoolAdmin = contactType === "school_admin";
+
   const mutation = useMutation({
     mutationFn: async (values: RegisterFormValues) => {
       const payload = toRegisterPayload(values);
       return registerContact(payload);
     },
     onSuccess: async (data, values) => {
-      await savePendingRegistration(values.email.trim().toLowerCase(), data.contact_id);
+      await savePendingRegistration(
+        values.email.trim().toLowerCase(),
+        data.contact_id,
+      );
       const warningText =
         data.warnings && data.warnings.length > 0
-          ? `\n${data.warnings.join('\n')}`
-          : '';
+          ? `\n${data.warnings.join("\n")}`
+          : "";
       toastSuccess(`${data.message}${warningText}`);
-      router.push('/verify');
+      router.push("/verify");
     },
     onError: (error) => toastError(toApiError(error).message),
   });
@@ -80,19 +94,25 @@ export function RegisterForm() {
     form.reset(DEFAULT_VALUES);
   };
 
+  const openPrivacyPolicy = () => {
+    void openBrowserAsync(`${API_BASE_URL}/privacy-policy`, {
+      presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
+    });
+  };
+
   return (
     <View>
-      <FormSection title="Personal Information">
+      <FormSection number="1" title="About you">
         <Controller
           control={form.control}
           name="name"
           render={({ field: { value, onChange }, fieldState }) => (
             <AuthTextField
-              label="Full Name *"
+              label="Full name"
               value={value}
               onChangeText={onChange}
               error={fieldState.error?.message}
-              placeholder="Dr. Sharma"
+              placeholder="Sita Sharma"
               autoCapitalize="words"
             />
           )}
@@ -102,11 +122,11 @@ export function RegisterForm() {
           name="email"
           render={({ field: { value, onChange }, fieldState }) => (
             <AuthTextField
-              label="Email Address *"
+              label="Email address"
               value={value}
               onChangeText={onChange}
               error={fieldState.error?.message}
-              placeholder="sharma@hospital.com"
+              placeholder="sita@example.com"
               keyboardType="email-address"
             />
           )}
@@ -116,12 +136,12 @@ export function RegisterForm() {
           name="phone_number"
           render={({ field: { value, onChange }, fieldState }) => (
             <AuthTextField
-              label="Phone Number *"
+              label="Phone number"
               value={value}
               onChangeText={onChange}
               error={fieldState.error?.message}
-              help="Include country code (e.g., +977)"
-              placeholder="+977-98XXXXXXXX"
+              help="Use international E.164 format, for example +9779812345678"
+              placeholder="+9779812345678"
               keyboardType="phone-pad"
             />
           )}
@@ -131,12 +151,12 @@ export function RegisterForm() {
           name="whatsapp_number"
           render={({ field: { value, onChange }, fieldState }) => (
             <AuthTextField
-              label="WhatsApp Number (Optional)"
-              value={value ?? ''}
+              label="WhatsApp number (optional)"
+              value={value ?? ""}
               onChangeText={onChange}
               error={fieldState.error?.message}
-              help="Leave blank to use phone number"
-              placeholder="+977-98XXXXXXXX"
+              help="Leave blank to use your phone number."
+              placeholder="+9779812345678"
               keyboardType="phone-pad"
             />
           )}
@@ -146,13 +166,14 @@ export function RegisterForm() {
           name="password"
           render={({ field: { value, onChange }, fieldState }) => (
             <AuthTextField
-              label="Dashboard password *"
+              label="Dashboard password"
               value={value}
               onChangeText={onChange}
               error={fieldState.error?.message}
-              help="Used to sign in after you verify your email / phone."
+              help="Used to sign in after you verify your email."
               placeholder="At least 8 characters"
               secureTextEntry
+              showSecureToggle
             />
           )}
         />
@@ -161,58 +182,33 @@ export function RegisterForm() {
           name="password_confirm"
           render={({ field: { value, onChange }, fieldState }) => (
             <AuthTextField
-              label="Confirm password *"
+              label="Confirm password"
               value={value}
               onChangeText={onChange}
               error={fieldState.error?.message}
               secureTextEntry
+              showSecureToggle
             />
           )}
         />
       </FormSection>
 
-      <FormSection title="Facility Information">
+      <FormSection
+        number="2"
+        title={isSchoolAdmin ? "Your school" : "Your facility or workplace"}>
         <Controller
           control={form.control}
           name="contact_type"
           render={({ field: { value, onChange }, fieldState }) => (
             <ChipMultiSelect
-              label="Your Role *"
-              options={CONTACT_TYPES}
+              label="Your role"
+              options={[...CONTACT_TYPES]}
               selected={[value]}
-              onChange={(next) => onChange((next[0] as typeof value) || value)}
+              onChange={(next) =>
+                onChange((next[0] as typeof value) || value)
+              }
               error={fieldState.error?.message}
               single
-            />
-          )}
-        />
-        <Controller
-          control={form.control}
-          name="facility_names_text"
-          render={({ field: { value, onChange }, fieldState }) => (
-            <AuthTextField
-              label="Facility name(s)"
-              value={value ?? ''}
-              onChangeText={onChange}
-              error={fieldState.error?.message}
-              help="Enter one facility or site per line if you cover more than one place. Optional for some roles."
-              placeholder={"e.g. Patan Academy of Health Sciences (PAHS)\nor: Ward 12 municipal clinic"}
-              multiline
-              autoCapitalize="words"
-            />
-          )}
-        />
-        <Controller
-          control={form.control}
-          name="cities"
-          render={({ field: { value, onChange }, fieldState }) => (
-            <ChipMultiSelect
-              label="Municipality / coverage area *"
-              options={CITY_NAMES.map((c) => ({ value: c, label: c }))}
-              selected={value}
-              onChange={onChange}
-              error={fieldState.error?.message}
-              help="You will receive municipality-level readiness alerts for every area you select."
             />
           )}
         />
@@ -221,30 +217,126 @@ export function RegisterForm() {
           name="language"
           render={({ field: { value, onChange }, fieldState }) => (
             <ChipMultiSelect
-              label="Preferred Language"
+              label="Preferred language"
               options={LANGUAGE_OPTIONS}
               selected={[value]}
-              onChange={(next) => onChange((next[0] as typeof value) || value)}
+              onChange={(next) =>
+                onChange((next[0] as typeof value) || value)
+              }
               error={fieldState.error?.message}
               single
             />
           )}
         />
+        <Controller
+          control={form.control}
+          name="cities"
+          render={({ field: { value, onChange }, fieldState }) => (
+            <ChipMultiSelect
+              label="Municipality / coverage area"
+              options={CITY_NAMES.map((c) => ({ value: c, label: c }))}
+              selected={value}
+              onChange={onChange}
+              error={fieldState.error?.message}
+              help="You will receive municipality-level readiness alerts for every area you select."
+            />
+          )}
+        />
+        {isSchoolAdmin ? (
+          <>
+            <Controller
+              control={form.control}
+              name="school_name"
+              render={({ field: { value, onChange }, fieldState }) => (
+                <AuthTextField
+                  label="School name"
+                  value={value ?? ""}
+                  onChangeText={onChange}
+                  error={fieldState.error?.message}
+                  help="Required. Enter the school you administer."
+                  placeholder="Shree Janaki Secondary School"
+                  autoCapitalize="words"
+                />
+              )}
+            />
+            <Controller
+              control={form.control}
+              name="school_contact"
+              render={({ field: { value, onChange }, fieldState }) => (
+                <AuthTextField
+                  label="School contact"
+                  value={value ?? ""}
+                  onChangeText={onChange}
+                  error={fieldState.error?.message}
+                  help="Optional phone or outreach contact for the school."
+                  placeholder="+977-1-XXXXXXX or school office phone"
+                />
+              )}
+            />
+            <Controller
+              control={form.control}
+              name="school_address"
+              render={({ field: { value, onChange }, fieldState }) => (
+                <AuthTextField
+                  label="School address"
+                  value={value ?? ""}
+                  onChangeText={onChange}
+                  error={fieldState.error?.message}
+                  help="Optional street or locality for the school."
+                  placeholder="Ward, municipality, district"
+                  autoCapitalize="words"
+                />
+              )}
+            />
+            <Controller
+              control={form.control}
+              name="school_information"
+              render={({ field: { value, onChange }, fieldState }) => (
+                <AuthTextField
+                  label="About the school"
+                  value={value ?? ""}
+                  onChangeText={onChange}
+                  error={fieldState.error?.message}
+                  help="Optional brief information (size, levels taught, notes)."
+                  placeholder="For example: public secondary school, about 800 students"
+                  multiline
+                />
+              )}
+            />
+          </>
+        ) : (
+          <Controller
+            control={form.control}
+            name="facility_names_text"
+            render={({ field: { value, onChange }, fieldState }) => (
+              <AuthTextField
+                label="Facility name(s)"
+                value={value ?? ""}
+                onChangeText={onChange}
+                error={fieldState.error?.message}
+                help="Optional for some roles. Enter one hospital, clinic, health post, office, school, or site per line."
+                placeholder={
+                  "Patan Academy of Health Sciences\nWard 12 municipal clinic"
+                }
+                multiline
+                autoCapitalize="words"
+              />
+            )}
+          />
+        )}
       </FormSection>
 
-      <FormSection
-        title="Notification Channels"
-        description="Select how you'd like to receive alerts:">
+      <FormSection number="3" title="How should we contact you?">
         <Controller
           control={form.control}
           name="preferred_channels"
           render={({ field: { value, onChange }, fieldState }) => (
             <ChipMultiSelect
-              label="Channels *"
+              label="Channels"
               options={[
-                { value: 'sms', label: 'SMS' },
-                { value: 'whatsapp', label: 'WhatsApp' },
-                { value: 'email', label: 'Email' },
+                { value: "sms", label: "SMS" },
+                { value: "whatsapp", label: "WhatsApp" },
+                { value: "email", label: "Email" },
               ]}
               selected={value}
               onChange={onChange}
@@ -254,18 +346,16 @@ export function RegisterForm() {
         />
       </FormSection>
 
-      <FormSection
-        title="Environmental hazards"
-        description="Municipality-level readiness pushes on the channels you selected above. Choose at least one topic.">
+      <FormSection number="4" title="Which conditions matter to you?">
         <Controller
           control={form.control}
           name="environmental_topics"
           render={({ field: { value, onChange }, fieldState }) => (
             <ChipMultiSelect
-              label="Topics *"
+              label="Topics"
               options={[
-                { value: 'air', label: 'Air quality' },
-                { value: 'heat', label: 'Heat' },
+                { value: "air", label: "Air quality" },
+                { value: "heat", label: "Heat" },
               ]}
               selected={value}
               onChange={onChange}
@@ -275,13 +365,13 @@ export function RegisterForm() {
         />
       </FormSection>
 
-      <FormSection title="Consent & Preferences">
+      <FormSection number="5" title="Consent and preferences">
         <Controller
           control={form.control}
           name="consent_given"
           render={({ field: { value, onChange }, fieldState }) => (
             <ConsentToggle
-              label="I give consent to receive air quality and heat readiness alerts via the channels and topics I selected above. I understand I can revisit these choices with program support when available."
+              label="I consent to receive alerts through the channels and topics selected above."
               checked={value === true}
               onChange={(next) => onChange(next)}
               error={fieldState.error?.message}
@@ -293,7 +383,19 @@ export function RegisterForm() {
           name="privacy_agreed"
           render={({ field: { value, onChange }, fieldState }) => (
             <ConsentToggle
-              label="I agree to the Privacy Policy and understand my data will be protected according to GDPR and healthcare privacy standards."
+              label={
+                <Text className="text-sm leading-5 text-ink">
+                  I agree to the{" "}
+                  <Text
+                    className="font-bold text-link underline"
+                    onPress={() => {
+                      openPrivacyPolicy();
+                    }}>
+                    Privacy Policy
+                  </Text>
+                  .
+                </Text>
+              }
               checked={value === true}
               onChange={(next) => onChange(next)}
               error={fieldState.error?.message}
@@ -305,7 +407,7 @@ export function RegisterForm() {
           name="data_use"
           render={({ field: { value, onChange }, fieldState }) => (
             <ConsentToggle
-              label="I allow my respiratory case data to be used for research to improve the Climate Compass (optional but appreciated)."
+              label="I allow respiratory case data to support research (optional)."
               checked={value === true}
               onChange={(next) => onChange(next)}
               error={fieldState.error?.message}
@@ -314,24 +416,31 @@ export function RegisterForm() {
         />
       </FormSection>
 
-      <View className="mt-1 flex-row gap-3">
-        <View className="flex-1">
-          <PrimaryButton label="Clear Form" variant="dangerOutline" onPress={clearForm} />
-        </View>
-        <View className="flex-1">
+      <View className="mt-1 flex-row flex-wrap gap-3">
+        <View className="min-w-[45%] flex-1">
           <PrimaryButton
-            label={mutation.isPending ? 'Registering…' : 'Register & Verify'}
+            label={mutation.isPending ? "Registering…" : "Register & verify"}
             disabled={mutation.isPending}
             onPress={form.handleSubmit(
               (values) => mutation.mutate(values),
-              () => toastError('Please fix the highlighted fields before submitting.'),
+              () =>
+                toastError(
+                  "Please fix the highlighted fields before submitting.",
+                ),
             )}
+          />
+        </View>
+        <View className="min-w-[45%] flex-1">
+          <PrimaryButton
+            label="Clear form"
+            variant="secondary"
+            onPress={clearForm}
           />
         </View>
       </View>
 
-      <Text className="mt-3 text-center text-xs text-neutral-500">
-        After registering, enter the verification code sent to your selected channels.
+      <Text className="mt-3 text-center text-xs text-muted">
+        After you submit, enter the code from your email on the Verify screen.
       </Text>
     </View>
   );

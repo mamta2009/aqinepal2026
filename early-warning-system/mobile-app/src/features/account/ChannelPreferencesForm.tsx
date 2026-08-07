@@ -1,77 +1,109 @@
-import { useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { AccountSectionAccent, FeatureSection } from '@/components/FeatureSection';
+import { useEffect } from "react";
+import { Text } from "react-native";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { AccountSectionAccent, FeatureSection } from "@/components/FeatureSection";
 import {
-  Banner,
   ChipMultiSelect,
   ConsentToggle,
   PrimaryButton,
-} from '@/features/auth/FormFields';
+} from "@/features/auth/FormFields";
 import {
-  channelPrefsSchema,
-  type ChannelPrefsFormValues,
-} from '@/features/auth/schemas';
-import { patchPreferences } from '@/services/api/auth';
-import { toApiError } from '@/services/api/client';
-import { toastError, toastSuccess } from '@/utils/toast';
-import type { AuthProfile, NotificationChannel } from '@/types/auth';
+  notificationPrefsSchema,
+  type NotificationPrefsFormValues,
+} from "@/features/auth/schemas";
+import { patchPreferences } from "@/services/api/auth";
+import { toApiError } from "@/services/api/client";
+import { toastError, toastSuccess } from "@/utils/toast";
+import type {
+  AuthProfile,
+  EnvironmentalTopic,
+  NotificationChannel,
+} from "@/types/auth";
 
 interface ChannelPreferencesFormProps {
   profile: AuthProfile | undefined;
 }
 
-export function ChannelPreferencesForm({ profile }: ChannelPreferencesFormProps) {
+export function ChannelPreferencesForm({
+  profile,
+}: ChannelPreferencesFormProps) {
   const queryClient = useQueryClient();
 
-  const form = useForm<ChannelPrefsFormValues>({
-    resolver: zodResolver(channelPrefsSchema),
+  const form = useForm<NotificationPrefsFormValues>({
+    resolver: zodResolver(notificationPrefsSchema),
     defaultValues: {
-      preferred_channels: ['sms', 'whatsapp', 'email'],
+      preferred_channels: ["sms", "whatsapp", "email"],
+      environmental_topics: ["air", "heat"],
       consent_given: true,
     },
   });
 
   useEffect(() => {
     if (!profile) return;
-    const channels = (profile.preferred_channels || []).filter(Boolean) as NotificationChannel[];
+    const channels = (profile.preferred_channels || []).filter(
+      Boolean,
+    ) as NotificationChannel[];
+    const topics = (profile.environmental_topics || []).filter(
+      Boolean,
+    ) as EnvironmentalTopic[];
     form.reset({
-      preferred_channels: channels.length > 0 ? channels : ['email'],
+      preferred_channels: channels.length > 0 ? channels : ["email"],
+      environmental_topics: topics.length > 0 ? topics : ["air", "heat"],
       consent_given: profile.consent_given !== false,
     });
   }, [profile, form]);
 
   const mutation = useMutation({
-    mutationFn: (values: ChannelPrefsFormValues) =>
+    mutationFn: (values: NotificationPrefsFormValues) =>
       patchPreferences({
         preferred_channels: values.preferred_channels,
+        environmental_topics: values.environmental_topics,
         consent_given: values.consent_given,
       }),
     onSuccess: async (data) => {
-      toastSuccess(data.message || 'Preferences saved.');
-      await queryClient.invalidateQueries({ queryKey: ['auth', 'profile'] });
+      toastSuccess(data.message || "Notification preferences saved.");
+      await queryClient.invalidateQueries({ queryKey: ["auth", "profile"] });
     },
     onError: (error) => toastError(toApiError(error).message),
   });
 
   return (
     <FeatureSection accent={AccountSectionAccent.channels}>
-      <Banner
-        message="Choose how we may reach you for alerts (matches your registration — save to update)."
-        tone="info"
-      />
+      <Text className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+        Alerts
+      </Text>
+      <Text className="mb-3 text-lg font-extrabold text-ink">
+        Notification preferences
+      </Text>
 
       <Controller
         control={form.control}
         name="preferred_channels"
         render={({ field: { value, onChange }, fieldState }) => (
           <ChipMultiSelect
-            label="Notification channels"
+            label="Channels"
             options={[
-              { value: 'sms', label: 'SMS' },
-              { value: 'whatsapp', label: 'WhatsApp' },
-              { value: 'email', label: 'Email' },
+              { value: "sms", label: "SMS" },
+              { value: "whatsapp", label: "WhatsApp" },
+              { value: "email", label: "Email" },
+            ]}
+            selected={value}
+            onChange={onChange}
+            error={fieldState.error?.message}
+          />
+        )}
+      />
+      <Controller
+        control={form.control}
+        name="environmental_topics"
+        render={({ field: { value, onChange }, fieldState }) => (
+          <ChipMultiSelect
+            label="Environmental topics"
+            options={[
+              { value: "air", label: "Air quality" },
+              { value: "heat", label: "Heat" },
             ]}
             selected={value}
             onChange={onChange}
@@ -84,7 +116,7 @@ export function ChannelPreferencesForm({ profile }: ChannelPreferencesFormProps)
         name="consent_given"
         render={({ field: { value, onChange }, fieldState }) => (
           <ConsentToggle
-            label="Keep consent active for alert delivery"
+            label="I consent to receive alerts through the selected channels."
             checked={value}
             onChange={onChange}
             error={fieldState.error?.message}
@@ -92,7 +124,7 @@ export function ChannelPreferencesForm({ profile }: ChannelPreferencesFormProps)
         )}
       />
       <PrimaryButton
-        label={mutation.isPending ? 'Saving…' : 'Save channels'}
+        label={mutation.isPending ? "Saving…" : "Save preferences"}
         disabled={mutation.isPending}
         onPress={form.handleSubmit((values) => mutation.mutate(values))}
       />
