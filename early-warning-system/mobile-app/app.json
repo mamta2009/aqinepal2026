@@ -2,7 +2,7 @@
   "expo": {
     "name": "Climate Compass",
     "slug": "early-warning-system",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/6b356195-f590-4513-9648-3429f98cbee0",
@@ -28,7 +28,7 @@
       "predictiveBackGestureEnabled": false,
       "googleServicesFile": "./google-services.json",
       "usesCleartextTraffic": true,
-      "versionCode": 2
+      "versionCode": 3
     },
     "web": {
       "output": "static",
