@@ -67,7 +67,8 @@ export default function RootLayout() {
                 <Stack.Screen name="compare" options={{ title: "Compare cities" }} />
                 <Stack.Screen name="map" options={{ title: "Map" }} />
                 <Stack.Screen name="guides" options={{ title: "Guides" }} />
-                <Stack.Screen name="open-source" options={{ title: "Open Source" }} />
+                <Stack.Screen name="about" options={{ title: "About" }} />
+
                 <Stack.Screen name="inbox" options={{ title: "Notification inbox" }} />
                 <Stack.Screen
                   name="facility-actions"

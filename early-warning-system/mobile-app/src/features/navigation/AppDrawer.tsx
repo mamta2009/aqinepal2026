@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
 import { type Href, usePathname, useRouter } from "expo-router";
 import { openBrowserAsync, WebBrowserPresentationStyle } from "expo-web-browser";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -19,6 +19,8 @@ import {
   isDrawerItemActive,
   type DrawerNavItem,
 } from "@/features/navigation/drawer-nav";
+import { useIsAuthenticated, useProfile } from "@/hooks/useAuth";
+import { useAuthStore } from "@/store/authStore";
 import { useDashboardStore } from "@/store/dashboardStore";
 import { useDrawerStore } from "@/store/drawerStore";
 
@@ -78,6 +80,24 @@ export function AppDrawer() {
   const close = useDrawerStore((s) => s.close);
   const setLastDrawerHref = useDrawerStore((s) => s.setLastDrawerHref);
   const selectedCity = useDashboardStore((s) => s.selectedCity);
+  const isAuthenticated = useIsAuthenticated();
+  const clearSession = useAuthStore((s) => s.clearSession);
+  const profileQuery = useProfile(isAuthenticated);
+  const displayName =
+    profileQuery.data?.name?.trim() ||
+    profileQuery.data?.email?.trim() ||
+    "Signed in";
+
+  const navGroups = useMemo(
+    () =>
+      DRAWER_NAV.map((group) => ({
+        ...group,
+        items: isAuthenticated
+          ? group.items.filter((item) => item.id !== "register")
+          : group.items,
+      })).filter((group) => group.items.length > 0),
+    [isAuthenticated],
+  );
 
   const panelWidth = Math.min(320, Math.round(windowWidth * 0.86));
   const progress = useSharedValue(0);
@@ -266,6 +286,34 @@ export function AppDrawer() {
                   </Text>
                 </View>
               </View>
+
+              {isAuthenticated ? (
+                <View
+                  className="mb-3 rounded-2xl px-3 py-3"
+                  style={{ backgroundColor: BrandColors.skySoft }}>
+                  <Text className="text-[10px] font-extrabold uppercase tracking-widest text-forest">
+                    Signed in as
+                  </Text>
+                  <Text
+                    className="mt-1 text-[15px] font-extrabold"
+                    style={{ color: BrandColors.forestDark }}
+                    numberOfLines={1}>
+                    {displayName}
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Sign out"
+                    onPress={() => {
+                      close();
+                      void clearSession();
+                    }}
+                    className="mt-3 min-h-10 items-center justify-center rounded-xl active:opacity-85"
+                    style={{ backgroundColor: BrandColors.forest }}>
+                    <Text className="text-sm font-bold text-white">Sign out</Text>
+                  </Pressable>
+                </View>
+              ) : null}
+
               <View
                 className="mb-3"
                 style={{
@@ -277,7 +325,7 @@ export function AppDrawer() {
               <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 24 }}>
-                {DRAWER_NAV.map((group) => (
+                {navGroups.map((group) => (
                   <View key={group.id} className="mb-3">
                     <Text className="mb-2 px-1 text-[10px] font-extrabold uppercase tracking-widest text-forest">
                       {group.title}

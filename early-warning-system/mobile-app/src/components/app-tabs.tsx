@@ -1,6 +1,10 @@
+import { Platform } from "react-native";
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 import { BrandColors } from "@/constants/brand";
 import { Colors } from "@/constants/theme";
+
+const supportsTabBarMinimize =
+  Platform.OS === "ios" && Number(Platform.Version) >= 26;
 
 export default function AppTabs() {
   const colors = Colors.light;
@@ -27,7 +31,9 @@ export default function AppTabs() {
         },
       }}
       blurEffect="systemChromeMaterialLight"
-      minimizeBehavior="onScrollDown"
+      {...(supportsTabBarMinimize
+        ? { minimizeBehavior: "onScrollDown" as const }
+        : {})}
       disableTransparentOnScrollEdge>
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
