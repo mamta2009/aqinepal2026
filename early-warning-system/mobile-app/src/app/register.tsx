@@ -1,38 +1,46 @@
-import { ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
+import { ScrollView, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Stack, useRouter } from "expo-router";
 
-import { RegisterForm } from '@/features/auth/RegisterForm';
-import { PrimaryButton } from '@/features/auth/FormFields';
+import { RegisterForm } from "@/features/auth/RegisterForm";
+import { PrimaryButton } from "@/features/auth/FormFields";
 
 export default function RegisterScreen() {
   const router = useRouter();
 
   return (
-    <SafeAreaView className="flex-1 bg-surface" edges={['bottom']}>
-      <Stack.Screen options={{ title: 'Register', headerBackTitle: 'Back' }} />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
-        <View className="mb-4 rounded-xl border border-border bg-white px-3 py-3">
-          <Text className="text-sm leading-5 text-neutral-600">
-            Registration is optional. You can open the dashboard anytime — use Register alerts when you want
-            facility-level notifications.
-          </Text>
+    <SafeAreaView className="flex-1 bg-surface" edges={["bottom"]}>
+      <Stack.Screen options={{ title: "Register", headerBackTitle: "Back" }} />
+      <ScrollView
+        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+        keyboardShouldPersistTaps="handled">
+        <Text className="text-xs font-extrabold uppercase tracking-widest text-forest">
+          Optional public registration
+        </Text>
+        <Text className="mt-1 text-3xl font-extrabold tracking-tight text-ink">
+          Get air and heat alerts
+        </Text>
+        <Text className="mt-3 text-base leading-6 text-muted">
+          Choose the municipalities and contact channels that matter to you.
+          After you submit, enter the code from your email on the Verify screen.
+          You can still use the{" "}
+          <Text
+            className="font-bold text-link underline"
+            onPress={() => router.push("/(tabs)")}>
+            Home dashboard
+          </Text>{" "}
+          without registering.
+        </Text>
+
+        <View className="mt-6">
+          <RegisterForm />
         </View>
-
-        <Text className="mb-1 text-2xl font-bold text-neutral-900">
-          Climate Compass Registration
-        </Text>
-        <Text className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
-          Join our network and receive real-time air and heat alerts for your facility
-        </Text>
-
-        <RegisterForm />
 
         <View className="mt-4">
           <PrimaryButton
             label="Already registered? Verify code"
             variant="ghost"
-            onPress={() => router.push('/verify')}
+            onPress={() => router.push("/verify")}
           />
         </View>
       </ScrollView>

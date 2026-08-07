@@ -7,6 +7,7 @@ export const contactTypeSchema = z.enum([
   "parent",
   "admin",
   "government",
+  "school_admin",
 ]);
 
 export const channelSchema = z.enum(["sms", "whatsapp", "email"]);
@@ -27,6 +28,10 @@ export const registerSchema = z
     whatsapp_number: z.string().trim().optional().or(z.literal("")),
     contact_type: contactTypeSchema,
     facility_names_text: z.string().optional().or(z.literal("")),
+    school_name: z.string().optional().or(z.literal("")),
+    school_contact: z.string().optional().or(z.literal("")),
+    school_address: z.string().optional().or(z.literal("")),
+    school_information: z.string().optional().or(z.literal("")),
     cities: z.array(citySchema).min(1, "Select at least one city"),
     preferred_channels: z
       .array(channelSchema)
@@ -37,10 +42,12 @@ export const registerSchema = z
     language: languageSchema,
     consent_given: z
       .boolean()
-      .refine((v) => v === true, { message: "Consent is required" }),
-    privacy_agreed: z
-      .boolean()
-      .refine((v) => v === true, { message: "Privacy agreement is required" }),
+      .refine((v) => v === true, {
+        message: "Consent is required to send alerts.",
+      }),
+    privacy_agreed: z.boolean().refine((v) => v === true, {
+      message: "Accept the privacy policy to continue.",
+    }),
     data_use: z.boolean(),
     password: z
       .string()
@@ -51,6 +58,15 @@ export const registerSchema = z
   .refine((data) => data.password === data.password_confirm, {
     message: "Passwords do not match",
     path: ["password_confirm"],
+  })
+  .superRefine((data, ctx) => {
+    if (data.contact_type === "school_admin" && !data.school_name?.trim()) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["school_name"],
+        message: "School name is required.",
+      });
+    }
   });
 
 export type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -115,10 +131,13 @@ export type ChannelPrefsFormValues = z.infer<typeof channelPrefsSchema>;
 export function toRegisterPayload(values: RegisterFormValues) {
   const phone = values.phone_number.trim();
   const whatsapp = (values.whatsapp_number || "").trim() || phone;
-  const facility_names = (values.facility_names_text || "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+  const isSchoolAdmin = values.contact_type === "school_admin";
+  const facility_names = isSchoolAdmin
+    ? [values.school_name?.trim() || ""].filter(Boolean)
+    : (values.facility_names_text || "")
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
 
   return {
     name: values.name.trim(),
@@ -133,5 +152,12 @@ export function toRegisterPayload(values: RegisterFormValues) {
     language: values.language,
     consent_given: values.consent_given === true,
     password: values.password,
+    ...(isSchoolAdmin
+      ? {
+          school_contact: values.school_contact?.trim() || undefined,
+          school_address: values.school_address?.trim() || undefined,
+          school_information: values.school_information?.trim() || undefined,
+        }
+      : {}),
   };
 }

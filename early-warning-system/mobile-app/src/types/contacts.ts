@@ -17,6 +17,9 @@ export interface ContactRegistrationPayload {
   language: string;
   consent_given: boolean;
   password: string;
+  school_contact?: string;
+  school_address?: string;
+  school_information?: string;
 }
 
 export interface ContactRegisterResponse {

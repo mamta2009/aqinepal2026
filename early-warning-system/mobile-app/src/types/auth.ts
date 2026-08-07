@@ -1,6 +1,11 @@
 /** Auth / session types mirroring backend login + profile responses. */
 
-export type ContactType = "health_worker" | "parent" | "admin" | "government";
+export type ContactType =
+  | "health_worker"
+  | "parent"
+  | "admin"
+  | "government"
+  | "school_admin";
 
 export type NotificationChannel = "sms" | "whatsapp" | "email";
 

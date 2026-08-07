@@ -65,42 +65,41 @@ export default function AccountScreen() {
           paddingBottom: BottomTabInset + Spacing.six + insets.bottom,
           paddingHorizontal: 16,
         }}>
-        <View className="pb-3 pt-2">
-          <Text className="text-2xl font-extrabold text-ink">Account</Text>
-          <Text className="mt-1 text-sm text-muted">
+        <View className="pb-3 pt-4">
+          <Text className="text-xs font-extrabold uppercase tracking-widest text-forest">
+            Registrant access
+          </Text>
+          <Text className="mt-1 text-2xl font-extrabold text-ink">
             {isAuthenticated
-              ? 'Sign in, enrolment profile, and workplace tools'
-              : 'Sign in or register to manage alerts'}
+              ? "Your clean-air account"
+              : "Sign in to your clean-air account"}
+          </Text>
+          <Text className="mt-2 text-sm leading-5 text-muted">
+            {isAuthenticated
+              ? "Manage facilities, alert preferences, preparedness actions, and trusted contacts."
+              : "Manage facilities, alert preferences, preparedness actions, and trusted contacts. Your session is stored securely on this device."}
           </Text>
         </View>
 
         {!isAuthenticated ? (
           <View className="gap-4">
-            <FeatureSection accent={AccountSectionAccent.signIn}>
-              <Text className="mb-2 text-sm leading-5 text-muted">
-                Use the same email and password (or OTP) as in the main app. Preparedness buttons write
-                to the facility audit when your account is approved and linked to a site.
-              </Text>
-              <Text className="mb-3 text-sm font-extrabold text-ink">
-                Sign in
-              </Text>
-              <LoginForm />
-            </FeatureSection>
+            <LoginForm />
 
             <View className="gap-3">
               <PrimaryButton
-                label="Register"
+                label="Register for alerts"
                 variant="action"
-                onPress={() => router.push('/register')}
+                onPress={() => router.push("/register")}
               />
               <PrimaryButton
                 label="Verify code"
                 variant="secondary"
-                onPress={() => router.push('/verify')}
+                onPress={() => router.push("/verify")}
               />
             </View>
             <Text className="text-xs text-muted">
-              After registering, verify the code sent to your channels, then sign in here.
+              After registering, verify the code sent to your channels, then
+              sign in here.
             </Text>
           </View>
         ) : (
