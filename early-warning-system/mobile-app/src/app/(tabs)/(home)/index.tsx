@@ -1,6 +1,7 @@
 import { Image } from "expo-image";
 import { useCallback, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Pressable,
   RefreshControl,
   Text,
@@ -15,7 +16,7 @@ import {
 } from "@/components/ui";
 import { TabScreen } from "@/components/layout/screen";
 import { RainStatusIcon } from "@/components/ui/rain-status-icon";
-import { AirBandColors } from "@/constants/brand";
+import { AirBandColors, BrandColors } from "@/constants/brand";
 import {
   AirQualityChart,
   CasesWeekCard,
@@ -140,6 +141,13 @@ export default function HomeScreen() {
             ? "#fdecec"
             : "#f3f6f8";
 
+  const isAirLoading =
+    !airQuality.data && (airQuality.isPending || airQuality.isFetching);
+  const isHeatLoading =
+    !heat.data && (heat.isPending || heat.isFetching);
+  const isWeatherLoading =
+    !weather.data && (weather.isPending || weather.isFetching);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
@@ -209,18 +217,37 @@ export default function HomeScreen() {
         />
       </View>
 
-      <View className="mx-4 mb-4 rounded-3xl border border-border p-5" style={{ backgroundColor: heroTint }}>
-        <View className="mb-3 self-start rounded-full bg-white/80 px-3 py-1">
-          <Text className="text-sm font-extrabold" style={{ color: bandColor }}>
-            {guidance.label}
-          </Text>
-        </View>
-        <Text className="text-xl font-extrabold leading-7 text-ink">
-          {guidance.outdoorAnswer}
-        </Text>
-        <Text className="mt-3 text-base leading-6 text-ink-soft">
-          {guidance.summary}
-        </Text>
+      <View
+        className="mx-4 mb-4 rounded-3xl border border-border p-5"
+        style={{ backgroundColor: isAirLoading ? "#f3f6f8" : heroTint }}
+        accessibilityState={{ busy: isAirLoading }}>
+        {isAirLoading ? (
+          <View
+            className="min-h-[148px] items-center justify-center gap-3 py-4"
+            accessibilityRole="progressbar"
+            accessibilityLabel={`Loading outdoor guidance for ${selectedCity}`}>
+            <ActivityIndicator color={BrandColors.forest} size="large" />
+            <Text className="text-center text-sm font-extrabold text-forest">
+              Loading conditions for {selectedCity}…
+            </Text>
+          </View>
+        ) : (
+          <>
+            <View className="mb-3 self-start rounded-full bg-white/80 px-3 py-1">
+              <Text
+                className="text-sm font-extrabold"
+                style={{ color: bandColor }}>
+                {guidance.label}
+              </Text>
+            </View>
+            <Text className="min-h-[56px] text-xl font-extrabold leading-7 text-ink">
+              {guidance.outdoorAnswer}
+            </Text>
+            <Text className="mt-3 min-h-[48px] text-base leading-6 text-ink-soft">
+              {guidance.summary}
+            </Text>
+          </>
+        )}
       </View>
 
       <View className="mb-4 gap-3 px-4">
@@ -230,6 +257,7 @@ export default function HomeScreen() {
             value={guidance.label}
             detail={airDetail}
             accentColor={bandColor}
+            loading={isAirLoading}
             help={
               <InfoSheet label="Air quality">
                 <InfoSheetParagraph>
@@ -261,6 +289,7 @@ export default function HomeScreen() {
                 : "—"
             }
             detail="How hot it feels outdoors"
+            loading={isHeatLoading}
             help={
               <InfoSheet label="Heat">
                 <InfoSheetParagraph>
@@ -285,6 +314,7 @@ export default function HomeScreen() {
         <StatusCard
           label="Rain"
           value={rain.status}
+          loading={isWeatherLoading}
           valueContent={
             <View className="flex-row items-center gap-2">
               <RainStatusIcon status={rain.status} />
@@ -325,14 +355,23 @@ export default function HomeScreen() {
           eyebrow="Recommendations"
           title="Five things to do today"
         />
-        {guidance.recommendations.map((item, index) => (
-          <RecommendationCard
-            key={item.title}
-            index={index + 1}
-            title={item.title}
-            action={item.action}
-          />
-        ))}
+        {isAirLoading
+          ? Array.from({ length: 5 }).map((_, index) => (
+            <RecommendationCard
+              key={`rec-placeholder-${index}`}
+              index={index + 1}
+              title="—"
+              action="—"
+            />
+          ))
+          : guidance.recommendations.map((item, index) => (
+            <RecommendationCard
+              key={item.title}
+              index={index + 1}
+              title={item.title}
+              action={item.action}
+            />
+          ))}
       </View>
 
       <View className="mb-4 gap-3 px-4">
@@ -341,7 +380,7 @@ export default function HomeScreen() {
             Families
           </Text>
           <Text className="mt-1 text-sm leading-5 text-muted">
-            {guidance.audienceAdvice.parent}
+            {isAirLoading ? "—" : guidance.audienceAdvice.parent}
           </Text>
         </View>
         <View className="rounded-2xl border border-border bg-white p-4">
@@ -349,7 +388,7 @@ export default function HomeScreen() {
             Facilities & sites
           </Text>
           <Text className="mt-1 text-sm leading-5 text-muted">
-            {guidance.audienceAdvice.school}
+            {isAirLoading ? "—" : guidance.audienceAdvice.school}
           </Text>
         </View>
         <View className="rounded-2xl border border-border bg-white p-4">
@@ -357,12 +396,16 @@ export default function HomeScreen() {
             Health settings
           </Text>
           <Text className="mt-1 text-sm leading-5 text-muted">
-            {guidance.audienceAdvice.student}
+            {isAirLoading ? "—" : guidance.audienceAdvice.student}
           </Text>
         </View>
-        <Text className="text-xs leading-5 text-muted">
-          {guidance.operatorAlertNote}
-        </Text>
+        {!isAirLoading ? (
+          <Text className="text-xs leading-5 text-muted">
+            {guidance.operatorAlertNote}
+          </Text>
+        ) : (
+          <Text className="text-xs leading-5 text-muted">—</Text>
+        )}
       </View>
 
       <View className="mb-3 px-4">

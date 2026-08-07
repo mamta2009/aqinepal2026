@@ -74,6 +74,7 @@ export function StatusCard({
   detail,
   accentColor,
   help,
+  loading,
   children,
 }: {
   label: string;
@@ -83,17 +84,26 @@ export function StatusCard({
   detail?: string | null;
   accentColor?: string;
   help?: ReactNode;
+  loading?: boolean;
   children?: ReactNode;
 }) {
   return (
-    <View className="min-h-[120px] flex-1 rounded-2xl border border-border bg-white p-4 shadow-sm">
+    <View
+      accessibilityState={{ busy: Boolean(loading) }}
+      className="min-h-[120px] flex-1 rounded-2xl border border-border bg-white p-4 shadow-sm">
       <View className="mb-2 flex-row items-center justify-between">
         <Text className="text-xs font-extrabold uppercase tracking-wide text-muted">
           {label}
         </Text>
         {help}
       </View>
-      {valueContent ? (
+      {loading ? (
+        <Text
+          className="text-2xl font-extrabold text-muted"
+          accessibilityLabel={`${label} loading`}>
+          —
+        </Text>
+      ) : valueContent ? (
         <View accessibilityLabel={value}>{valueContent}</View>
       ) : (
         <Text
@@ -102,8 +112,10 @@ export function StatusCard({
           {value}
         </Text>
       )}
-      {detail ? (
-        <Text className="mt-1 text-sm leading-5 text-muted">{detail}</Text>
+      {loading || detail ? (
+        <Text className="mt-1 text-sm leading-5 text-muted">
+          {loading ? "—" : detail}
+        </Text>
       ) : null}
       {children}
     </View>
