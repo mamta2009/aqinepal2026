@@ -54,40 +54,8 @@ export default function RootLayout() {
           <AuthBootstrap>
             <StatusBar style="dark" />
             <BrandedStartupGate>
-              <Stack
-                screenOptions={{
-                  headerStyle: { backgroundColor: BrandColors.surface },
-                  headerTintColor: BrandColors.forest,
-                  headerTitleStyle: { fontWeight: "700", color: BrandColors.ink },
-                  contentStyle: { backgroundColor: BrandColors.surface },
-                }}>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="register" options={{ title: "Register" }} />
-                <Stack.Screen name="verify" options={{ title: "Verify" }} />
-                <Stack.Screen name="alerts" options={{ title: "Recent Alerts" }} />
-                <Stack.Screen name="compare" options={{ title: "Compare cities" }} />
-                <Stack.Screen name="map" options={{ title: "Map" }} />
-                <Stack.Screen name="guides" options={{ title: "Guides" }} />
-                <Stack.Screen name="about" options={{ title: "About" }} />
-                <Stack.Screen name="aqi-help" options={{ title: "aqiHelp" }} />
-
-                <Stack.Screen name="inbox" options={{ title: "Notification inbox" }} />
-                <Stack.Screen
-                  name="facility-actions"
-                  options={{ title: "Facilities" }}
-                />
-                <Stack.Screen
-                  name="friends"
-                  options={{ title: "Trusted contacts" }}
-                />
-                <Stack.Screen
-                  name="learn/[audience]"
-                  options={{ title: "Learn" }}
-                />
-                <Stack.Screen
-                  name="learn/guide/[path]"
-                  options={{ title: "Guide" }}
-                />
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(tabs)" />
               </Stack>
               <FloatingAqiHelpButton />
               <AppDrawer />

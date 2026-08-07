@@ -1,5 +1,5 @@
 import { Image } from "expo-image";
-import { type Href, usePathname, useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import { openBrowserAsync, WebBrowserPresentationStyle } from "expo-web-browser";
 import { useEffect, useMemo } from "react";
 import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
@@ -10,7 +10,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSafeAreaInsets, SafeAreaView } from "react-native-safe-area-context";
 
 import { API_BASE_URL } from "@/constants/api";
 import { BrandColors } from "@/constants/brand";
@@ -19,6 +19,7 @@ import {
   isDrawerItemActive,
   type DrawerNavItem,
 } from "@/features/navigation/drawer-nav";
+import { DrawerNavIcon } from "@/features/navigation/DrawerNavIcon";
 import { useIsAuthenticated, useProfile } from "@/hooks/useAuth";
 import { useAuthStore } from "@/store/authStore";
 import { useDashboardStore } from "@/store/dashboardStore";
@@ -42,22 +43,22 @@ function NavRow({
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
       onPress={onPress}
-      className="mb-1 min-h-11 flex-row items-center gap-3 rounded-2xl px-3 py-2.5 active:opacity-85"
+      className="mb-1 min-h-12 flex-row items-center gap-3 rounded-2xl px-3 py-2.5 active:opacity-85"
       style={
         active
           ? { backgroundColor: BrandColors.skySoft }
           : { backgroundColor: "transparent" }
       }>
       <View
-        className="h-9 w-9 items-center justify-center rounded-xl"
+        className="h-11 w-11 items-center justify-center rounded-xl"
         style={{
           backgroundColor: active ? BrandColors.forest : BrandColors.surfaceTint,
         }}>
-        <Text
-          className="text-sm font-bold"
-          style={{ color: active ? "#ffffff" : BrandColors.forest }}>
-          {item.icon}
-        </Text>
+        <DrawerNavIcon
+          id={item.id}
+          size={22}
+          color={active ? "#ffffff" : BrandColors.forest}
+        />
       </View>
       <Text
         className="flex-1 text-[15px] font-bold"
@@ -186,8 +187,12 @@ export function AppDrawer() {
       });
       return;
     }
-    setLastDrawerHref(action.href);
-    if (action.href.startsWith("/learn/") && action.href !== "/learn/guide") {
+    setLastDrawerHref(String(action.href));
+    if (
+      typeof action.href === "string" &&
+      action.href.startsWith("/learn/") &&
+      action.href !== "/learn/guide"
+    ) {
       const audience = action.href.replace("/learn/", "");
       router.push({
         pathname: "/learn/[audience]",
@@ -195,7 +200,7 @@ export function AppDrawer() {
       });
       return;
     }
-    router.push(action.href as Href);
+    router.push(action.href);
   };
 
   return (
@@ -262,12 +267,13 @@ export function AppDrawer() {
               },
               panelStyle,
             ]}>
-            <View
+            <SafeAreaView
+              edges={["top", "bottom", "left"]}
               style={{
                 flex: 1,
-                paddingTop: insets.top + 12,
-                paddingBottom: insets.bottom + 12,
-                paddingLeft: Math.max(insets.left, 16),
+                paddingTop: 8,
+                paddingBottom: 8,
+                paddingLeft: 16,
                 paddingRight: 16,
               }}>
               <View className="mb-4 flex-row items-center gap-3 pr-2">
@@ -292,7 +298,7 @@ export function AppDrawer() {
                   className="mb-3 rounded-2xl px-3 py-3"
                   style={{ backgroundColor: BrandColors.skySoft }}>
                   <Text className="text-[10px] font-extrabold uppercase tracking-widest text-forest">
-                    Signed in as
+                    Welcome
                   </Text>
                   <Text
                     className="mt-1 text-[15px] font-extrabold"
@@ -300,17 +306,6 @@ export function AppDrawer() {
                     numberOfLines={1}>
                     {displayName}
                   </Text>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Sign out"
-                    onPress={() => {
-                      close();
-                      void clearSession();
-                    }}
-                    className="mt-3 min-h-10 items-center justify-center rounded-xl active:opacity-85"
-                    style={{ backgroundColor: BrandColors.forest }}>
-                    <Text className="text-sm font-bold text-white">Sign out</Text>
-                  </Pressable>
                 </View>
               ) : null}
 
@@ -323,8 +318,9 @@ export function AppDrawer() {
               />
 
               <ScrollView
+                className="flex-1"
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 24 }}>
+                contentContainerStyle={{ paddingBottom: 16 }}>
                 {navGroups.map((group) => (
                   <View key={group.id} className="mb-3">
                     <Text className="mb-2 px-1 text-[10px] font-extrabold uppercase tracking-widest text-forest">
@@ -343,7 +339,30 @@ export function AppDrawer() {
                   </View>
                 ))}
               </ScrollView>
-            </View>
+
+              {isAuthenticated ? (
+                <View className="pt-2">
+                  <View
+                    className="mb-3"
+                    style={{
+                      height: 1,
+                      backgroundColor: BrandColors.border,
+                    }}
+                  />
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Sign out"
+                    onPress={() => {
+                      close();
+                      void clearSession();
+                    }}
+                    className="min-h-11 items-center justify-center rounded-xl active:opacity-85"
+                    style={{ backgroundColor: BrandColors.forest }}>
+                    <Text className="text-sm font-bold text-white">Sign out</Text>
+                  </Pressable>
+                </View>
+              ) : null}
+            </SafeAreaView>
           </Animated.View>
         </GestureDetector>
       </View>

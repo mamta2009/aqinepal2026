@@ -74,7 +74,7 @@ export function NotificationInboxList({
           <View className="flex-row items-center justify-between">
             <Text className="text-lg font-extrabold text-ink">{title}</Text>
             {showSeeMore && hasMore ? (
-              <Pressable onPress={() => router.push('/inbox')} hitSlop={8}>
+              <Pressable onPress={() => router.push('/account/inbox')} hitSlop={8}>
                 <Text className="text-sm font-semibold text-forest">See more</Text>
               </Pressable>
             ) : null}
@@ -97,7 +97,7 @@ export function NotificationInboxList({
 
       {showSeeMore && hasMore ? (
         <Pressable
-          onPress={() => router.push('/inbox')}
+          onPress={() => router.push('/account/inbox')}
           className="mt-2 items-center rounded-xl border px-3 py-2"
           style={{ borderColor: 'rgba(245, 158, 11, 0.45)' }}>
           <Text className="text-sm font-semibold text-secondary">See more notifications</Text>

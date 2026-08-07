@@ -75,8 +75,8 @@ export function TabScreen({
 }
 
 /**
- * Stack route shell under a native header: bottom safe area only,
- * shared content padding. Use scroll=false with FlatList parents.
+ * Stack route shell under a native header.
+ * Includes bottom tab bar clearance since stacks live inside NativeTabs.
  */
 export function StackScreen({
   children,
@@ -90,13 +90,13 @@ export function StackScreen({
   const padding = {
     paddingHorizontal: ScreenPadding.x,
     paddingTop: ScreenPadding.stackTop,
-    paddingBottom: ScreenPadding.stackBottom,
+    paddingBottom: BottomTabInset + ScreenPadding.stackBottom,
   };
 
   return (
     <SafeAreaView
       className={className ?? "flex-1 bg-surface"}
-      edges={["bottom"]}>
+      edges={[]}>
       {scroll ? (
         <ScrollView
           keyboardShouldPersistTaps={keyboardShouldPersistTaps}
@@ -114,7 +114,7 @@ export function StackScreen({
   );
 }
 
-/** Safe-area wrapper for FlatList / custom scroll parents on stack routes. */
+/** Wrapper for FlatList / custom scroll parents on stack routes under tabs. */
 export function StackScreenFrame({
   children,
   className,
@@ -123,10 +123,10 @@ export function StackScreenFrame({
   className?: string;
 }) {
   return (
-    <SafeAreaView
+    <View
       className={className ?? "flex-1 bg-surface"}
-      edges={["bottom"]}>
+      style={{ paddingBottom: BottomTabInset }}>
       {children}
-    </SafeAreaView>
+    </View>
   );
 }

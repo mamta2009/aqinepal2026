@@ -25,7 +25,7 @@ export default function FacilityActionsScreen() {
   }, [profileQuery]);
 
   if (hydrated && !isAuthenticated) {
-    return <Redirect href="/(tabs)/account" />;
+    return <Redirect href="/account" />;
   }
 
   return (

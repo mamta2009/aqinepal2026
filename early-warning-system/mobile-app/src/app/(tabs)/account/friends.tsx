@@ -8,7 +8,7 @@ export default function FriendsScreen() {
   const isAuthenticated = useIsAuthenticated();
 
   if (hydrated && !isAuthenticated) {
-    return <Redirect href="/(tabs)/account" />;
+    return <Redirect href="/account" />;
   }
 
   return (

@@ -22,7 +22,7 @@ export default function RegisterScreen() {
         You can still use the{" "}
         <Text
           className="font-bold text-link underline"
-          onPress={() => router.push("/(tabs)")}>
+          onPress={() => router.push("/")}>
           Home dashboard
         </Text>{" "}
         without registering.

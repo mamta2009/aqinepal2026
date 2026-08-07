@@ -41,7 +41,7 @@ export default function InboxScreen() {
   }, [inbox]);
 
   if (hydrated && !isAuthenticated) {
-    return <Redirect href="/(tabs)/account" />;
+    return <Redirect href="/account" />;
   }
 
   return (

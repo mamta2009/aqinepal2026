@@ -1,4 +1,4 @@
-import { usePathname, useRouter, useSegments } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
 import { Platform, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -14,26 +14,18 @@ const FAB_GAP = 12;
 export function FloatingAqiHelpButton() {
   const router = useRouter();
   const pathname = usePathname();
-  const segments = useSegments();
   const insets = useSafeAreaInsets();
   const drawerOpen = useDrawerStore((s) => s.isOpen);
 
   const onAqiHelp =
     pathname === "/aqi-help" || pathname.startsWith("/aqi-help/");
-  const inTabs =
-    segments[0] === "(tabs)" ||
-    pathname === "/" ||
-    pathname === "/learn" ||
-    pathname === "/account";
 
   if (onAqiHelp || drawerOpen) {
     return null;
   }
 
-  // Tab bar sits above the bottom safe area (home indicator / nav gestures).
-  const bottom = inTabs
-    ? insets.bottom + TAB_BAR_HEIGHT + FAB_GAP
-    : Math.max(insets.bottom, 12) + FAB_GAP;
+  // App routes live under NativeTabs, so always clear the tab bar.
+  const bottom = insets.bottom + TAB_BAR_HEIGHT + FAB_GAP;
 
   return (
     <View

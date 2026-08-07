@@ -126,7 +126,7 @@ export default function AccountScreen() {
             title="Facilities"
             subtitle="Sites you cover, PM2.5 thresholds, and preparedness actions"
             tone="facility"
-            onPress={() => router.push("/facility-actions")}
+            onPress={() => router.push("/account/facility-actions")}
           />
 
           <ChannelPreferencesForm profile={profileQuery.data} />
@@ -143,7 +143,7 @@ export default function AccountScreen() {
             title="Trusted contacts"
             subtitle="People you trust for shared SMS, WhatsApp, or email alerts"
             tone="friends"
-            onPress={() => router.push("/friends")}
+            onPress={() => router.push("/account/friends")}
           />
 
           <PrimaryButton
