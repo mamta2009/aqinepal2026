@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Toast from "react-native-toast-message";
 import { BrandedStartupGate } from "@/components/branded-startup-gate";
 import { BrandColors } from "@/constants/brand";
+import { FloatingAqiHelpButton } from "@/features/aqi-help";
 import { AppDrawer } from "@/features/navigation/AppDrawer";
 import { setUnauthorizedHandler } from "@/services/api/client";
 import { queryClient } from "@/services/api/queryClient";
@@ -68,6 +69,7 @@ export default function RootLayout() {
                 <Stack.Screen name="map" options={{ title: "Map" }} />
                 <Stack.Screen name="guides" options={{ title: "Guides" }} />
                 <Stack.Screen name="about" options={{ title: "About" }} />
+                <Stack.Screen name="aqi-help" options={{ title: "aqiHelp" }} />
 
                 <Stack.Screen name="inbox" options={{ title: "Notification inbox" }} />
                 <Stack.Screen
@@ -87,6 +89,7 @@ export default function RootLayout() {
                   options={{ title: "Guide" }}
                 />
               </Stack>
+              <FloatingAqiHelpButton />
               <AppDrawer />
             </BrandedStartupGate>
             <Toast />

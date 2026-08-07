@@ -37,6 +37,13 @@ export const DRAWER_NAV: DrawerNavGroup[] = [
         action: { type: "route", href: "/map" },
         match: ["/map"],
       },
+      {
+        id: "aqi-help",
+        label: "Ask aqiHelp",
+        icon: "?",
+        action: { type: "route", href: "/aqi-help" },
+        match: ["/aqi-help"],
+      },
     ],
   },
   // Hide Learn sidebar group for now — Learn tab remains available.
