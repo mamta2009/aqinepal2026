@@ -58,3 +58,16 @@ export async function getLatestAlert(
   );
   return data;
 }
+
+/** `GET /api/weather/current` — used for rain / precip status. */
+export async function getWeatherCurrent(
+  city: CityName,
+): Promise<Record<string, unknown>> {
+  const { data } = await apiClient.get<Record<string, unknown>>(
+    "/api/weather/current",
+    {
+      params: { city },
+    },
+  );
+  return data;
+}

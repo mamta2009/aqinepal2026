@@ -5,7 +5,11 @@ import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeOut } from "react-native-reanimated";
 
 import { BrandColors } from "@/constants/brand";
-import { getAirQualityCurrent, getHeatCurrent } from "@/services/api/dashboard";
+import {
+  getAirQualityCurrent,
+  getHeatCurrent,
+  getWeatherCurrent,
+} from "@/services/api/dashboard";
 import { getCities } from "@/services/api/cities";
 import { getRuntimeConfig } from "@/services/api/runtimeConfig";
 import { queryClient } from "@/services/api/queryClient";
@@ -32,6 +36,10 @@ async function prefetchCoreData(city: string) {
     queryClient.prefetchQuery({
       queryKey: ["heat-current", city],
       queryFn: () => getHeatCurrent(city as never),
+    }),
+    queryClient.prefetchQuery({
+      queryKey: ["weather-current", city],
+      queryFn: () => getWeatherCurrent(city as never),
     }),
   ]);
 }

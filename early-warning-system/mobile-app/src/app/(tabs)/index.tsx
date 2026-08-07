@@ -15,6 +15,7 @@ import {
   SectionTitle,
   StatusCard,
 } from "@/components/ui";
+import { RainStatusIcon } from "@/components/ui/rain-status-icon";
 import { AirBandColors } from "@/constants/brand";
 import { BottomTabInset, Spacing } from "@/constants/theme";
 import {
@@ -34,6 +35,7 @@ import { useCities } from "@/hooks/useCities";
 import { useHeatCurrent } from "@/hooks/useHeatCurrent";
 import { useLatestAlert } from "@/hooks/useLatestAlert";
 import { useRuntimeConfig } from "@/hooks/useRuntimeConfig";
+import { useWeatherCurrent } from "@/hooks/useWeatherCurrent";
 import { useWeekForecast } from "@/hooks/useWeekForecast";
 import { getClimateGuidance } from "@/lib/climate-guidance";
 import { briefAirMeasurement, explainAirMeasurement } from "@/lib/pm25-aqi";
@@ -49,6 +51,7 @@ export default function HomeScreen() {
   const cities = useCities();
   const airQuality = useAirQuality(selectedCity);
   const heat = useHeatCurrent(selectedCity);
+  const weather = useWeatherCurrent(selectedCity);
   const casesWeek = useCasesWeek(selectedCity);
   const weekForecast = useWeekForecast(selectedCity);
   const latestAlert = useLatestAlert(selectedCity);
@@ -89,9 +92,14 @@ export default function HomeScreen() {
   });
 
   const heatTemp = heat.data?.heat_temperature_display;
-  const rain = extractRainIndicator(
-    (heat.data?.heat as Record<string, unknown> | undefined) ?? null,
-  );
+  const rain = useMemo(() => {
+    const payload = weather.data?.weather;
+    return extractRainIndicator(
+      payload && typeof payload === "object"
+        ? (payload as Record<string, unknown>)
+        : null,
+    );
+  }, [weather.data]);
 
   const bandColor = AirBandColors[guidance.airBand];
   const heroTint =
@@ -115,6 +123,7 @@ export default function HomeScreen() {
       await Promise.all([
         airQuality.refetch(),
         heat.refetch(),
+        weather.refetch(),
         casesWeek.refetch(),
         weekForecast.refetch(),
         latestAlert.refetch(),
@@ -127,6 +136,7 @@ export default function HomeScreen() {
   }, [
     airQuality,
     heat,
+    weather,
     casesWeek,
     weekForecast,
     latestAlert,
@@ -221,11 +231,21 @@ export default function HomeScreen() {
           <StatusCard
             label="Rain"
             value={rain.status}
+            valueContent={
+              <View className="flex-row items-center gap-2">
+                <RainStatusIcon status={rain.status} />
+                <Text className="text-lg font-extrabold text-ink">
+                  {rain.status}
+                </Text>
+              </View>
+            }
             detail={rain.summary}
             help={
               <InfoSheet label="Rain">
-                A short weather reading about rain or wet conditions near this
-                place. It is not a flood warning.
+                The icon shows if it looks rainy, a little wet, or dry at the
+                place you selected right now. The small text may show how much
+                rain was reported or a short weather note. It is not a flood
+                warning.
               </InfoSheet>
             }
           />

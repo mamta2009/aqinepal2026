@@ -70,6 +70,7 @@ export function SharedButton({
 export function StatusCard({
   label,
   value,
+  valueContent,
   detail,
   accentColor,
   help,
@@ -77,6 +78,8 @@ export function StatusCard({
 }: {
   label: string;
   value: string;
+  /** When set, shown instead of the text value (e.g. rain status icons). */
+  valueContent?: ReactNode;
   detail?: string | null;
   accentColor?: string;
   help?: ReactNode;
@@ -90,11 +93,15 @@ export function StatusCard({
         </Text>
         {help}
       </View>
-      <Text
-        className="text-2xl font-extrabold text-ink"
-        style={accentColor ? { color: accentColor } : undefined}>
-        {value}
-      </Text>
+      {valueContent ? (
+        <View accessibilityLabel={value}>{valueContent}</View>
+      ) : (
+        <Text
+          className="text-2xl font-extrabold text-ink"
+          style={accentColor ? { color: accentColor } : undefined}>
+          {value}
+        </Text>
+      )}
       {detail ? (
         <Text className="mt-1 text-sm leading-5 text-muted">{detail}</Text>
       ) : null}
