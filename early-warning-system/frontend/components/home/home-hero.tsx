@@ -40,7 +40,7 @@ export function HomeHero() {
           <div>
             <p className="eyebrow">Climate-Health Alerts</p>
             <h1 className="max-w-4xl text-5xl leading-[1.02] font-extrabold tracking-[-0.045em] text-ink sm:text-7xl">
-              How are the air, heat, and rain near you?
+              How will the climate affect your activities today?
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-muted sm:text-xl">
               See outdoor air, heat, and rain together for the places you care
