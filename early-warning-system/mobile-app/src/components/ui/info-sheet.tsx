@@ -48,7 +48,7 @@ export function InfoSheet({
             <View className="mb-3 h-1 w-10 self-center rounded-full bg-border-strong" />
             <Text className="text-lg font-extrabold text-ink">{label}</Text>
             <ScrollView className="mt-2 max-h-72">
-              <Text className="text-base leading-6 text-muted">{children}</Text>
+              <View className="gap-3">{children}</View>
             </ScrollView>
             <Pressable
               accessibilityRole="button"
@@ -61,5 +61,11 @@ export function InfoSheet({
         </Pressable>
       </Modal>
     </>
+  );
+}
+
+export function InfoSheetParagraph({ children }: { children: ReactNode }) {
+  return (
+    <Text className="text-base leading-6 text-muted">{children}</Text>
   );
 }

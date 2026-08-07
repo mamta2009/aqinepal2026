@@ -12,9 +12,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { BarChart } from 'react-native-gifted-charts';
-
 import { BrandColors } from '@/constants/brand';
 import { CITY_NAMES, DEFAULT_CITY, type CityName } from '@/constants/cities';
+import { InfoSheet, InfoSheetParagraph } from '@/components/ui';
 import { useRuntimeConfig } from '@/hooks/useRuntimeConfig';
 import {
   compareBarColor,
@@ -204,10 +204,26 @@ export default function CompareCitiesScreen() {
         contentContainerStyle={{ paddingBottom: Spacing.four * 4 }}
         keyboardShouldPersistTaps="handled">
         <View className="px-4 pt-3">
+          <View className="mb-2 flex-row flex-wrap items-center gap-2">
+            <Text className="text-lg font-extrabold text-ink">
+              Compare cities · live PM2.5
+            </Text>
+            <InfoSheet label="City air comparison chart">
+              <InfoSheetParagraph>
+                Pick cities to compare their live PM2.5 (tiny pollution particles)
+                side by side. The dashed line is an alert guide line at about{' '}
+                {threshold} µg/m³.
+              </InfoSheetParagraph>
+              <InfoSheetParagraph>
+                Read the numbers in the table too — do not rely on colour alone.
+              </InfoSheetParagraph>
+            </InfoSheet>
+          </View>
           <Text className="text-sm leading-5 text-neutral-500">
-            Select cities to load side-by-side air readings. Fetches run one city at a time
-            (~0.65s apart) to reduce rate limits. Keep selections small (about {MAX_RECOMMENDED}{' '}
-            or fewer).
+            Select cities to fetch live PM2.5 side by side. Requests run one at a
+            time to limit upstream rate pressure. Threshold band uses {threshold}{' '}
+            µg/m³ (operator runtime setting when available). Keep selections small
+            (about {MAX_RECOMMENDED} or fewer).
           </Text>
 
           <Text className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-neutral-500">

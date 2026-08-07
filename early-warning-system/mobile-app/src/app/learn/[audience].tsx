@@ -1,20 +1,22 @@
-import { useLocalSearchParams, useNavigation } from "expo-router";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useEffect } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 import { EmptyState, SectionTitle } from "@/components/ui";
 import { Spacing } from "@/constants/theme";
 import {
+  audienceGuidePath,
   audiencePages,
   type AudienceKey,
 } from "@/content/education";
 
 export default function LearnAudienceScreen() {
   const navigation = useNavigation();
+  const router = useRouter();
   const params = useLocalSearchParams<{ audience?: string }>();
   const key = (params.audience ?? "") as AudienceKey;
   const page = audiencePages[key];
+  const guidePath = audienceGuidePath[key];
 
   useEffect(() => {
     if (page) {
@@ -48,6 +50,21 @@ export default function LearnAudienceScreen() {
             lede={page.lede}
           />
         </View>
+
+        {guidePath ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Open linked help guide"
+            onPress={() =>
+              router.push({
+                pathname: "/learn/guide/[path]",
+                params: { path: guidePath },
+              })
+            }
+            className="mb-4 min-h-11 items-center justify-center rounded-full bg-forest px-4 py-3 active:opacity-90">
+            <Text className="font-extrabold text-white">Open related guide</Text>
+          </Pressable>
+        ) : null}
 
         <Text className="mb-3 text-xs font-extrabold uppercase tracking-widest text-forest">
           Three ideas to remember

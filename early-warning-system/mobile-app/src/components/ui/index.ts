@@ -8,4 +8,4 @@ export {
   SharedButton,
   StatusCard,
 } from "@/components/ui/primitives";
-export { InfoSheet } from "@/components/ui/info-sheet";
+export { InfoSheet, InfoSheetParagraph } from "@/components/ui/info-sheet";

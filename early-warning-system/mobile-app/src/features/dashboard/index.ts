@@ -4,6 +4,8 @@ export { StatusCards } from "./StatusCards";
 export { AirQualityChart } from "./AirQualityChart";
 export { FiveDayForecastCard } from "./FiveDayForecastCard";
 export { CasesWeekCard } from "./CasesWeekCard";
+export { IllustrativeForecastCard } from "./IllustrativeForecastCard";
+export { WeeklyCityComparisonCard } from "./WeeklyCityComparisonCard";
 export { RecentAlertsCard } from "./RecentAlertsCard";
 export { AlertRow } from "./AlertRow";
 export { StressSandboxCard } from "./StressSandboxCard";

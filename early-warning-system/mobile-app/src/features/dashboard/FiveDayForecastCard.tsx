@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { BrandColors } from '@/constants/brand';
+import { InfoSheet, InfoSheetParagraph } from '@/components/ui';
 import {
   DashboardSection,
   DashboardSectionAccent,
@@ -49,10 +50,21 @@ export function FiveDayForecastCard({
             AI Powered
           </Text>
         </View>
+        <InfoSheet label="5-day forecast">
+          <InfoSheetParagraph>
+            Cards for the next five days with example PM2.5 and breathing-related
+            case guesses for {cityLabel}, starting from today{"'"}s reading when we
+            have one.
+          </InfoSheetParagraph>
+          <InfoSheetParagraph>
+            Demo / discussion only — not an official forecast.
+          </InfoSheetParagraph>
+        </InfoSheet>
       </View>
 
       <Text className="mb-3 text-xs text-muted">
-        Predicted respiratory cases based on air quality forecast
+        Predicted respiratory cases based on air quality and the weekly case trend
+        for {cityLabel}.
       </Text>
 
       {isLoading && !data ? (

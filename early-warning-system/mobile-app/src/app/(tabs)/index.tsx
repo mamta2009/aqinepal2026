@@ -8,9 +8,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 import {
   InfoSheet,
+  InfoSheetParagraph,
   RecommendationCard,
   SectionTitle,
   StatusCard,
@@ -26,15 +26,19 @@ import {
   DashboardActionsSidebar,
   DashboardMenuButton,
   FiveDayForecastCard,
+  IllustrativeForecastCard,
   RecentAlertsCard,
   StressSandboxCard,
+  WeeklyCityComparisonCard,
 } from "@/features/dashboard";
 import { useAirQuality } from "@/hooks/useAirQuality";
+import { useCasesAllCities } from "@/hooks/useCasesAllCities";
 import { useCasesWeek } from "@/hooks/useCasesWeek";
 import { useCities } from "@/hooks/useCities";
 import { useHeatCurrent } from "@/hooks/useHeatCurrent";
 import { useLatestAlert } from "@/hooks/useLatestAlert";
 import { useRuntimeConfig } from "@/hooks/useRuntimeConfig";
+import { useSurgeForecast } from "@/hooks/useSurgeForecast";
 import { useWeatherCurrent } from "@/hooks/useWeatherCurrent";
 import { useWeekForecast } from "@/hooks/useWeekForecast";
 import { getClimateGuidance } from "@/lib/climate-guidance";
@@ -42,10 +46,41 @@ import { briefAirMeasurement, explainAirMeasurement } from "@/lib/pm25-aqi";
 import { extractRainIndicator } from "@/lib/weather-rain";
 import { toApiError } from "@/services/api/client";
 import { useDashboardStore } from "@/store/dashboardStore";
+import type { ProvenanceInfo } from "@/types/provenance";
 
+function provenanceHelpLine(
+  source: string | null | undefined,
+  provenance: ProvenanceInfo | Record<string, unknown> | null | undefined,
+): string {
+  const tier =
+    provenance &&
+      typeof provenance === "object" &&
+      provenance.confidence &&
+      typeof provenance.confidence === "object" &&
+      typeof (provenance.confidence as { tier?: unknown }).tier === "string"
+      ? (provenance.confidence as { tier: string }).tier
+      : null;
+  const role =
+    provenance &&
+      typeof provenance === "object" &&
+      typeof (provenance as { deployment_role?: unknown }).deployment_role ===
+      "string"
+      ? String((provenance as { deployment_role: string }).deployment_role).replaceAll(
+        "_",
+        " ",
+      )
+      : null;
+  const confidence = tier
+    ? `Confidence: ${tier}`
+    : role || "Provenance details unavailable";
+  return `Source: ${source || "Unavailable"} · ${confidence}`;
+}
 export default function HomeScreen() {
   const selectedCity = useDashboardStore((state) => state.selectedCity);
   const setSelectedCity = useDashboardStore((state) => state.setSelectedCity);
+  const [refreshing, setRefreshing] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   const runtimeConfig = useRuntimeConfig();
   const cities = useCities();
@@ -54,6 +89,8 @@ export default function HomeScreen() {
   const weather = useWeatherCurrent(selectedCity);
   const casesWeek = useCasesWeek(selectedCity);
   const weekForecast = useWeekForecast(selectedCity);
+  const surgeForecast = useSurgeForecast(selectedCity, showDetails);
+  const allCases = useCasesAllCities(showDetails);
   const latestAlert = useLatestAlert(selectedCity);
 
   const selectedCityInfo = cities.data?.cities.find(
@@ -113,10 +150,6 @@ export default function HomeScreen() {
             ? "#fdecec"
             : "#f3f6f8";
 
-  const [refreshing, setRefreshing] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
-
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
@@ -129,6 +162,9 @@ export default function HomeScreen() {
         latestAlert.refetch(),
         runtimeConfig.refetch(),
         cities.refetch(),
+        ...(showDetails
+          ? [surgeForecast.refetch(), allCases.refetch()]
+          : []),
       ]);
     } finally {
       setRefreshing(false);
@@ -142,6 +178,9 @@ export default function HomeScreen() {
     latestAlert,
     runtimeConfig,
     cities,
+    showDetails,
+    surgeForecast,
+    allCases,
   ]);
 
   return (
@@ -206,8 +245,24 @@ export default function HomeScreen() {
               accentColor={bandColor}
               help={
                 <InfoSheet label="Air quality">
-                  {airHelp ??
-                    "Air quality tells you how clean the outdoor air is. Start with the status label, then look at PM2.5 or AQI numbers."}
+                  <InfoSheetParagraph>
+                    The big word here is a simple level for how clean or dirty
+                    the air is: Good, Moderate, Use extra care, or Unhealthy.
+                  </InfoSheetParagraph>
+                  <InfoSheetParagraph>
+                    The small line may show PM2.5 (tiny pollution particles in
+                    the air) and ~AQI (a common air score from about 0 to 500).
+                    Higher PM2.5 or AQI usually means dirtier air.
+                  </InfoSheetParagraph>
+                  {airHelp ? (
+                    <InfoSheetParagraph>{airHelp}</InfoSheetParagraph>
+                  ) : null}
+                  <InfoSheetParagraph>
+                    {provenanceHelpLine(
+                      airQuality.data?.source,
+                      airQuality.data?.provenance,
+                    )}
+                  </InfoSheetParagraph>
                 </InfoSheet>
               }
             />
@@ -221,9 +276,21 @@ export default function HomeScreen() {
               detail="How hot it feels outdoors"
               help={
                 <InfoSheet label="Heat">
-                  This is the outdoor feels-like temperature when available.
-                  Hot weather adds strain, especially for children and older
-                  adults.
+                  <InfoSheetParagraph>
+                    The big number is how warm it feels outside in °C
+                    (Celsius). We use a feels-like temperature when the weather
+                    source provides one.
+                  </InfoSheetParagraph>
+                  <InfoSheetParagraph>
+                    Higher numbers mean hotter conditions. Plan shade, water,
+                    and rest when it feels especially hot.
+                  </InfoSheetParagraph>
+                  <InfoSheetParagraph>
+                    {provenanceHelpLine(
+                      heat.data?.source,
+                      heat.data?.provenance,
+                    )}
+                  </InfoSheetParagraph>
                 </InfoSheet>
               }
             />
@@ -242,10 +309,25 @@ export default function HomeScreen() {
             detail={rain.summary}
             help={
               <InfoSheet label="Rain">
-                The icon shows if it looks rainy, a little wet, or dry at the
-                place you selected right now. The small text may show how much
-                rain was reported or a short weather note. It is not a flood
-                warning.
+                <InfoSheetParagraph>
+                  The icon shows if it looks rainy, a little wet, or dry at the
+                  place you selected right now.
+                </InfoSheetParagraph>
+                <InfoSheetParagraph>
+                  The small text may show how much rain was reported (in mm) or
+                  a short weather note such as light rain or clear skies.
+                </InfoSheetParagraph>
+                <InfoSheetParagraph>
+                  {provenanceHelpLine(
+                    typeof weather.data?.source === "string"
+                      ? weather.data.source
+                      : null,
+                    weather.data?.provenance as
+                    | ProvenanceInfo
+                    | Record<string, unknown>
+                    | undefined,
+                  )}
+                </InfoSheetParagraph>
               </InfoSheet>
             }
           />
@@ -339,6 +421,17 @@ export default function HomeScreen() {
               isLoadingLatestAlert={latestAlert.isLoading}
             />
             <CasesWeekCard data={casesWeek.data} isLoading={casesWeek.isLoading} />
+            <IllustrativeForecastCard
+              data={surgeForecast.data}
+              isLoading={surgeForecast.isLoading}
+              isError={surgeForecast.isError}
+              error={surgeForecast.error}
+            />
+            <WeeklyCityComparisonCard
+              selectedCity={selectedCity}
+              data={allCases.data}
+              isLoading={allCases.isLoading}
+            />
             <StressSandboxCard
               cityLabel={selectedCity}
               livePm25={pm25}

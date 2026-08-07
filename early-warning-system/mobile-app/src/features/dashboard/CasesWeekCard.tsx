@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { ActivityIndicator, Text, View, useColorScheme } from 'react-native';
 import { BarChart } from 'react-native-gifted-charts';
 import { BrandColors } from '@/constants/brand';
+import { InfoSheet, InfoSheetParagraph } from '@/components/ui';
 import {
   DashboardSection,
   DashboardSectionAccent,
@@ -31,10 +32,25 @@ export function CasesWeekCard({ data, isLoading }: CasesWeekCardProps) {
 
   return (
     <DashboardSection accent={DashboardSectionAccent.cases}>
-      <View className="mb-3 flex-row items-baseline justify-between">
-        <Text className="text-sm font-semibold text-ink dark:text-white">
-          Respiratory cases — this week
-        </Text>
+      <View className="mb-3 flex-row flex-wrap items-center justify-between gap-2">
+        <View className="flex-1 flex-row flex-wrap items-center gap-2">
+          <Text className="text-sm font-semibold text-ink dark:text-white">
+            Respiratory cases — this week
+          </Text>
+          <InfoSheet label="Respiratory cases chart">
+            <InfoSheetParagraph>
+              The bars show an example count of breathing-related clinic visits
+              for about the last week in this city. The dashed line is a simple
+              guess for the next few days.
+            </InfoSheetParagraph>
+            <InfoSheetParagraph>
+              This is practice / demo data for now — not live hospital numbers.
+            </InfoSheetParagraph>
+            <InfoSheetParagraph>
+              Source: {data?.source || 'Unavailable'}
+            </InfoSheetParagraph>
+          </InfoSheet>
+        </View>
         {data ? (
           <Text className="font-mono text-sm text-muted">
             {data.total} total

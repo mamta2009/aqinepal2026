@@ -4,7 +4,6 @@ import { Stack, DefaultTheme, ThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import Toast from "react-native-toast-message";
-
 import { BrandedStartupGate } from "@/components/branded-startup-gate";
 import { BrandColors } from "@/constants/brand";
 import { setUnauthorizedHandler } from "@/services/api/client";
@@ -75,6 +74,10 @@ export default function RootLayout() {
               <Stack.Screen
                 name="learn/[audience]"
                 options={{ title: "Learn" }}
+              />
+              <Stack.Screen
+                name="learn/guide/[path]"
+                options={{ title: "Guide" }}
               />
             </Stack>
           </BrandedStartupGate>

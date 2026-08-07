@@ -2,8 +2,14 @@ import { apiClient } from "./client";
 
 import type { AirQualityResponse } from "@/types/airQuality";
 import type { LatestAlertResponse } from "@/types/alerts";
-import type { CasesWeekResponse } from "@/types/cases";
-import type { WeekPredictResponse } from "@/types/forecast";
+import type {
+  CasesAllCitiesResponse,
+  CasesWeekResponse,
+} from "@/types/cases";
+import type {
+  SurgeForecastResponse,
+  WeekPredictResponse,
+} from "@/types/forecast";
 import type { HeatCurrentResponse } from "@/types/heat";
 import type { CityName } from "@/constants/cities";
 
@@ -38,11 +44,27 @@ export async function getCasesWeek(city: CityName): Promise<CasesWeekResponse> {
   return data;
 }
 
+export async function getCasesAllCities(): Promise<CasesAllCitiesResponse> {
+  const { data } = await apiClient.get<CasesAllCitiesResponse>(
+    "/api/cases/all-cities",
+  );
+  return data;
+}
+
 export async function getWeekPredict(
   city: CityName,
 ): Promise<WeekPredictResponse> {
   const { data } = await apiClient.get<WeekPredictResponse>(
     `/api/models/predict/week/${city}`,
+  );
+  return data;
+}
+
+export async function getSurgeForecast(
+  city: CityName,
+): Promise<SurgeForecastResponse> {
+  const { data } = await apiClient.get<SurgeForecastResponse>(
+    `/api/models/surge-forecast/${city}`,
   );
   return data;
 }

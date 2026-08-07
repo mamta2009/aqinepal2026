@@ -253,6 +253,68 @@ export const airBasicsTips = [
   },
 ];
 
+/** Matches website home `AirBasics` measurement glossary. */
+export const measurementTerms = [
+  {
+    term: "AQI",
+    explanation:
+      "A simple air-quality score (often from 0 toward 500). Use this number and its colour band first — lower is generally cleaner.",
+  },
+  {
+    term: "PM2.5",
+    explanation:
+      "Fine particle pollution measured in micrograms. Optional detail behind the AQI score for people who want more context.",
+  },
+  {
+    term: "Heat index",
+    explanation:
+      "A way to understand how hot the weather feels, not only the temperature on a thermometer.",
+  },
+] as const;
+
+/** Matches website home colour-band guide. */
+export const colourGuideStatuses = [
+  {
+    title: "Good",
+    text: "Most people can continue normal outdoor activity.",
+    chipClass: "bg-aq-good/15",
+    textClass: "text-aq-good",
+  },
+  {
+    title: "Moderate",
+    text: "Sensitive people may need more breaks outdoors.",
+    chipClass: "bg-aq-moderate/15",
+    textClass: "text-aq-moderate",
+  },
+  {
+    title: "Use extra care",
+    text: "Consider shorter or gentler outdoor activity.",
+    chipClass: "bg-aq-sensitive/15",
+    textClass: "text-aq-sensitive",
+  },
+  {
+    title: "Unhealthy",
+    text: "Limit strenuous outdoor activity where possible.",
+    chipClass: "bg-aq-unhealthy/15",
+    textClass: "text-aq-unhealthy",
+  },
+] as const;
+
+/** Educational markdown guides shown on the website Guides hub. */
+export const educationalGuidePaths = [
+  "STUDENT_CLEAN_AIR_ACTIVITY.md",
+  "TEACHER_CLEAN_AIR_LESSON.md",
+  "PARENT_AIR_QUALITY_CHECKLIST.md",
+  "SCHOOL_AIR_QUALITY_ACTION_GUIDE.md",
+] as const;
+
+export const audienceGuidePath: Partial<Record<AudienceKey, string>> = {
+  students: "STUDENT_CLEAN_AIR_ACTIVITY.md",
+  teachers: "TEACHER_CLEAN_AIR_LESSON.md",
+  parents: "PARENT_AIR_QUALITY_CHECKLIST.md",
+  schools: "SCHOOL_AIR_QUALITY_ACTION_GUIDE.md",
+};
+
 export const howItWorksSteps = [
   {
     title: "Choose a place",
