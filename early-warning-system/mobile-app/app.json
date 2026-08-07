@@ -28,7 +28,7 @@
       "predictiveBackGestureEnabled": false,
       "googleServicesFile": "./google-services.json",
       "usesCleartextTraffic": true,
-      "versionCode": 3
+      "versionCode": 2
     },
     "web": {
       "output": "static",
