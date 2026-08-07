@@ -1,5 +1,4 @@
 import { Pressable, ScrollView, Text, View } from "react-native";
-
 import { BrandColors } from "@/constants/brand";
 import { CITY_NAMES, type CityName } from "@/constants/cities";
 
@@ -10,10 +9,7 @@ interface CityPickerProps {
 
 export function CityPicker({ selectedCity, onSelectCity }: CityPickerProps) {
   return (
-    <View className="py-6">
-      {/* <Text className="mb-2 px-4 text-xs font-extrabold uppercase tracking-wide text-muted">
-        City
-      </Text> */}
+    <View className="py-4">
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

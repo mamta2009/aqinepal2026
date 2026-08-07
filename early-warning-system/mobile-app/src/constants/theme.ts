@@ -1,7 +1,5 @@
 import "@/global.css";
-
 import { Platform } from "react-native";
-
 import { BrandColors } from "@/constants/brand";
 
 /** Forced light palette — system dark mode is not used. */
@@ -55,5 +53,22 @@ export const Spacing = {
   six: 64,
 } as const;
 
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
+/** Shared outer padding for tab and stack content shells. */
+export const ScreenPadding = {
+  x: Spacing.three,
+  top: 20,
+  /** Extra space above the tab bar inside scroll content. */
+  bottom: Spacing.four,
+  /** Top padding under a native stack header. */
+  stackTop: Spacing.three,
+  /** Bottom padding on stack screens. */
+  stackBottom: Spacing.five,
+} as const;
+
+/**
+ * Scroll clearance for the native tab bar + home indicator.
+ * Tuned slightly tighter than the previous Android 80 guess.
+ */
+export const BottomTabInset = Platform.select({ ios: 49, android: 72 }) ?? 0;
+
 export const MaxContentWidth = 800;

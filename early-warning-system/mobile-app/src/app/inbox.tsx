@@ -1,23 +1,21 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from "react";
 import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
   Text,
   View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Redirect, Stack } from 'expo-router';
-
-import { NotificationInboxRow } from '@/features/account/NotificationInboxList';
+} from "react-native";
+import { Redirect, Stack } from "expo-router";
+import { StackScreenFrame } from "@/components/layout/screen";
+import { NotificationInboxRow } from "@/features/account/NotificationInboxList";
 import {
   useAuthHydrated,
   useInfiniteNotificationInbox,
   useIsAuthenticated,
-} from '@/hooks/useAuth';
-import { Spacing } from '@/constants/theme';
-
-import type { NotificationInboxEntry } from '@/types/auth';
+} from "@/hooks/useAuth";
+import { ScreenPadding } from "@/constants/theme";
+import type { NotificationInboxEntry } from "@/types/auth";
 
 export default function InboxScreen() {
   const hydrated = useAuthHydrated();
@@ -26,7 +24,9 @@ export default function InboxScreen() {
 
   const entries = useMemo(
     () =>
-      (inbox.data?.pages ?? []).flatMap((page) => page.entries ?? []) as NotificationInboxEntry[],
+      (inbox.data?.pages ?? []).flatMap(
+        (page) => page.entries ?? [],
+      ) as NotificationInboxEntry[],
     [inbox.data?.pages],
   );
 
@@ -45,14 +45,24 @@ export default function InboxScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-surface" edges={['bottom']}>
-      <Stack.Screen options={{ title: 'Notification inbox', headerBackTitle: 'Account' }} />
+    <StackScreenFrame>
+      <Stack.Screen
+        options={{ title: "Notification inbox", headerBackTitle: "Account" }}
+      />
       <FlatList
         data={entries}
-        keyExtractor={(item, index) => `${item.timestamp ?? 't'}-${index}`}
-        contentContainerStyle={{ padding: 16, paddingBottom: Spacing.five, flexGrow: 1 }}
+        keyExtractor={(item, index) => `${item.timestamp ?? "t"}-${index}`}
+        contentContainerStyle={{
+          paddingHorizontal: ScreenPadding.x,
+          paddingTop: ScreenPadding.stackTop,
+          paddingBottom: ScreenPadding.stackBottom,
+          flexGrow: 1,
+        }}
         refreshControl={
-          <RefreshControl refreshing={inbox.isRefetching} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={inbox.isRefetching}
+            onRefresh={onRefresh}
+          />
         }
         ListHeaderComponent={
           <View className="mb-3">
@@ -60,12 +70,14 @@ export default function InboxScreen() {
               Delivery history
             </Text>
             <Text className="mt-1 text-sm leading-5 text-muted">
-              SMS, WhatsApp, and email attempts logged by the server. Full text when
-              available. Scroll to load more.
+              SMS, WhatsApp, and email attempts logged by the server. Full text
+              when available. Scroll to load more.
             </Text>
           </View>
         }
-        renderItem={({ item, index }) => <NotificationInboxRow entry={item} index={index} />}
+        renderItem={({ item, index }) => (
+          <NotificationInboxRow entry={item} index={index} />
+        )}
         onEndReached={onEndReached}
         onEndReachedThreshold={0.4}
         ListEmptyComponent={
@@ -81,10 +93,12 @@ export default function InboxScreen() {
           inbox.isFetchingNextPage ? (
             <ActivityIndicator className="my-4" />
           ) : !inbox.hasNextPage && entries.length > 0 ? (
-            <Text className="my-4 text-center text-xs text-neutral-400">End of list</Text>
+            <Text className="my-4 text-center text-xs text-muted">
+              End of list
+            </Text>
           ) : null
         }
       />
-    </SafeAreaView>
+    </StackScreenFrame>
   );
 }

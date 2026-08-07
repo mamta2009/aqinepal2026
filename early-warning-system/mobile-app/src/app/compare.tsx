@@ -9,11 +9,11 @@ import {
   View,
   useColorScheme,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 import { BarChart } from 'react-native-gifted-charts';
 import { BrandColors } from '@/constants/brand';
 import { CITY_NAMES, DEFAULT_CITY, type CityName } from '@/constants/cities';
+import { StackScreen } from '@/components/layout/screen';
 import { InfoSheet, InfoSheetParagraph } from '@/components/ui';
 import { useRuntimeConfig } from '@/hooks/useRuntimeConfig';
 import {
@@ -25,7 +25,6 @@ import {
   formatCompareThreshold,
   type CompareCityRow,
 } from '@/utils/compareCities';
-import { Spacing } from '@/constants/theme';
 
 const DEFAULT_PM25_THRESHOLD = 55;
 const MAX_RECOMMENDED = 4;
@@ -195,166 +194,162 @@ export default function CompareCitiesScreen() {
   const chartWidth = Math.max(windowWidth - 48, chartBars.length * 56);
 
   return (
-    <SafeAreaView className="flex-1 bg-surface" edges={['bottom']}>
+    <StackScreen
+      refreshControl={
+        <RefreshControl refreshing={loading} onRefresh={() => void runCompare()} />
+      }>
       <Stack.Screen options={{ title: 'Compare cities', headerBackTitle: 'Back' }} />
-      <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={() => void runCompare()} />
-        }
-        contentContainerStyle={{ paddingBottom: Spacing.four * 4 }}
-        keyboardShouldPersistTaps="handled">
-        <View className="px-4 pt-3">
-          <View className="mb-2 flex-row flex-wrap items-center gap-2">
-            <Text className="text-lg font-extrabold text-ink">
-              Compare cities · live PM2.5
-            </Text>
-            <InfoSheet label="City air comparison chart">
-              <InfoSheetParagraph>
-                Pick cities to compare their live PM2.5 (tiny pollution particles)
-                side by side. The dashed line is an alert guide line at about{' '}
-                {threshold} µg/m³.
-              </InfoSheetParagraph>
-              <InfoSheetParagraph>
-                Read the numbers in the table too — do not rely on colour alone.
-              </InfoSheetParagraph>
-            </InfoSheet>
-          </View>
-          <Text className="text-sm leading-5 text-neutral-500">
-            Select cities to fetch live PM2.5 side by side. Requests run one at a
-            time to limit upstream rate pressure. Threshold band uses {threshold}{' '}
-            µg/m³ (operator runtime setting when available). Keep selections small
-            (about {MAX_RECOMMENDED} or fewer).
+      <View>
+        <View className="mb-2 flex-row flex-wrap items-center gap-2">
+          <Text className="text-lg font-extrabold text-ink">
+            Compare cities · live PM2.5
           </Text>
-
-          <Text className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-neutral-500">
-            Cities
-          </Text>
-          <View className="flex-row flex-wrap gap-2">
-            {CITY_NAMES.map((city) => (
-              <CityToggleChip
-                key={city}
-                city={city}
-                selected={selected.includes(city)}
-                onToggle={() => toggleCity(city)}
-              />
-            ))}
-          </View>
-
-          {selected.length > MAX_RECOMMENDED ? (
-            <Text className="mt-2 text-xs text-warning">
-              Many cities selected — upstream APIs may return HTTP 429. Prefer a smaller set.
-            </Text>
-          ) : null}
-
-          <View className="mt-4 flex-row flex-wrap gap-2">
-            <Pressable
-              accessibilityRole="button"
-              disabled={loading || selected.length === 0}
-              onPress={() => void runCompare()}
-              className="rounded-xl bg-secondary px-4 py-3 active:opacity-80"
-              style={loading || selected.length === 0 ? { opacity: 0.5 } : undefined}>
-              <Text className="text-sm font-semibold text-white">
-                {loading
-                  ? progress
-                    ? `Loading ${progress.done}/${progress.total}…`
-                    : 'Loading…'
-                  : 'Compare'}
-              </Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              disabled={loading}
-              onPress={() => setSelected([DEFAULT_CITY])}
-              className="rounded-xl border border-border px-4 py-3 active:opacity-70">
-              <Text className="text-sm font-semibold text-neutral-800">
-                Only {DEFAULT_CITY}
-              </Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              disabled={loading}
-              onPress={() => setSelected([])}
-              className="rounded-xl border border-border px-4 py-3 active:opacity-70">
-              <Text className="text-sm font-semibold text-neutral-800">
-                Clear
-              </Text>
-            </Pressable>
-          </View>
-
-          {status ? (
-            <Text className="mt-3 text-xs text-neutral-500">{status}</Text>
-          ) : null}
+          <InfoSheet label="City air comparison chart">
+            <InfoSheetParagraph>
+              Pick cities to compare their live PM2.5 (tiny pollution particles)
+              side by side. The dashed line is an alert guide line at about{' '}
+              {threshold} µg/m³.
+            </InfoSheetParagraph>
+            <InfoSheetParagraph>
+              Read the numbers in the table too — do not rely on colour alone.
+            </InfoSheetParagraph>
+          </InfoSheet>
         </View>
+        <Text className="text-sm leading-5 text-muted">
+          Select cities to fetch live PM2.5 side by side. Requests run one at a
+          time to limit upstream rate pressure. Threshold band uses {threshold}{' '}
+          µg/m³ (operator runtime setting when available). Keep selections small
+          (about {MAX_RECOMMENDED} or fewer).
+        </Text>
 
-        <View className="mt-4 mx-4 rounded-2xl border border-border bg-white p-4">
-          <Text className="mb-1 text-sm font-semibold text-neutral-900">
-            Snapshot chart
-          </Text>
-          <Text className="mb-3 text-xs text-neutral-500">
-            PM2.5 (µg/m³) by city. Bar color follows alert tiers. Dashed line is the stored
-            threshold ({threshold} µg/m³).
-          </Text>
-
-          {loading && chartBars.length === 0 ? (
-            <ActivityIndicator className="my-10 self-center" color={BrandColors.secondary} />
-          ) : chartBars.length === 0 ? (
-            <View className="min-h-[140px] items-center justify-center py-8">
-              <Text className="text-center text-sm text-neutral-500">
-                {hasFetched
-                  ? 'No successful PM2.5 readings to chart.'
-                  : 'Tap Compare after selecting cities — the chart loads with the results.'}
-              </Text>
-            </View>
-          ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <BarChart
-                data={chartBars}
-                width={chartWidth}
-                height={200}
-                barWidth={Math.min(36, Math.max(22, Math.floor(chartWidth / (chartBars.length * 2.2))))}
-                spacing={18}
-                barBorderRadius={5}
-                hideRules
-                yAxisThickness={0}
-                xAxisThickness={1}
-                xAxisColor={isDark ? '#404040' : '#d4d4d4'}
-                yAxisTextStyle={{ color: isDark ? '#a3a3a3' : '#737373', fontSize: 10 }}
-                xAxisLabelTextStyle={{ color: isDark ? '#a3a3a3' : '#737373', fontSize: 10 }}
-                noOfSections={4}
-                maxValue={Math.max(
-                  threshold * 1.15,
-                  ...chartBars.map((b) => b.value),
-                  80,
-                )}
-                showReferenceLine1
-                referenceLine1Position={threshold}
-                referenceLine1Config={{
-                  color: BrandColors.accent,
-                  dashWidth: 4,
-                  dashGap: 4,
-                  thickness: 2,
-                  labelText: `Thr ${threshold}`,
-                  labelTextStyle: { color: BrandColors.accent, fontSize: 10 },
-                }}
-              />
-            </ScrollView>
-          )}
-        </View>
-
-        <View className="mt-4 gap-3 px-4">
-          <Text className="text-sm font-semibold text-neutral-900">
-            Results
-          </Text>
-          {!hasFetched && !loading ? (
-            <Text className="text-sm text-neutral-500">
-              Select cities and tap Compare to load readings.
-            </Text>
-          ) : null}
-          {rows.map((row) => (
-            <CompareResultCard key={row.city} row={row} threshold={threshold} />
+        <Text className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-muted">
+          Cities
+        </Text>
+        <View className="flex-row flex-wrap gap-2">
+          {CITY_NAMES.map((city) => (
+            <CityToggleChip
+              key={city}
+              city={city}
+              selected={selected.includes(city)}
+              onToggle={() => toggleCity(city)}
+            />
           ))}
         </View>
-      </ScrollView>
-    </SafeAreaView>
+
+        {selected.length > MAX_RECOMMENDED ? (
+          <Text className="mt-2 text-xs text-warning">
+            Many cities selected — upstream APIs may return HTTP 429. Prefer a smaller set.
+          </Text>
+        ) : null}
+
+        <View className="mt-4 flex-row flex-wrap gap-2">
+          <Pressable
+            accessibilityRole="button"
+            disabled={loading || selected.length === 0}
+            onPress={() => void runCompare()}
+            className="rounded-xl bg-secondary px-4 py-3 active:opacity-80"
+            style={loading || selected.length === 0 ? { opacity: 0.5 } : undefined}>
+            <Text className="text-sm font-semibold text-white">
+              {loading
+                ? progress
+                  ? `Loading ${progress.done}/${progress.total}…`
+                  : 'Loading…'
+                : 'Compare'}
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            disabled={loading}
+            onPress={() => setSelected([DEFAULT_CITY])}
+            className="rounded-xl border border-border px-4 py-3 active:opacity-70">
+            <Text className="text-sm font-semibold text-neutral-800">
+              Only {DEFAULT_CITY}
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            disabled={loading}
+            onPress={() => setSelected([])}
+            className="rounded-xl border border-border px-4 py-3 active:opacity-70">
+            <Text className="text-sm font-semibold text-neutral-800">
+              Clear
+            </Text>
+          </Pressable>
+        </View>
+
+        {status ? (
+          <Text className="mt-3 text-xs text-neutral-500">{status}</Text>
+        ) : null}
+      </View>
+
+      <View className="mt-4 rounded-2xl border border-border bg-white p-4">
+        <Text className="mb-1 text-sm font-semibold text-ink">
+          Snapshot chart
+        </Text>
+        <Text className="mb-3 text-xs text-muted">
+          PM2.5 (µg/m³) by city. Bar color follows alert tiers. Dashed line is the stored
+          threshold ({threshold} µg/m³).
+        </Text>
+
+        {loading && chartBars.length === 0 ? (
+          <ActivityIndicator className="my-10 self-center" color={BrandColors.secondary} />
+        ) : chartBars.length === 0 ? (
+          <View className="min-h-[140px] items-center justify-center py-8">
+            <Text className="text-center text-sm text-muted">
+              {hasFetched
+                ? 'No successful PM2.5 readings to chart.'
+                : 'Tap Compare after selecting cities — the chart loads with the results.'}
+            </Text>
+          </View>
+        ) : (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <BarChart
+              data={chartBars}
+              width={chartWidth}
+              height={200}
+              barWidth={Math.min(36, Math.max(22, Math.floor(chartWidth / (chartBars.length * 2.2))))}
+              spacing={18}
+              barBorderRadius={5}
+              hideRules
+              yAxisThickness={0}
+              xAxisThickness={1}
+              xAxisColor={isDark ? '#404040' : '#d4d4d4'}
+              yAxisTextStyle={{ color: isDark ? '#a3a3a3' : '#737373', fontSize: 10 }}
+              xAxisLabelTextStyle={{ color: isDark ? '#a3a3a3' : '#737373', fontSize: 10 }}
+              noOfSections={4}
+              maxValue={Math.max(
+                threshold * 1.15,
+                ...chartBars.map((b) => b.value),
+                80,
+              )}
+              showReferenceLine1
+              referenceLine1Position={threshold}
+              referenceLine1Config={{
+                color: BrandColors.accent,
+                dashWidth: 4,
+                dashGap: 4,
+                thickness: 2,
+                labelText: `Thr ${threshold}`,
+                labelTextStyle: { color: BrandColors.accent, fontSize: 10 },
+              }}
+            />
+          </ScrollView>
+        )}
+      </View>
+
+      <View className="mt-4 gap-3">
+        <Text className="text-sm font-semibold text-ink">
+          Results
+        </Text>
+        {!hasFetched && !loading ? (
+          <Text className="text-sm text-muted">
+            Select cities and tap Compare to load readings.
+          </Text>
+        ) : null}
+        {rows.map((row) => (
+          <CompareResultCard key={row.city} row={row} threshold={threshold} />
+        ))}
+      </View>
+    </StackScreen>
   );
 }

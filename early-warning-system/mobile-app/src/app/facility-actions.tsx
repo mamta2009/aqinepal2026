@@ -1,15 +1,13 @@
-import { useCallback, useState } from 'react';
-import { RefreshControl, ScrollView, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Redirect, Stack } from 'expo-router';
-
-import { FacilityActionsPanel } from '@/features/account/FacilityActionsPanel';
+import { useCallback, useState } from "react";
+import { RefreshControl } from "react-native";
+import { Redirect, Stack } from "expo-router";
+import { StackScreen } from "@/components/layout/screen";
+import { FacilityActionsPanel } from "@/features/account/FacilityActionsPanel";
 import {
   useAuthHydrated,
   useIsAuthenticated,
   useProfile,
-} from '@/hooks/useAuth';
-import { Spacing } from '@/constants/theme';
+} from "@/hooks/useAuth";
 
 export default function FacilityActionsScreen() {
   const hydrated = useAuthHydrated();
@@ -31,14 +29,14 @@ export default function FacilityActionsScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-surface" edges={['bottom']}>
-      <Stack.Screen options={{ title: 'Facilities', headerBackTitle: 'Account' }} />
-      <ScrollView
-        contentContainerStyle={{ padding: 16, paddingBottom: Spacing.five }}
-        keyboardShouldPersistTaps="handled"
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
-        <FacilityActionsPanel profile={profileQuery.data} />
-      </ScrollView>
-    </SafeAreaView>
+    <StackScreen
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }>
+      <Stack.Screen
+        options={{ title: "Facilities", headerBackTitle: "Account" }}
+      />
+      <FacilityActionsPanel profile={profileQuery.data} />
+    </StackScreen>
   );
 }

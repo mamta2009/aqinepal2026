@@ -1,5 +1,4 @@
 import { NativeTabs } from "expo-router/unstable-native-tabs";
-
 import { BrandColors } from "@/constants/brand";
 import { Colors } from "@/constants/theme";
 
@@ -10,7 +9,26 @@ export default function AppTabs() {
     <NativeTabs
       backgroundColor={colors.background}
       indicatorColor={BrandColors.skySoft}
-      labelStyle={{ selected: { color: BrandColors.forest } }}>
+      tintColor={BrandColors.forest}
+      iconColor={{
+        default: BrandColors.muted,
+        selected: BrandColors.forest,
+      }}
+      labelStyle={{
+        default: {
+          fontSize: 10,
+          fontWeight: "600",
+          color: BrandColors.muted,
+        },
+        selected: {
+          fontSize: 10,
+          fontWeight: "700",
+          color: BrandColors.forest,
+        },
+      }}
+      blurEffect="systemChromeMaterialLight"
+      minimizeBehavior="onScrollDown"
+      disableTransparentOnScrollEdge>
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon

@@ -1,7 +1,6 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "expo-router";
-import { RefreshControl, ScrollView, Text, View } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { RefreshControl, Text, View } from "react-native";
 import {
   AccountNavRow,
   ChannelPreferencesForm,
@@ -11,6 +10,8 @@ import {
 } from "@/features/account";
 import { LoginForm } from "@/features/auth/LoginForm";
 import { PrimaryButton } from "@/features/auth/FormFields";
+import { TabScreen } from "@/components/layout/screen";
+import { TabChrome } from "@/features/navigation/TabChrome";
 import {
   useAuthHydrated,
   useIsAuthenticated,
@@ -18,11 +19,9 @@ import {
   useProfile,
 } from "@/hooks/useAuth";
 import { useAuthStore } from "@/store/authStore";
-import { BottomTabInset, Spacing } from "@/constants/theme";
 
 export default function AccountScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const hydrated = useAuthHydrated();
   const isAuthenticated = useIsAuthenticated();
   const clearSession = useAuthStore((s) => s.clearSession);
@@ -44,9 +43,12 @@ export default function AccountScreen() {
 
   if (!hydrated) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-surface">
-        <Text className="text-muted">Loading your account…</Text>
-      </SafeAreaView>
+      <TabScreen scroll={false}>
+        <TabChrome title="Account" />
+        <View className="flex-1 items-center justify-center">
+          <Text className="text-muted">Loading your account…</Text>
+        </View>
+      </TabScreen>
     );
   }
 
@@ -56,113 +58,105 @@ export default function AccountScreen() {
     "there";
 
   return (
-    <SafeAreaView className="flex-1 bg-surface" edges={["top"]}>
-      <ScrollView
-        refreshControl={
-          isAuthenticated ? (
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          ) : undefined
-        }
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{
-          paddingBottom: BottomTabInset + Spacing.six + insets.bottom,
-          paddingHorizontal: 16,
-        }}>
-        {!isAuthenticated ? (
-          <>
-            <View className="pb-3 pt-4">
-              <Text className="text-xs font-extrabold uppercase tracking-widest text-forest">
-                Registrant access
-              </Text>
-              <Text className="mt-1 text-2xl font-extrabold text-ink">
-                Sign in to your clean-air account
-              </Text>
-              <Text className="mt-2 text-sm leading-5 text-muted">
-                Manage facilities, alert preferences, preparedness actions, and
-                trusted contacts. Your session is stored securely on this
-                device.
-              </Text>
-            </View>
-            <View className="gap-4">
-              <LoginForm />
-              <View className="gap-3">
-                <PrimaryButton
-                  label="Register for alerts"
-                  variant="action"
-                  onPress={() => router.push("/register")}
-                />
-                <PrimaryButton
-                  label="Verify code"
-                  variant="secondary"
-                  onPress={() => router.push("/verify")}
-                />
-              </View>
-              <Text className="text-xs text-muted">
-                After registering, verify the code sent to your channels, then
-                sign in here.
-              </Text>
-            </View>
-          </>
-        ) : (
-          <View className="gap-4">
-            <View className="pb-1 pt-4">
-              <Text className="text-xs font-extrabold uppercase tracking-widest text-forest">
-                Registrant account
-              </Text>
-              <Text className="mt-1 text-2xl font-extrabold text-ink">
-                Welcome, {welcomeName}
-              </Text>
-              <Text className="mt-2 text-sm leading-5 text-muted">
-                Keep your sites, alerts, contacts, and preparedness records
-                current.
-              </Text>
-            </View>
-
-            <Text className="text-[10px] font-extrabold uppercase tracking-widest text-forest">
-              Account tasks
+    <TabScreen
+      refreshControl={
+        isAuthenticated ? (
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        ) : undefined
+      }>
+      <TabChrome title="Account" subtitle="Registrant access" />
+      {!isAuthenticated ? (
+        <View className="gap-4">
+          <View className="pb-1">
+            <Text className="text-xs font-extrabold uppercase tracking-widest text-forest">
+              Registrant access
             </Text>
-
-            <ProfileCard
-              profile={profileQuery.data}
-              facilityReportingReady={facilityReportingReady}
-            />
-
-            <AccountNavRow
-              title="Facilities"
-              subtitle="Sites you cover, PM2.5 thresholds, and preparedness actions"
-              tone="facility"
-              onPress={() => router.push("/facility-actions")}
-            />
-
-            <ChannelPreferencesForm profile={profileQuery.data} />
-
-            <NotificationInboxList
-              entries={inboxQuery.data?.entries}
-              isLoading={inboxQuery.isLoading}
-              previewLimit={2}
-              totalCount={inboxQuery.data?.total ?? inboxQuery.data?.count}
-              showSeeMore
-            />
-
-            <AccountNavRow
-              title="Trusted contacts"
-              subtitle="People you trust for shared SMS, WhatsApp, or email alerts"
-              tone="friends"
-              onPress={() => router.push("/friends")}
-            />
-
-            <PrimaryButton
-              label="Sign out"
-              variant="ghost"
-              onPress={() => {
-                void clearSession();
-              }}
-            />
-
-            <DeleteAccountPanel />
+            <Text className="mt-1 text-2xl font-extrabold text-ink">
+              Sign in to your clean-air account
+            </Text>
+            <Text className="mt-2 text-sm leading-5 text-muted">
+              Manage facilities, alert preferences, preparedness actions, and
+              trusted contacts. Your session is stored securely on this
+              device.
+            </Text>
           </View>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+          <LoginForm />
+          <View className="gap-3">
+            <PrimaryButton
+              label="Register for alerts"
+              variant="action"
+              onPress={() => router.push("/register")}
+            />
+            <PrimaryButton
+              label="Verify code"
+              variant="secondary"
+              onPress={() => router.push("/verify")}
+            />
+          </View>
+          <Text className="text-xs text-muted">
+            After registering, verify the code sent to your channels, then
+            sign in here.
+          </Text>
+        </View>
+      ) : (
+        <View className="gap-4">
+          <View className="pb-1">
+            <Text className="text-xs font-extrabold uppercase tracking-widest text-forest">
+              Registrant account
+            </Text>
+            <Text className="mt-1 text-2xl font-extrabold text-ink">
+              Welcome, {welcomeName}
+            </Text>
+            <Text className="mt-2 text-sm leading-5 text-muted">
+              Keep your sites, alerts, contacts, and preparedness records
+              current.
+            </Text>
+          </View>
+
+          <Text className="text-[10px] font-extrabold uppercase tracking-widest text-forest">
+            Account tasks
+          </Text>
+
+          <ProfileCard
+            profile={profileQuery.data}
+            facilityReportingReady={facilityReportingReady}
+          />
+
+          <AccountNavRow
+            title="Facilities"
+            subtitle="Sites you cover, PM2.5 thresholds, and preparedness actions"
+            tone="facility"
+            onPress={() => router.push("/facility-actions")}
+          />
+
+          <ChannelPreferencesForm profile={profileQuery.data} />
+
+          <NotificationInboxList
+            entries={inboxQuery.data?.entries}
+            isLoading={inboxQuery.isLoading}
+            previewLimit={2}
+            totalCount={inboxQuery.data?.total ?? inboxQuery.data?.count}
+            showSeeMore
+          />
+
+          <AccountNavRow
+            title="Trusted contacts"
+            subtitle="People you trust for shared SMS, WhatsApp, or email alerts"
+            tone="friends"
+            onPress={() => router.push("/friends")}
+          />
+
+          <PrimaryButton
+            label="Sign out"
+            variant="ghost"
+            onPress={() => {
+              void clearSession();
+            }}
+          />
+
+          <DeleteAccountPanel />
+        </View>
+      )}
+    </TabScreen>
   );
 }

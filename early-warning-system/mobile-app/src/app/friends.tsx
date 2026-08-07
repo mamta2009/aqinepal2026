@@ -1,10 +1,7 @@
-import { ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Redirect, Stack } from 'expo-router';
-
-import { FriendsFamilyPanel } from '@/features/account/FriendsFamilyPanel';
-import { useAuthHydrated, useIsAuthenticated } from '@/hooks/useAuth';
-import { Spacing } from '@/constants/theme';
+import { Redirect, Stack } from "expo-router";
+import { StackScreen } from "@/components/layout/screen";
+import { FriendsFamilyPanel } from "@/features/account/FriendsFamilyPanel";
+import { useAuthHydrated, useIsAuthenticated } from "@/hooks/useAuth";
 
 export default function FriendsScreen() {
   const hydrated = useAuthHydrated();
@@ -15,13 +12,11 @@ export default function FriendsScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-surface" edges={['bottom']}>
-      <Stack.Screen options={{ title: 'Trusted contacts', headerBackTitle: 'Account' }} />
-      <ScrollView
-        contentContainerStyle={{ padding: 16, paddingBottom: Spacing.five }}
-        keyboardShouldPersistTaps="handled">
-        <FriendsFamilyPanel />
-      </ScrollView>
-    </SafeAreaView>
+    <StackScreen>
+      <Stack.Screen
+        options={{ title: "Trusted contacts", headerBackTitle: "Account" }}
+      />
+      <FriendsFamilyPanel />
+    </StackScreen>
   );
 }

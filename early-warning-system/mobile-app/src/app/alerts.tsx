@@ -1,17 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { FlatList, RefreshControl, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-
-import { AlertRow } from '@/features/dashboard/AlertRow';
-import { CityPicker } from '@/features/dashboard/CityPicker';
-import { useAirQuality } from '@/hooks/useAirQuality';
-import { useLatestAlert } from '@/hooks/useLatestAlert';
-import { useRuntimeConfig } from '@/hooks/useRuntimeConfig';
-import { useDashboardStore } from '@/store/dashboardStore';
-import { buildRecentAlerts } from '@/utils/buildRecentAlerts';
-import { isCityName, type CityName } from '@/constants/cities';
-import { Spacing } from '@/constants/theme';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { FlatList, RefreshControl, Text, View } from "react-native";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { StackScreenFrame } from "@/components/layout/screen";
+import { EmptyState } from "@/components/ui";
+import { AlertRow } from "@/features/dashboard/AlertRow";
+import { CityPicker } from "@/features/dashboard/CityPicker";
+import { useAirQuality } from "@/hooks/useAirQuality";
+import { useLatestAlert } from "@/hooks/useLatestAlert";
+import { useRuntimeConfig } from "@/hooks/useRuntimeConfig";
+import { useDashboardStore } from "@/store/dashboardStore";
+import { buildRecentAlerts } from "@/utils/buildRecentAlerts";
+import { isCityName, type CityName } from "@/constants/cities";
+import { ScreenPadding } from "@/constants/theme";
 
 const DEFAULT_PM25_THRESHOLD = 55;
 
@@ -37,7 +37,8 @@ export default function AlertsScreen() {
   const latestAlert = useLatestAlert(city);
 
   const threshold =
-    runtimeConfig.data?.dashboard.pm25_alert_threshold_ugm3 ?? DEFAULT_PM25_THRESHOLD;
+    runtimeConfig.data?.dashboard.pm25_alert_threshold_ugm3 ??
+    DEFAULT_PM25_THRESHOLD;
   const pm25 = airQuality.data?.air_quality?.pm25_ug_m3 ?? null;
 
   const alerts = useMemo(
@@ -74,40 +75,52 @@ export default function AlertsScreen() {
   }, [airQuality, latestAlert, runtimeConfig]);
 
   return (
-    <SafeAreaView className="flex-1 bg-surface" edges={['bottom']}>
+    <StackScreenFrame>
       <Stack.Screen
         options={{
           title: `Alerts · ${city}`,
-          headerBackTitle: 'Back',
+          headerBackTitle: "Back",
         }}
       />
       <FlatList
         data={alerts}
         keyExtractor={(item) => `${city}-${item.id}`}
         extraData={city}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        contentContainerStyle={{ paddingBottom: Spacing.four * 4 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        contentContainerStyle={{
+          paddingBottom: ScreenPadding.stackBottom,
+          flexGrow: 1,
+        }}
         ListHeaderComponent={
-          <View className="pt-2">
+          <View className="pt-1">
             <CityPicker selectedCity={city} onSelectCity={onSelectCity} />
-            <Text className="mb-3 px-4 text-sm text-neutral-500">
-              Showing alerts for {city} — live PM2.5 tier, facility notes, and the latest
-              broadcast for this city.
+            <Text className="mb-3 px-4 text-sm leading-5 text-muted">
+              Showing alerts for {city} — live PM2.5 tier, facility notes, and
+              the latest broadcast for this city.
             </Text>
           </View>
         }
         renderItem={({ item }) => (
           <View className="mx-4 rounded-xl border border-border bg-white px-3">
-            <AlertRow level={item.level} time={item.time} message={item.message} />
+            <AlertRow
+              level={item.level}
+              time={item.time}
+              message={item.message}
+            />
           </View>
         )}
         ItemSeparatorComponent={() => <View className="h-2" />}
         ListEmptyComponent={
-          <Text className="py-8 text-center text-sm text-neutral-500">
-            No alerts yet for {city}.
-          </Text>
+          <View className="mx-4 mt-4">
+            <EmptyState
+              title="No alerts yet"
+              message={`No alerts are recorded for ${city} right now.`}
+            />
+          </View>
         }
       />
-    </SafeAreaView>
+    </StackScreenFrame>
   );
 }

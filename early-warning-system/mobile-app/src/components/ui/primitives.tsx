@@ -195,7 +195,7 @@ export function AppHeader({
   right?: ReactNode;
 }) {
   return (
-    <View className="mb-3 flex-row items-start justify-between px-4 pt-2">
+    <View className="mb-3 flex-row items-start justify-between">
       <View className="mr-3 flex-1">
         <Text className="text-2xl font-extrabold tracking-tight text-forest">
           {title}

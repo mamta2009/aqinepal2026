@@ -7,10 +7,8 @@ import {
   TabListProps,
 } from "expo-router/ui";
 import { Pressable, View, StyleSheet } from "react-native";
-
 import { ThemedText } from "./themed-text";
 import { ThemedView } from "./themed-view";
-
 import { BrandColors } from "@/constants/brand";
 import { MaxContentWidth, Spacing } from "@/constants/theme";
 
@@ -79,12 +77,12 @@ const styles = StyleSheet.create({
   },
   innerContainer: {
     paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.five,
+    paddingHorizontal: Spacing.four,
     borderRadius: Spacing.five,
     flexDirection: "row",
     alignItems: "center",
     flexGrow: 1,
-    gap: Spacing.two,
+    gap: Spacing.one,
     maxWidth: MaxContentWidth,
     borderWidth: 1,
     borderColor: BrandColors.border,
@@ -98,7 +96,7 @@ const styles = StyleSheet.create({
   },
   tabButtonView: {
     paddingVertical: Spacing.one,
-    paddingHorizontal: Spacing.three,
+    paddingHorizontal: Spacing.two,
     borderRadius: Spacing.three,
   },
 });
