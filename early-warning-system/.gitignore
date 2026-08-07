@@ -18,13 +18,9 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-# Application source (must not be excluded by the Python lib/ rule above)
-!frontend/lib/
-!frontend/lib/**
-!mobile-app/src/lib/
-!mobile-app/src/lib/**
-lib64/
+# Only ignore a top-level Python lib/ — nested frontend/lib and mobile app helpers must stay
+/lib/
+/lib64/
 parts/
 sdist/
 var/

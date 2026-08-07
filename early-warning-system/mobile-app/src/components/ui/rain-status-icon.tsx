@@ -1,6 +1,6 @@
 import Svg, { Circle, Path } from "react-native-svg";
 
-import type { RainIndicator } from "@/lib/weather-rain";
+import type { RainIndicator } from "@/helpers/weather-rain";
 
 const COLORS = {
   Raining: "#176b8c",
