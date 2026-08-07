@@ -5,13 +5,13 @@ import {
   ActivityIndicator,
   Animated,
   Pressable,
+  ScrollView,
   Text,
   useWindowDimensions,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { API_BASE_URL } from '@/constants/api';
-import { exportDashboardCsv } from '@/utils/exportDashboardCsv';
 
 const SIDEBAR_WIDTH = 280;
 const AQI_HELP_PATH = '/help/aqi-help';
@@ -77,7 +77,15 @@ function ActionRow({
   );
 }
 
-/** Collapsible right sidebar with the web dashboard header actions. */
+function SectionLabel({ children }: { children: string }) {
+  return (
+    <Text className="mb-1 mt-2 text-[10px] font-extrabold uppercase tracking-widest text-forest">
+      {children}
+    </Text>
+  );
+}
+
+/** Collapsible right sidebar with the web dashboard / site navigation actions. */
 export function DashboardActionsSidebar({
   open,
   onClose,
@@ -91,7 +99,6 @@ export function DashboardActionsSidebar({
   const slide = useRef(new Animated.Value(SIDEBAR_WIDTH)).current;
   const fade = useRef(new Animated.Value(0)).current;
   const [mounted, setMounted] = useState(open);
-  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -142,9 +149,19 @@ export function DashboardActionsSidebar({
     router.push('/compare');
   }, [onClose, router]);
 
+  const handleMap = useCallback(() => {
+    onClose();
+    router.push('/map');
+  }, [onClose, router]);
+
+  const handleGuides = useCallback(() => {
+    onClose();
+    router.push('/guides');
+  }, [onClose, router]);
+
   const handleLearn = useCallback(() => {
     onClose();
-    router.push('/learn');
+    router.push('/(tabs)/learn');
   }, [onClose, router]);
 
   const handleAqiHelp = useCallback(async () => {
@@ -159,16 +176,6 @@ export function DashboardActionsSidebar({
     await onRefresh();
     onClose();
   }, [onRefresh, onClose]);
-
-  const handleExport = useCallback(async () => {
-    setExporting(true);
-    try {
-      await exportDashboardCsv(selectedCity);
-      onClose();
-    } finally {
-      setExporting(false);
-    }
-  }, [selectedCity, onClose]);
 
   if (!mounted) return null;
 
@@ -204,7 +211,7 @@ export function DashboardActionsSidebar({
           ],
         }}
         className="border-l border-border bg-surface">
-        <View className="mb-4 flex-row items-center justify-between px-4">
+        <View className="mb-2 flex-row items-center justify-between px-4">
           <Text className="text-base font-extrabold text-ink">
             Home actions
           </Text>
@@ -217,7 +224,27 @@ export function DashboardActionsSidebar({
           </Pressable>
         </View>
 
-        <View className="gap-3 px-4">
+        <ScrollView
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 8, gap: 10 }}
+          showsVerticalScrollIndicator={false}>
+          <SectionLabel>Explore</SectionLabel>
+          <ActionRow
+            label="Map"
+            hint="Air and heat overview across Nepal"
+            onPress={handleMap}
+          />
+          <ActionRow
+            label="Guides"
+            hint="Published learning resources and checklists"
+            onPress={handleGuides}
+          />
+          <ActionRow
+            label="Learn"
+            hint="Tips for students, families, and schools"
+            onPress={handleLearn}
+          />
+
+          <SectionLabel>Alerts and tools</SectionLabel>
           <ActionRow
             label="Register for Alerts"
             hint="Sign up for SMS and email alerts"
@@ -233,11 +260,8 @@ export function DashboardActionsSidebar({
             hint="Side-by-side air snapshot chart and readings"
             onPress={handleCompare}
           />
-          <ActionRow
-            label="Learn"
-            hint="Tips for students, families, and schools"
-            onPress={handleLearn}
-          />
+
+          <SectionLabel>Help</SectionLabel>
           <ActionRow
             label="aqiHelp"
             hint="How the platform works"
@@ -256,19 +280,7 @@ export function DashboardActionsSidebar({
               refreshing ? <ActivityIndicator size="small" color="#1f794b" /> : null
             }
           />
-          <ActionRow
-            label="Export"
-            hint="Download a CSV snapshot"
-            onPress={() => {
-              void handleExport();
-            }}
-            disabled={exporting}
-            variant="primary"
-            trailing={
-              exporting ? <ActivityIndicator size="small" color="#ffffff" /> : null
-            }
-          />
-        </View>
+        </ScrollView>
       </Animated.View>
     </View>
   );

@@ -1,6 +1,5 @@
 import { useRouter } from "expo-router";
-import { useMemo } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EducationalCard, SectionTitle } from "@/components/ui";
 import { BrandColors } from "@/constants/brand";
@@ -8,17 +7,12 @@ import { BottomTabInset, Spacing } from "@/constants/theme";
 import {
   airBasicsTips,
   colourGuideStatuses,
-  educationalGuidePaths,
   howItWorksSteps,
   learnHubCards,
   measurementTerms,
 } from "@/content/education";
-import { useGuides } from "@/hooks/useGuides";
 
-const COLOUR_STYLES: Record<
-  string,
-  { bg: string; text: string }
-> = {
+const COLOUR_STYLES: Record<string, { bg: string; text: string }> = {
   Good: { bg: "rgba(22, 163, 74, 0.12)", text: BrandColors.aqGood },
   Moderate: { bg: "rgba(202, 138, 4, 0.14)", text: BrandColors.aqModerate },
   "Use extra care": {
@@ -28,24 +22,9 @@ const COLOUR_STYLES: Record<
   Unhealthy: { bg: "rgba(220, 38, 38, 0.12)", text: BrandColors.aqUnhealthy },
 };
 
+/** Learn tab: education hub — glossary, colour guide, audiences, how-it-works. */
 export default function LearnScreen() {
   const router = useRouter();
-  const guidesQuery = useGuides();
-
-  const learningGuides = useMemo(() => {
-    const educational = new Set<string>(educationalGuidePaths);
-    const fromApi = (guidesQuery.data ?? []).filter((guide) =>
-      educational.has(guide.path),
-    );
-    if (fromApi.length) return fromApi;
-    return educationalGuidePaths.map((path) => ({
-      path,
-      slug: path.replace(/\.md$/i, ""),
-      title: path.replace(/\.md$/i, "").replaceAll("_", " "),
-      summary: "Open this practical Climate Compass resource.",
-      audience: "Learning resource",
-    }));
-  }, [guidesQuery.data]);
 
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={["top"]}>
@@ -53,12 +32,12 @@ export default function LearnScreen() {
         contentContainerStyle={{
           paddingHorizontal: 16,
           paddingBottom: BottomTabInset + Spacing.four,
-          paddingTop: 8,
+          paddingTop: 16,
         }}>
         <SectionTitle
           eyebrow="Learning centre"
-          title="Explore climate learning with Climate Compass"
-          lede="Practical guides for using Climate Compass and understanding air, heat, and outdoor conditions at school and at home."
+          title="Understand outdoor conditions"
+          lede="Plain-language tips for air, heat, and rain, plus pathways for students, families, schools, and partners."
         />
 
         <View className="mb-6 rounded-2xl bg-sky-soft p-4">
@@ -147,48 +126,27 @@ export default function LearnScreen() {
           />
         ))}
 
-        <View className="mt-4 mb-2">
-          <SectionTitle
-            eyebrow="Optional guides"
-            title="Published help guides"
-            lede="Short informational resources for families, facilities, and classrooms."
-          />
-          {guidesQuery.isLoading ? (
-            <ActivityIndicator
-              className="my-4 self-center"
-              color={BrandColors.forest}
-            />
-          ) : null}
-          {learningGuides.map((guide) => (
-            <Pressable
-              key={guide.path}
-              accessibilityRole="button"
-              accessibilityLabel={`Open guide ${guide.title}`}
-              onPress={() =>
-                router.push({
-                  pathname: "/learn/guide/[path]",
-                  params: { path: guide.path },
-                })
-              }
-              className="mb-3 rounded-2xl border border-border bg-white p-4 active:opacity-80">
-              <Text className="text-xs font-extrabold uppercase tracking-widest text-forest">
-                {guide.audience || "Learning resource"}
-              </Text>
-              <Text className="mt-1 text-base font-extrabold text-ink">
-                {guide.title}
-              </Text>
-              <Text className="mt-1 text-sm leading-5 text-muted">
-                {guide.summary ||
-                  "Open this practical Climate Compass resource."}
-              </Text>
-              <Text className="mt-3 text-sm font-extrabold text-link">
-                Open guide
-              </Text>
-            </Pressable>
-          ))}
+        <View className="mt-4 mb-4 rounded-2xl border border-border bg-white p-4">
+          <Text className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+            Optional guides
+          </Text>
+          <Text className="mt-1 text-base font-extrabold text-ink">
+            Published help guides
+          </Text>
+          <Text className="mt-1 text-sm leading-5 text-muted">
+            Short informational resources for families, facilities, and
+            classrooms live in the Guides library.
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Browse guides"
+            onPress={() => router.push("/guides")}
+            className="mt-4 min-h-11 items-center justify-center rounded-full bg-forest px-4 py-3 active:opacity-90">
+            <Text className="font-extrabold text-white">Browse guides</Text>
+          </Pressable>
         </View>
 
-        <View className="mt-4 mb-2">
+        <View className="mb-2">
           <SectionTitle eyebrow="How it works" title="Three simple steps" />
           {howItWorksSteps.map((step, index) => (
             <View

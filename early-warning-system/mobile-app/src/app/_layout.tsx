@@ -62,6 +62,8 @@ export default function RootLayout() {
               <Stack.Screen name="verify" options={{ title: "Verify" }} />
               <Stack.Screen name="alerts" options={{ title: "Recent Alerts" }} />
               <Stack.Screen name="compare" options={{ title: "Compare cities" }} />
+              <Stack.Screen name="map" options={{ title: "Map" }} />
+              <Stack.Screen name="guides" options={{ title: "Guides" }} />
               <Stack.Screen name="inbox" options={{ title: "Notifications" }} />
               <Stack.Screen
                 name="facility-actions"
