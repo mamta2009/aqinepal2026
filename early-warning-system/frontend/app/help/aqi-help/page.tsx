@@ -6,7 +6,7 @@ import { AqiHelpPageClient } from "@/components/aqi-help/aqi-help-page-client";
 export const metadata: Metadata = {
   title: "aqiHelp",
   description:
-    "Ask plain-language questions about air quality, alerts, and Climate Compass guidance.",
+    "Ask plain-language questions about air, heat, rain, alerts, and Climate Compass guidance.",
 };
 
 export default function AqiHelpPage() {

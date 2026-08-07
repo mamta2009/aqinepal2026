@@ -12,7 +12,7 @@ export function AudiencePathways() {
         <Reveal>
           <SectionHeading
             eyebrow="Who uses Climate Compass"
-            title="Built for people who need timely air and heat information"
+            title="Built for people who need timely climate information"
             lede="Schools are one important setting — but not the whole story. The same tools support clinics, offices, families, and public agencies."
             align="center"
           />

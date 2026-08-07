@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Climate Compass",
     short_name: "Climate Compass",
     description:
-      "Understand air quality and make healthier choices for home and school.",
+      "Understand air, heat, and rain to make healthier choices for home and school.",
     start_url: "/",
     display: "standalone",
     background_color: "#f8fcfd",

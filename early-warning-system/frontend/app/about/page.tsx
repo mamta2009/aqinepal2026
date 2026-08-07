@@ -8,7 +8,7 @@ import { Reveal } from "@/components/ui/reveal";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Learn why Climate Compass is built as an open-source climate-health product for air and heat awareness.",
+    "Learn why Climate Compass is built as an open-source climate-health product for air, heat, and rain awareness.",
 };
 
 const principles = [

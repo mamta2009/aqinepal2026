@@ -23,7 +23,7 @@ export default function RegisterScreen() {
           Climate Compass Registration
         </Text>
         <Text className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">
-          Join our network and receive real-time air quality alerts for your facility
+          Join our network and receive real-time air and heat alerts for your facility
         </Text>
 
         <RegisterForm />

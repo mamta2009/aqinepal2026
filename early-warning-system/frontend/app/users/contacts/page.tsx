@@ -3,7 +3,7 @@ import { AccountContactsPage } from "@/components/account/account-dashboard";
 
 export const metadata: Metadata = {
   title: "Trusted contacts",
-  description: "Manage people who can receive shared air quality alerts.",
+  description: "Manage people who can receive shared air and heat alerts.",
 };
 
 export default function UsersContactsPage() {

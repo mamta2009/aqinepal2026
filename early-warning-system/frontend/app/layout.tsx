@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: "%s — Climate Compass",
   },
   description:
-    "Climate Compass helps people check air quality for selected places and get notified when conditions change.",
+    "Climate Compass helps people check air, heat, and rain for selected places and get notified when conditions change.",
   applicationName: "Climate Compass",
   icons: {
     icon: "/favicon.ico",

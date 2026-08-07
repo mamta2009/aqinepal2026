@@ -41,8 +41,8 @@ export function WeatherContext({
       <h2 className="text-xl font-bold">Conditions around the reading</h2>
       {temperature === null && humidity === null && wind === null ? (
         <p className="mt-3 text-sm text-muted">
-          Current weather details are unavailable. Air guidance remains based on
-          the available air and heat readings.
+          Current weather details are unavailable. Outdoor guidance still uses
+          the available air, heat, and rain readings.
         </p>
       ) : (
         <dl className="mt-4 grid grid-cols-2 gap-3">

@@ -26,8 +26,8 @@ export function SiteFooter() {
               Climate Compass
             </div>
             <p className="text-sm leading-relaxed text-white/75">
-              Place-based air and heat checks and alerts for communities across
-              Nepal.
+              Place-based air, heat, and rain checks and alerts for communities
+              across Nepal.
             </p>
           </div>
           <nav className="flex max-w-xl flex-wrap gap-x-5 gap-y-2" aria-label="Footer">

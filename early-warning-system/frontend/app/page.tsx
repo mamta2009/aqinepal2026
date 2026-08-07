@@ -9,7 +9,7 @@ import { Mission } from "@/components/home/mission";
 export const metadata: Metadata = {
   title: "Climate checks and alerts",
   description:
-    "How is the air near you? Check here for air, heat and rain information in one place.",
+    "See outdoor air, heat, and rain together for the places you care about.",
 };
 
 export default function HomePage() {

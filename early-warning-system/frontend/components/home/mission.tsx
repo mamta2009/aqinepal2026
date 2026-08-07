@@ -15,11 +15,12 @@ export function Mission() {
               <p className="eyebrow">From information to action</p>
               <h2 className="section-title">Why Climate Compass exists</h2>
               <p className="section-lede mt-5">
-                Climate Compass helps people check local air and heat in plain
-                language, register for alerts when conditions need attention, and
-                decide next steps — adjust outdoor plans, share status with a
-                group, or follow up with official guidance. The goal is not only
-                to know the reading, but to act when it matters.
+                Climate Compass helps people check local air, heat, and rain in
+                plain language, register for alerts when conditions need
+                attention, and decide next steps — adjust outdoor plans, share
+                status with a group, or follow up with official guidance. The
+                goal is not only to know the reading, but to act when it
+                matters.
               </p>
               <ButtonLink href="/about" variant="secondary" className="mt-7">
                 Learn about the product

@@ -183,7 +183,8 @@ export function DashboardClient() {
             <p className="eyebrow">Today&apos;s health decision</p>
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Can we go outside?</h1>
             <p className="mt-2 text-muted">
-              Clear public guidance for air quality and heat — separate from operator alert rules.
+              Clear public guidance for air, heat, and rain — separate from
+              operator alert rules.
             </p>
           </div>
           <div className="grid gap-2 sm:grid-cols-[minmax(12rem,1fr)_auto]">

@@ -166,7 +166,7 @@ export const audiencePages = {
   government: {
     eyebrow: "For government officials",
     title: "See climate conditions across places you serve",
-    lede: "Use Climate Compass to review air and heat status for major cities, share a shared picture with partners, and stay informed when conditions change — without replacing official monitoring or emergency systems.",
+    lede: "Use Climate Compass to review air, heat, and rain status for major cities, share a shared picture with partners, and stay informed when conditions change — without replacing official monitoring or emergency systems.",
     icon: Landmark,
     accent: "bg-sky-soft",
     facts: [
@@ -197,8 +197,8 @@ export const audiencePages = {
   },
   healthWorkers: {
     eyebrow: "For health workers",
-    title: "Monitor local air and heat for facility readiness",
-    lede: "Check conditions near your facility, register for alerts, and use informational guides alongside clinical judgement and local health authority instructions.",
+    title: "Monitor local climate conditions for facility readiness",
+    lede: "Check air, heat, and rain near your facility, register for alerts, and use informational guides alongside clinical judgement and local health authority instructions.",
     icon: Stethoscope,
     accent: "bg-violet-50",
     facts: [
@@ -232,25 +232,25 @@ export const audiencePages = {
 export const audiencePathways = [
   {
     title: "School administrators and teachers",
-    text: "Review local air and heat status and share clear information with staff and classrooms.",
+    text: "Review local air, heat, and rain status and share clear information with staff and classrooms.",
     href: "/schools",
     icon: School,
   },
   {
     title: "Parents and guardians",
-    text: "Check nearby air and heat conditions and register for alerts when you want updates.",
+    text: "Check nearby air, heat, and rain conditions and register for alerts when you want updates.",
     href: "/parents",
     icon: HeartHandshake,
   },
   {
     title: "Government officials",
-    text: "Track conditions across selected places and stay informed when air or heat worsens.",
+    text: "Track conditions across selected places and stay informed when outdoor climate conditions worsen.",
     href: "/government",
     icon: Landmark,
   },
   {
     title: "Health workers",
-    text: "Monitor local air and heat, receive alerts, and log facility readiness actions.",
+    text: "Monitor local air, heat, and rain, receive alerts, and log facility readiness actions.",
     href: "/health-workers",
     icon: Stethoscope,
   },

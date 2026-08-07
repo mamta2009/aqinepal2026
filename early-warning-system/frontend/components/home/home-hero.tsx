@@ -40,10 +40,11 @@ export function HomeHero() {
           <div>
             <p className="eyebrow">Climate-Health Alerts</p>
             <h1 className="max-w-4xl text-5xl leading-[1.02] font-extrabold tracking-[-0.045em] text-ink sm:text-7xl">
-              How is the air near you?
+              How are the air, heat, and rain near you?
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-muted sm:text-xl">
-              Check here for air, heat and rain information in one place!
+              See outdoor air, heat, and rain together for the places you care
+              about.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <ButtonLink href="/dashboard" size="lg">
@@ -54,7 +55,7 @@ export function HomeHero() {
               </ButtonLink>
             </div>
             <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm font-bold text-ink-soft">
-              {["Place-based air and heat checks", "Alert notifications"].map(
+              {["Place-based air, heat, and rain checks", "Alert notifications"].map(
                 (item) => (
                   <li key={item} className="flex items-center gap-2">
                     <span className="grid size-6 place-items-center rounded-full bg-surface-tint text-forest">

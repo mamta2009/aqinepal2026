@@ -36,11 +36,11 @@ export function GuidesIndexClient() {
         <header className="max-w-4xl">
           <p className="eyebrow">Learning centre</p>
           <h1 className="text-5xl leading-[1.05] font-extrabold tracking-[-0.04em] sm:text-6xl">
-            Explore clean air with Climate Compass
+            Explore climate learning with Climate Compass
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted">
-            Practical guides for using Climate Compass and understanding air
-            quality at school and at home.
+            Practical guides for using Climate Compass and understanding air,
+            heat, and outdoor conditions at school and at home.
           </p>
         </header>
       </Reveal>
