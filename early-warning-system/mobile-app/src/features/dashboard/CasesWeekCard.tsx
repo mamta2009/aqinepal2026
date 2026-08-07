@@ -32,11 +32,11 @@ export function CasesWeekCard({ data, isLoading }: CasesWeekCardProps) {
   return (
     <DashboardSection accent={DashboardSectionAccent.cases}>
       <View className="mb-3 flex-row items-baseline justify-between">
-        <Text className="text-sm font-semibold text-neutral-900 dark:text-white">
+        <Text className="text-sm font-semibold text-ink dark:text-white">
           Respiratory cases — this week
         </Text>
         {data ? (
-          <Text className="font-mono text-sm text-neutral-500 dark:text-neutral-400">
+          <Text className="font-mono text-sm text-muted">
             {data.total} total
           </Text>
         ) : null}
@@ -58,10 +58,10 @@ export function CasesWeekCard({ data, isLoading }: CasesWeekCardProps) {
           xAxisColor={isDark ? '#404040' : '#d4d4d4'}
         />
       ) : (
-        <Text className="text-sm text-neutral-500 dark:text-neutral-400">No case data yet.</Text>
+        <Text className="text-sm text-muted">No case data yet.</Text>
       )}
 
-      <Text className="mt-3 text-xs text-neutral-500 dark:text-neutral-400">
+      <Text className="mt-3 text-xs text-muted">
         {data?.note ?? 'Synthetic demo data — transitions to real DHIS2 data when connected.'}
       </Text>
     </DashboardSection>

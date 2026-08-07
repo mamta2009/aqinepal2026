@@ -31,7 +31,7 @@ export default function FacilityActionsScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-neutral-50 dark:bg-surface-dark" edges={['bottom']}>
+    <SafeAreaView className="flex-1 bg-surface" edges={['bottom']}>
       <Stack.Screen options={{ title: 'Facility Actions', headerBackTitle: 'Account' }} />
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: Spacing.five }}

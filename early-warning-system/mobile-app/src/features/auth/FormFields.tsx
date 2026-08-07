@@ -11,10 +11,10 @@ export function FormSection({
   children: ReactNode;
 }) {
   return (
-    <View className="mb-5 border-b border-neutral-200 pb-4 dark:border-neutral-800">
-      <Text className="mb-1 text-lg font-bold text-neutral-900 dark:text-white">{title}</Text>
+    <View className="mb-5 border-b border-border pb-4">
+      <Text className="mb-1 text-lg font-extrabold text-ink">{title}</Text>
       {description ? (
-        <Text className="mb-3 text-sm leading-5 text-neutral-500 dark:text-neutral-400">
+        <Text className="mb-3 text-sm leading-5 text-muted">
           {description}
         </Text>
       ) : (
@@ -54,13 +54,13 @@ export function AuthTextField({
 }: AuthTextFieldProps) {
   return (
     <View className="mb-3">
-      <Text className="mb-1 text-sm font-medium text-neutral-800 dark:text-neutral-200">{label}</Text>
+      <Text className="mb-1 text-sm font-medium text-ink">{label}</Text>
       <TextInput
-        className="rounded-xl border border-neutral-300 bg-white px-3 py-3 text-base text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white"
+        className="min-h-11 rounded-xl border border-border bg-white px-3 py-3 text-base text-ink"
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor="#9ca3af"
+        placeholderTextColor="#526b78"
         secureTextEntry={secureTextEntry}
         autoCapitalize={autoCapitalize}
         autoCorrect={false}
@@ -70,9 +70,9 @@ export function AuthTextField({
         style={multiline ? { minHeight: 96, textAlignVertical: 'top' } : undefined}
       />
       {help ? (
-        <Text className="mt-1 text-xs leading-4 text-neutral-500 dark:text-neutral-400">{help}</Text>
+        <Text className="mt-1 text-xs leading-4 text-muted">{help}</Text>
       ) : null}
-      {error ? <Text className="mt-1 text-xs text-primary">{error}</Text> : null}
+      {error ? <Text className="mt-1 text-xs text-alert-red">{error}</Text> : null}
     </View>
   );
 }
@@ -116,7 +116,7 @@ export function ChipMultiSelect({
 
   return (
     <View className="mb-3">
-      <Text className="mb-2 text-sm font-medium text-neutral-800 dark:text-neutral-200">{label}</Text>
+      <Text className="mb-2 text-sm font-medium text-neutral-800">{label}</Text>
       <View className="flex-row flex-wrap gap-2">
         {options.map((opt) => {
           const isOn = selected.includes(opt.value);
@@ -127,11 +127,11 @@ export function ChipMultiSelect({
               className={
                 isOn
                   ? 'rounded-full bg-primary px-3 py-2'
-                  : 'rounded-full border border-neutral-300 px-3 py-2 dark:border-neutral-700'
+                  : 'rounded-full border border-neutral-300 px-3 py-2'
               }>
               <Text
                 className={
-                  isOn ? 'text-sm font-semibold text-white' : 'text-sm text-neutral-700 dark:text-neutral-300'
+                  isOn ? 'text-sm font-semibold text-white' : 'text-sm text-neutral-700'
                 }>
                 {opt.label}
               </Text>
@@ -140,7 +140,7 @@ export function ChipMultiSelect({
         })}
       </View>
       {help ? (
-        <Text className="mt-1 text-xs leading-4 text-neutral-500 dark:text-neutral-400">{help}</Text>
+        <Text className="mt-1 text-xs leading-4 text-neutral-500">{help}</Text>
       ) : null}
       {error ? <Text className="mt-1 text-xs text-primary">{error}</Text> : null}
     </View>
@@ -159,7 +159,7 @@ export function ConsentToggle({ label, checked, onChange, error }: ConsentToggle
     <View className="mb-3">
       <Pressable
         onPress={() => onChange(!checked)}
-        className="flex-row items-center gap-3 rounded-xl border border-neutral-300 px-3 py-3 dark:border-neutral-700">
+        className="flex-row items-center gap-3 rounded-xl border border-neutral-300 px-3 py-3">
         <View
           className={
             checked
@@ -168,7 +168,7 @@ export function ConsentToggle({ label, checked, onChange, error }: ConsentToggle
           }>
           {checked ? <Text className="text-xs font-bold text-white">✓</Text> : null}
         </View>
-        <Text className="flex-1 text-sm text-neutral-800 dark:text-neutral-200">{label}</Text>
+        <Text className="flex-1 text-sm text-neutral-800">{label}</Text>
       </Pressable>
       {error ? <Text className="mt-1 text-xs text-primary">{error}</Text> : null}
     </View>
@@ -200,26 +200,28 @@ export function PrimaryButton({
 
   const className =
     resolved === 'action'
-      ? 'rounded-xl bg-secondary px-4 py-3 active:opacity-80'
+      ? 'min-h-11 rounded-full bg-forest px-4 py-3 active:opacity-80'
       : resolved === 'secondary'
-        ? 'rounded-xl border-2 border-secondary bg-blue-50 px-4 py-3 active:opacity-80 dark:bg-blue-950'
+        ? 'min-h-11 rounded-full border-2 border-forest bg-sky-soft px-4 py-3 active:opacity-80'
         : resolved === 'danger'
-          ? 'rounded-xl bg-primary px-4 py-3 active:opacity-80'
+          ? 'min-h-11 rounded-full bg-alert-red px-4 py-3 active:opacity-80'
           : resolved === 'dangerOutline'
-            ? 'rounded-xl border-2 border-primary bg-red-50 px-4 py-3 active:opacity-80 dark:bg-red-950'
-            : 'rounded-xl border border-neutral-300 bg-neutral-100 px-4 py-3 active:opacity-80 dark:border-neutral-600 dark:bg-neutral-800';
+            ? 'min-h-11 rounded-full border-2 border-alert-red bg-red-50 px-4 py-3 active:opacity-80'
+            : 'min-h-11 rounded-full border border-border bg-white px-4 py-3 active:opacity-80';
 
   const textClass =
     resolved === 'action' || resolved === 'danger'
-      ? 'text-center font-semibold text-white'
+      ? 'text-center font-extrabold text-white'
       : resolved === 'secondary'
-        ? 'text-center font-semibold text-secondary'
+        ? 'text-center font-extrabold text-forest'
         : resolved === 'dangerOutline'
-          ? 'text-center font-semibold text-primary'
-          : 'text-center font-semibold text-neutral-800 dark:text-neutral-100';
+          ? 'text-center font-extrabold text-alert-red'
+          : 'text-center font-extrabold text-ink';
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
       onPress={onPress}
       disabled={disabled}
       className={`${className} ${disabled ? 'opacity-50' : ''}`}>
@@ -243,7 +245,7 @@ export function Banner({
         : 'border-secondary bg-blue-50 dark:bg-blue-950';
   return (
     <View className={`mb-3 rounded-xl border px-3 py-2 ${toneClass}`}>
-      <Text className="text-sm text-neutral-800 dark:text-neutral-200">{message}</Text>
+      <Text className="text-sm text-neutral-800">{message}</Text>
     </View>
   );
 }

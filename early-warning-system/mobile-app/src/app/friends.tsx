@@ -15,7 +15,7 @@ export default function FriendsScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-neutral-50 dark:bg-surface-dark" edges={['bottom']}>
+    <SafeAreaView className="flex-1 bg-surface" edges={['bottom']}>
       <Stack.Screen options={{ title: 'Friends & family', headerBackTitle: 'Account' }} />
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: Spacing.five }}

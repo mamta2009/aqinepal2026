@@ -1,22 +1,19 @@
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from "react-native";
 
-import { CITY_NAMES, type CityName } from '@/constants/cities';
-
-/** Matches `--phase1` on the web geographic selector. */
-const PHASE1_GREEN = '#10b981';
+import { BrandColors } from "@/constants/brand";
+import { CITY_NAMES, type CityName } from "@/constants/cities";
 
 interface CityPickerProps {
   selectedCity: CityName;
   onSelectCity: (city: CityName) => void;
 }
 
-/** Recreates the `<select id="citySelector">` on the web dashboard as a horizontal chip row. */
 export function CityPicker({ selectedCity, onSelectCity }: CityPickerProps) {
   return (
-    <View className="mb-4">
-      <Text className="mb-2 px-4 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+    <View className="py-6">
+      {/* <Text className="mb-2 px-4 text-xs font-extrabold uppercase tracking-wide text-muted">
         City
-      </Text>
+      </Text> */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -27,19 +24,22 @@ export function CityPicker({ selectedCity, onSelectCity }: CityPickerProps) {
             <Pressable
               key={city}
               accessibilityRole="button"
+              accessibilityLabel={`Select ${city}`}
               accessibilityState={{ selected: isSelected }}
               onPress={() => onSelectCity(city)}
               className={
                 isSelected
-                  ? 'rounded-full px-4 py-2'
-                  : 'rounded-full border border-neutral-300 px-4 py-2 dark:border-neutral-700'
+                  ? "min-h-11 justify-center rounded-full px-4 py-2"
+                  : "min-h-11 justify-center rounded-full border border-border bg-white px-4 py-2"
               }
-              style={isSelected ? { backgroundColor: PHASE1_GREEN } : undefined}>
+              style={
+                isSelected ? { backgroundColor: BrandColors.forest } : undefined
+              }>
               <Text
                 className={
                   isSelected
-                    ? 'font-semibold text-white'
-                    : 'text-neutral-700 dark:text-neutral-300'
+                    ? "font-extrabold text-white"
+                    : "font-semibold text-ink"
                 }>
                 {city}
               </Text>

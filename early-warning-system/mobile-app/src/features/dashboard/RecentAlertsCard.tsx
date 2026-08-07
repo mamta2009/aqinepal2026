@@ -48,7 +48,7 @@ export function RecentAlertsCard({
   return (
     <DashboardSection accent={DashboardSectionAccent.alerts}>
       <View className="mb-1 flex-row items-center justify-between">
-        <Text className="text-sm font-semibold text-neutral-900 dark:text-white">
+        <Text className="text-sm font-semibold text-ink dark:text-white">
           Recent alerts · {cityLabel}
         </Text>
         <Pressable

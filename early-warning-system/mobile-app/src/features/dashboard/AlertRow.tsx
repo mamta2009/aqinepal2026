@@ -23,9 +23,9 @@ export function AlertRow({ level, time, message }: AlertRowProps) {
             style={{ color }}>
             {level}
           </Text>
-          <Text className="text-[11px] text-neutral-400 dark:text-neutral-500">{time}</Text>
+          <Text className="text-[11px] text-neutral-400">{time}</Text>
         </View>
-        <Text className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">{message}</Text>
+        <Text className="mt-1 text-sm text-neutral-700">{message}</Text>
       </View>
     </View>
   );

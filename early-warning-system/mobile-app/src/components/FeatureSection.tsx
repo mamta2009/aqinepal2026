@@ -1,35 +1,34 @@
-import type { ReactNode } from 'react';
-import { View, useColorScheme } from 'react-native';
-import { BrandColors } from '@/constants/brand';
+import type { ReactNode } from "react";
+import { View } from "react-native";
 
-/** Distinct accent per dashboard feature panel. */
+import { BrandColors } from "@/constants/brand";
+
 export const DashboardSectionAccent = {
-  airQuality: BrandColors.primary,
-  forecast: BrandColors.ai,
-  alerts: BrandColors.warning,
-  cases: BrandColors.secondary,
-  scenario: BrandColors.blockchain,
+  airQuality: BrandColors.forest,
+  forecast: BrandColors.link,
+  alerts: BrandColors.aqModerate,
+  cases: BrandColors.link,
+  scenario: BrandColors.leaf,
 } as const;
 
-/** Distinct accent per account / workspace panel. */
 export const AccountSectionAccent = {
-  signIn: BrandColors.secondary,
-  tip: BrandColors.secondaryLight,
-  profile: BrandColors.primary,
-  channels: BrandColors.ai,
-  inbox: BrandColors.warning,
-  facility: BrandColors.success,
-  friends: '#0d9488',
-  sites: BrandColors.success,
-  actionLog: BrandColors.secondary,
-  contactForm: BrandColors.ai,
-  contactList: BrandColors.secondary,
-  sendAlert: BrandColors.primary,
+  signIn: BrandColors.link,
+  tip: BrandColors.sky,
+  profile: BrandColors.forest,
+  channels: BrandColors.link,
+  inbox: BrandColors.aqModerate,
+  facility: BrandColors.leaf,
+  friends: BrandColors.link,
+  sites: BrandColors.leaf,
+  actionLog: BrandColors.link,
+  contactForm: BrandColors.link,
+  contactList: BrandColors.forest,
+  sendAlert: BrandColors.alertRed,
 } as const;
 
 function withAlpha(hex: string, alpha: number): string {
-  const h = hex.replace('#', '');
-  const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+  const h = hex.replace("#", "");
+  const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
   const r = parseInt(full.slice(0, 2), 16);
   const g = parseInt(full.slice(2, 4), 16);
   const b = parseInt(full.slice(4, 6), 16);
@@ -41,32 +40,23 @@ interface FeatureSectionProps {
   children: ReactNode;
 }
 
-/**
- * Soft tinted surface + colored outline + top accent bar so each
- * feature panel reads as its own visual block.
- */
 export function FeatureSection({ accent, children }: FeatureSectionProps) {
-  const isDark = useColorScheme() === 'dark';
-
   return (
     <View
-      className="overflow-hidden rounded-2xl"
+      className="overflow-hidden rounded-2xl bg-white"
       style={{
-        borderWidth: 1.5,
-        borderColor: withAlpha(accent, isDark ? 0.55 : 0.4),
-        backgroundColor: isDark ? withAlpha(accent, 0.1) : withAlpha(accent, 0.05),
-        shadowColor: accent,
+        borderWidth: 1,
+        borderColor: BrandColors.border,
+        shadowColor: BrandColors.ink,
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: isDark ? 0.22 : 0.12,
+        shadowOpacity: 0.06,
         shadowRadius: 10,
-        elevation: 3,
+        elevation: 2,
       }}>
       <View style={{ height: 3, backgroundColor: accent }} />
       <View
         className="p-4"
-        style={{
-          backgroundColor: isDark ? 'rgba(23, 23, 23, 0.92)' : 'rgba(255, 255, 255, 0.94)',
-        }}>
+        style={{ backgroundColor: withAlpha(accent, 0.04) }}>
         {children}
       </View>
     </View>

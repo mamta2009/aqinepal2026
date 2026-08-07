@@ -45,14 +45,14 @@ export default function AccountScreen() {
 
   if (!hydrated) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-neutral-50 dark:bg-surface-dark">
-        <Text className="text-neutral-500">Loading session…</Text>
+      <SafeAreaView className="flex-1 items-center justify-center bg-surface">
+        <Text className="text-muted">Loading session…</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-neutral-50 dark:bg-surface-dark" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-surface" edges={['top']}>
       <ScrollView
         refreshControl={
           isAuthenticated ? (
@@ -66,8 +66,8 @@ export default function AccountScreen() {
           paddingHorizontal: 16,
         }}>
         <View className="pb-3 pt-2">
-          <Text className="text-2xl font-bold text-neutral-900 dark:text-white">Account</Text>
-          <Text className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+          <Text className="text-2xl font-extrabold text-ink">Account</Text>
+          <Text className="mt-1 text-sm text-muted">
             {isAuthenticated
               ? 'Sign in, enrolment profile, and workplace tools'
               : 'Sign in or register to manage alerts'}
@@ -77,11 +77,11 @@ export default function AccountScreen() {
         {!isAuthenticated ? (
           <View className="gap-4">
             <FeatureSection accent={AccountSectionAccent.signIn}>
-              <Text className="mb-2 text-sm leading-5 text-neutral-600 dark:text-neutral-300">
+              <Text className="mb-2 text-sm leading-5 text-muted">
                 Use the same email and password (or OTP) as in the main app. Preparedness buttons write
                 to the facility audit when your account is approved and linked to a site.
               </Text>
-              <Text className="mb-3 text-sm font-semibold text-neutral-900 dark:text-white">
+              <Text className="mb-3 text-sm font-extrabold text-ink">
                 Sign in
               </Text>
               <LoginForm />
@@ -99,14 +99,14 @@ export default function AccountScreen() {
                 onPress={() => router.push('/verify')}
               />
             </View>
-            <Text className="text-xs text-neutral-500">
+            <Text className="text-xs text-muted">
               After registering, verify the code sent to your channels, then sign in here.
             </Text>
           </View>
         ) : (
           <View className="gap-4">
             <FeatureSection accent={AccountSectionAccent.tip}>
-              <Text className="text-sm leading-5 text-neutral-700 dark:text-neutral-200">
+              <Text className="text-sm leading-5 text-muted">
                 Use the same email and password (or OTP) as in the main app. Preparedness buttons write
                 to the facility audit when your account is approved and linked to a site.
               </Text>

@@ -49,15 +49,15 @@ function ActionRow({
       onPress={onPress}
       className={
         isPrimary
-          ? 'flex-row items-center justify-between rounded-xl bg-secondary px-4 py-3.5 active:opacity-80'
-          : 'flex-row items-center justify-between rounded-xl border border-neutral-300 bg-white px-4 py-3.5 active:opacity-80 dark:border-neutral-700 dark:bg-neutral-900'
+          ? 'min-h-11 flex-row items-center justify-between rounded-2xl bg-forest px-4 py-3.5 active:opacity-80'
+          : 'min-h-11 flex-row items-center justify-between rounded-2xl border border-border bg-white px-4 py-3.5 active:opacity-80'
       }>
       <View className="flex-1 pr-2">
         <Text
           className={
             isPrimary
-              ? 'text-sm font-semibold uppercase tracking-wide text-white'
-              : 'text-sm font-semibold uppercase tracking-wide text-neutral-800 dark:text-neutral-100'
+              ? 'text-sm font-extrabold uppercase tracking-wide text-white'
+              : 'text-sm font-extrabold uppercase tracking-wide text-ink'
           }>
           {label}
         </Text>
@@ -66,7 +66,7 @@ function ActionRow({
             className={
               isPrimary
                 ? 'mt-0.5 text-xs text-white/80'
-                : 'mt-0.5 text-xs text-neutral-500 dark:text-neutral-400'
+                : 'mt-0.5 text-xs text-muted'
             }>
             {hint}
           </Text>
@@ -142,6 +142,11 @@ export function DashboardActionsSidebar({
     router.push('/compare');
   }, [onClose, router]);
 
+  const handleLearn = useCallback(() => {
+    onClose();
+    router.push('/learn');
+  }, [onClose, router]);
+
   const handleAqiHelp = useCallback(async () => {
     const href = `${API_BASE_URL}${AQI_HELP_PATH}`;
     onClose();
@@ -198,19 +203,17 @@ export function DashboardActionsSidebar({
             },
           ],
         }}
-        className="border-l border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-surface-dark">
+        className="border-l border-border bg-surface">
         <View className="mb-4 flex-row items-center justify-between px-4">
-          <Text className="text-base font-bold text-neutral-900 dark:text-white">
-            Dashboard actions
+          <Text className="text-base font-extrabold text-ink">
+            Home actions
           </Text>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Close"
             onPress={onClose}
-            className="rounded-lg px-2.5 py-1.5 active:opacity-70">
-            <Text className="text-2xl leading-none text-neutral-500 dark:text-neutral-400">
-              ✕
-            </Text>
+            className="min-h-11 min-w-11 items-center justify-center rounded-lg active:opacity-70">
+            <Text className="text-2xl leading-none text-muted">✕</Text>
           </Pressable>
         </View>
 
@@ -231,6 +234,11 @@ export function DashboardActionsSidebar({
             onPress={handleCompare}
           />
           <ActionRow
+            label="Learn"
+            hint="Tips for students, families, and schools"
+            onPress={handleLearn}
+          />
+          <ActionRow
             label="aqiHelp"
             hint="How the platform works"
             onPress={() => {
@@ -239,13 +247,13 @@ export function DashboardActionsSidebar({
           />
           <ActionRow
             label="Refresh"
-            hint="Reload air quality, heat, cases, and alerts"
+            hint="Reload air, heat, rain, cases, and alerts"
             onPress={() => {
               void handleRefresh();
             }}
             disabled={refreshing}
             trailing={
-              refreshing ? <ActivityIndicator size="small" color="#1565c0" /> : null
+              refreshing ? <ActivityIndicator size="small" color="#1f794b" /> : null
             }
           />
           <ActionRow
@@ -275,12 +283,10 @@ export function DashboardMenuButton({ onPress }: DashboardMenuButtonProps) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Open dashboard actions"
+      accessibilityLabel="Open home actions"
       onPress={onPress}
-      className="rounded-xl border border-neutral-300 bg-white px-3.5 py-2.5 active:opacity-80 dark:border-neutral-700 dark:bg-neutral-900">
-      <Text className="text-2xl font-semibold leading-none text-neutral-800 dark:text-neutral-100">
-        ☰
-      </Text>
+      className="min-h-11 min-w-11 items-center justify-center rounded-2xl border border-border bg-white px-3.5 py-2.5 active:opacity-80">
+      <Text className="text-2xl font-semibold leading-none text-ink">☰</Text>
     </Pressable>
   );
 }

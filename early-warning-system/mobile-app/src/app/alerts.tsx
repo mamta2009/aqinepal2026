@@ -74,7 +74,7 @@ export default function AlertsScreen() {
   }, [airQuality, latestAlert, runtimeConfig]);
 
   return (
-    <SafeAreaView className="flex-1 bg-neutral-50 dark:bg-surface-dark" edges={['bottom']}>
+    <SafeAreaView className="flex-1 bg-surface" edges={['bottom']}>
       <Stack.Screen
         options={{
           title: `Alerts · ${city}`,
@@ -90,14 +90,14 @@ export default function AlertsScreen() {
         ListHeaderComponent={
           <View className="pt-2">
             <CityPicker selectedCity={city} onSelectCity={onSelectCity} />
-            <Text className="mb-3 px-4 text-sm text-neutral-500 dark:text-neutral-400">
+            <Text className="mb-3 px-4 text-sm text-neutral-500">
               Showing alerts for {city} — live PM2.5 tier, facility notes, and the latest
               broadcast for this city.
             </Text>
           </View>
         }
         renderItem={({ item }) => (
-          <View className="mx-4 rounded-xl border border-neutral-200 bg-white px-3 dark:border-neutral-800 dark:bg-neutral-900">
+          <View className="mx-4 rounded-xl border border-border bg-white px-3">
             <AlertRow level={item.level} time={item.time} message={item.message} />
           </View>
         )}

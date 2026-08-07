@@ -47,14 +47,14 @@ function CityToggleChip({
       className={
         selected
           ? 'rounded-full px-3.5 py-2'
-          : 'rounded-full border border-neutral-300 px-3.5 py-2 dark:border-neutral-700'
+          : 'rounded-full border border-border px-3.5 py-2'
       }
       style={selected ? { backgroundColor: BrandColors.secondary } : undefined}>
       <Text
         className={
           selected
             ? 'text-sm font-semibold text-white'
-            : 'text-sm text-neutral-700 dark:text-neutral-300'
+            : 'text-sm text-neutral-700'
         }>
         {city}
       </Text>
@@ -74,9 +74,9 @@ function CompareResultCard({
 
   if (!row.ok) {
     return (
-      <View className="rounded-xl border border-primary/40 bg-red-50 p-3 dark:bg-red-950/30">
+      <View className="rounded-xl border border-primary/40 bg-red-50 p-3">
         <Text className="font-semibold text-primary">{row.city}</Text>
-        <Text className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
+        <Text className="mt-1 text-sm text-neutral-700">
           {row.error ?? `HTTP ${row.http ?? 'error'}`}
         </Text>
       </View>
@@ -85,32 +85,32 @@ function CompareResultCard({
 
   return (
     <View
-      className="rounded-xl border border-neutral-200 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-900"
+      className="rounded-xl border border-border bg-white p-3"
       style={{ borderLeftWidth: 4, borderLeftColor: accent }}>
-      <Text className="text-base font-semibold text-neutral-900 dark:text-white">
+      <Text className="text-base font-semibold text-neutral-900">
         {row.city}
       </Text>
       <View className="mt-2 gap-1">
-        <Text className="text-sm text-neutral-600 dark:text-neutral-300">
+        <Text className="text-sm text-neutral-600">
           PM2.5:{' '}
-          <Text className="font-mono font-bold text-neutral-900 dark:text-white">
+          <Text className="font-mono font-bold text-neutral-900">
             {pm25 != null ? `${pm25} µg/m³` : '—'}
           </Text>
         </Text>
-        <Text className="text-sm text-neutral-600 dark:text-neutral-300">
+        <Text className="text-sm text-neutral-600">
           Air index:{' '}
-          <Text className="font-semibold text-neutral-900 dark:text-white">
+          <Text className="font-semibold text-neutral-900">
             {formatCompareAirIndexCell(row.source, row.aq)}
           </Text>
         </Text>
-        <Text className="text-sm text-neutral-600 dark:text-neutral-300">
+        <Text className="text-sm text-neutral-600">
           Source: {compareSourceLabel(row)}
         </Text>
-        <Text className="text-sm text-neutral-600 dark:text-neutral-300">
+        <Text className="text-sm text-neutral-600">
           vs threshold: {formatCompareThreshold(pm25, threshold)}
         </Text>
         {row.aq?.station_name ? (
-          <Text className="text-xs text-neutral-400 dark:text-neutral-500">
+          <Text className="text-xs text-neutral-400">
             Station: {row.aq.station_name}
           </Text>
         ) : null}
@@ -195,7 +195,7 @@ export default function CompareCitiesScreen() {
   const chartWidth = Math.max(windowWidth - 48, chartBars.length * 56);
 
   return (
-    <SafeAreaView className="flex-1 bg-neutral-50 dark:bg-surface-dark" edges={['bottom']}>
+    <SafeAreaView className="flex-1 bg-surface" edges={['bottom']}>
       <Stack.Screen options={{ title: 'Compare cities', headerBackTitle: 'Back' }} />
       <ScrollView
         refreshControl={
@@ -204,7 +204,7 @@ export default function CompareCitiesScreen() {
         contentContainerStyle={{ paddingBottom: Spacing.four * 4 }}
         keyboardShouldPersistTaps="handled">
         <View className="px-4 pt-3">
-          <Text className="text-sm leading-5 text-neutral-500 dark:text-neutral-400">
+          <Text className="text-sm leading-5 text-neutral-500">
             Select cities to load side-by-side air readings. Fetches run one city at a time
             (~0.65s apart) to reduce rate limits. Keep selections small (about {MAX_RECOMMENDED}{' '}
             or fewer).
@@ -249,8 +249,8 @@ export default function CompareCitiesScreen() {
               accessibilityRole="button"
               disabled={loading}
               onPress={() => setSelected([DEFAULT_CITY])}
-              className="rounded-xl border border-neutral-300 px-4 py-3 active:opacity-70 dark:border-neutral-600">
-              <Text className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+              className="rounded-xl border border-border px-4 py-3 active:opacity-70">
+              <Text className="text-sm font-semibold text-neutral-800">
                 Only {DEFAULT_CITY}
               </Text>
             </Pressable>
@@ -258,23 +258,23 @@ export default function CompareCitiesScreen() {
               accessibilityRole="button"
               disabled={loading}
               onPress={() => setSelected([])}
-              className="rounded-xl border border-neutral-300 px-4 py-3 active:opacity-70 dark:border-neutral-600">
-              <Text className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+              className="rounded-xl border border-border px-4 py-3 active:opacity-70">
+              <Text className="text-sm font-semibold text-neutral-800">
                 Clear
               </Text>
             </Pressable>
           </View>
 
           {status ? (
-            <Text className="mt-3 text-xs text-neutral-500 dark:text-neutral-400">{status}</Text>
+            <Text className="mt-3 text-xs text-neutral-500">{status}</Text>
           ) : null}
         </View>
 
-        <View className="mt-4 mx-4 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
-          <Text className="mb-1 text-sm font-semibold text-neutral-900 dark:text-white">
+        <View className="mt-4 mx-4 rounded-2xl border border-border bg-white p-4">
+          <Text className="mb-1 text-sm font-semibold text-neutral-900">
             Snapshot chart
           </Text>
-          <Text className="mb-3 text-xs text-neutral-500 dark:text-neutral-400">
+          <Text className="mb-3 text-xs text-neutral-500">
             PM2.5 (µg/m³) by city. Bar color follows alert tiers. Dashed line is the stored
             threshold ({threshold} µg/m³).
           </Text>
@@ -326,7 +326,7 @@ export default function CompareCitiesScreen() {
         </View>
 
         <View className="mt-4 gap-3 px-4">
-          <Text className="text-sm font-semibold text-neutral-900 dark:text-white">
+          <Text className="text-sm font-semibold text-neutral-900">
             Results
           </Text>
           {!hasFetched && !loading ? (

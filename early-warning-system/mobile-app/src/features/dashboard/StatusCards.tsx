@@ -36,9 +36,9 @@ function StatusCard({
 }: StatusCardProps) {
   return (
     <View
-      className="min-w-[45%] flex-1 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
+      className="min-w-[45%] flex-1 rounded-2xl border border-border bg-white p-4"
       style={{ borderLeftWidth: 4, borderLeftColor: accentColor }}>
-      <Text className="text-xs uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+      <Text className="text-xs uppercase tracking-wide text-muted">
         {label}
       </Text>
       {loading ? (
@@ -46,12 +46,12 @@ function StatusCard({
       ) : (
         <View className="mt-1">
           <View className="flex-row items-baseline gap-1">
-            <Text className="font-mono text-2xl font-bold text-neutral-900 dark:text-white">
+            <Text className="font-mono text-2xl font-bold text-ink dark:text-white">
               {value}
             </Text>
           </View>
           {unit ? (
-            <Text className="mt-1 text-xs leading-4 text-neutral-500 dark:text-neutral-400">
+            <Text className="mt-1 text-xs leading-4 text-muted">
               {unit}
             </Text>
           ) : null}

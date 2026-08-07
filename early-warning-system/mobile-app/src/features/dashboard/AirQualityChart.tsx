@@ -29,7 +29,7 @@ export function AirQualityChart({ pm25, cityLabel, sourceLabel }: AirQualityChar
 
   return (
     <DashboardSection accent={DashboardSectionAccent.airQuality}>
-      <Text className="mb-3 text-sm font-semibold text-neutral-900 dark:text-white">
+      <Text className="mb-3 text-sm font-semibold text-ink dark:text-white">
         Air quality — 24h
       </Text>
 
@@ -57,13 +57,13 @@ export function AirQualityChart({ pm25, cityLabel, sourceLabel }: AirQualityChar
         />
       ) : (
         <View className="h-[180px] items-center justify-center">
-          <Text className="text-sm text-neutral-500 dark:text-neutral-400">
+          <Text className="text-sm text-muted">
             No PM2.5 reading yet for {cityLabel}.
           </Text>
         </View>
       )}
 
-      <Text className="mt-3 text-xs text-neutral-500 dark:text-neutral-400">
+      <Text className="mt-3 text-xs text-muted">
         Deterministic intra-day variation around the latest {sourceLabel} reading — not observed
         hourly AQ.
       </Text>
