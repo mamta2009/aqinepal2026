@@ -40,7 +40,7 @@ export const DRAWER_NAV: DrawerNavGroup[] = [
       {
         id: "aqi-help",
         label: "Ask aqiHelp",
-        icon: "?",
+        icon: "⌬",
         action: { type: "route", href: "/aqi-help" },
         match: ["/aqi-help"],
       },

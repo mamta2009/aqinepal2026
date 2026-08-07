@@ -1,8 +1,9 @@
 import { usePathname, useRouter, useSegments } from "expo-router";
-import { Platform, Pressable, Text, View } from "react-native";
+import { Platform, Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BrandColors } from "@/constants/brand";
+import { RobotIcon } from "@/features/aqi-help/RobotIcon";
 import { useDrawerStore } from "@/store/drawerStore";
 
 /** Native tab bar height above the home-indicator / gesture inset. */
@@ -57,7 +58,7 @@ export function FloatingAqiHelpButton() {
           shadowOffset: { width: 0, height: 4 },
           elevation: 8,
         }}>
-        <Text className="text-xl font-extrabold text-white">?</Text>
+        <RobotIcon size={26} color="#ffffff" />
       </Pressable>
     </View>
   );
