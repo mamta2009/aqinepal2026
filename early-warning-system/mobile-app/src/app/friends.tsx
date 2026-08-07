@@ -16,7 +16,7 @@ export default function FriendsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={['bottom']}>
-      <Stack.Screen options={{ title: 'Friends & family', headerBackTitle: 'Account' }} />
+      <Stack.Screen options={{ title: 'Trusted contacts', headerBackTitle: 'Account' }} />
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: Spacing.five }}
         keyboardShouldPersistTaps="handled">

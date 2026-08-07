@@ -64,14 +64,14 @@ export default function RootLayout() {
               <Stack.Screen name="compare" options={{ title: "Compare cities" }} />
               <Stack.Screen name="map" options={{ title: "Map" }} />
               <Stack.Screen name="guides" options={{ title: "Guides" }} />
-              <Stack.Screen name="inbox" options={{ title: "Notifications" }} />
+              <Stack.Screen name="inbox" options={{ title: "Notification inbox" }} />
               <Stack.Screen
                 name="facility-actions"
-                options={{ title: "Facility Actions" }}
+                options={{ title: "Facilities" }}
               />
               <Stack.Screen
                 name="friends"
-                options={{ title: "Friends & family" }}
+                options={{ title: "Trusted contacts" }}
               />
               <Stack.Screen
                 name="learn/[audience]"

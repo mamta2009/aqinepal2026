@@ -46,7 +46,7 @@ export default function InboxScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={['bottom']}>
-      <Stack.Screen options={{ title: 'Notifications', headerBackTitle: 'Account' }} />
+      <Stack.Screen options={{ title: 'Notification inbox', headerBackTitle: 'Account' }} />
       <FlatList
         data={entries}
         keyExtractor={(item, index) => `${item.timestamp ?? 't'}-${index}`}
@@ -56,9 +56,12 @@ export default function InboxScreen() {
         }
         ListHeaderComponent={
           <View className="mb-3">
-            <Text className="text-sm leading-5 text-neutral-500 dark:text-neutral-400">
-              SMS, WhatsApp, and email attempts logged by the server (including alert broadcasts). Full
-              text when available. Scroll to load 5 more at a time.
+            <Text className="text-[10px] font-extrabold uppercase tracking-widest text-forest">
+              Delivery history
+            </Text>
+            <Text className="mt-1 text-sm leading-5 text-muted">
+              SMS, WhatsApp, and email attempts logged by the server. Full text when
+              available. Scroll to load more.
             </Text>
           </View>
         }
@@ -69,8 +72,8 @@ export default function InboxScreen() {
           inbox.isLoading ? (
             <ActivityIndicator className="mt-8" />
           ) : (
-            <Text className="mt-8 text-center text-sm text-neutral-500">
-              No deliveries logged yet.
+            <Text className="mt-8 text-center text-sm text-muted">
+              No notification deliveries are recorded yet.
             </Text>
           )
         }

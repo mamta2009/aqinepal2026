@@ -218,21 +218,21 @@ export function FriendsFamilyPanel() {
 
   return (
     <View className="gap-3">
-      <Text className="text-lg font-bold text-neutral-900 dark:text-white">
-        Friends & family alerts
+      <Text className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+        People you trust
       </Text>
-      <Text className="text-xs leading-5 text-neutral-500 dark:text-neutral-400">
-        Save people you may message in an emergency — SMS, WhatsApp, or email. They must agree before you
-        contact them; sending is rate-limited per day.
+      <Text className="text-lg font-extrabold text-ink">Trusted contacts</Text>
+      <Text className="text-xs leading-5 text-muted">
+        Save friends or family who agreed to receive messages from you.
       </Text>
       {limitsLine ? <Banner message={limitsLine} tone="info" /> : null}
 
       <FeatureSection accent={AccountSectionAccent.contactForm}>
-        <Text className="mb-2 text-sm font-semibold text-neutral-900 dark:text-white">
+        <Text className="mb-2 text-sm font-semibold text-ink">
           {isEditing ? 'Edit contact' : 'Add contact'}
         </Text>
         <AuthTextField
-          label="Name"
+          label="Display name"
           value={displayName}
           onChangeText={setDisplayName}
           autoCapitalize="words"

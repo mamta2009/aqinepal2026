@@ -50,9 +50,9 @@ export function NotificationInboxList({
   previewLimit,
   totalCount,
   showSeeMore,
-  emptyMessage = 'No deliveries logged yet.',
-  title = 'Notifications sent to you',
-  helper = 'SMS, WhatsApp, and email attempts logged by the server (including alert broadcasts).',
+  emptyMessage = 'No notification deliveries are recorded yet.',
+  title = 'Notification inbox',
+  helper = 'Delivery history for SMS, WhatsApp, and email attempts logged by the server.',
   bare = false,
 }: NotificationInboxListProps) {
   const router = useRouter();
@@ -67,19 +67,22 @@ export function NotificationInboxList({
   const body = (
     <>
       {title ? (
-        <View className="mb-1 flex-row items-center justify-between">
-          <Text className="text-sm font-semibold text-neutral-900 dark:text-white">{title}</Text>
-          {showSeeMore && hasMore ? (
-            <Pressable onPress={() => router.push('/inbox')} hitSlop={8}>
-              <Text className="text-sm font-semibold text-secondary">See more</Text>
-            </Pressable>
-          ) : null}
+        <View className="mb-1">
+          <Text className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+            Delivery history
+          </Text>
+          <View className="flex-row items-center justify-between">
+            <Text className="text-lg font-extrabold text-ink">{title}</Text>
+            {showSeeMore && hasMore ? (
+              <Pressable onPress={() => router.push('/inbox')} hitSlop={8}>
+                <Text className="text-sm font-semibold text-forest">See more</Text>
+              </Pressable>
+            ) : null}
+          </View>
         </View>
       ) : null}
       {helper ? (
-        <Text className="mb-2 text-xs leading-4 text-neutral-500 dark:text-neutral-400">
-          {helper}
-        </Text>
+        <Text className="mb-2 text-xs leading-4 text-muted">{helper}</Text>
       ) : null}
 
       {isLoading ? (

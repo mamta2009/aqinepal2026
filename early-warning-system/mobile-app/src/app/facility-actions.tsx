@@ -32,7 +32,7 @@ export default function FacilityActionsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-surface" edges={['bottom']}>
-      <Stack.Screen options={{ title: 'Facility Actions', headerBackTitle: 'Account' }} />
+      <Stack.Screen options={{ title: 'Facilities', headerBackTitle: 'Account' }} />
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: Spacing.five }}
         keyboardShouldPersistTaps="handled"

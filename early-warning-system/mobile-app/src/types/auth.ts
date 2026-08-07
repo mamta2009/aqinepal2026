@@ -74,6 +74,9 @@ export interface AuthProfile {
   scopes?: string[];
   facility_site_pm25_thresholds?: Record<string, number>;
   consent_given?: boolean;
+  school_contact?: string | null;
+  school_address?: string | null;
+  school_information?: string | null;
   [key: string]: unknown;
 }
 

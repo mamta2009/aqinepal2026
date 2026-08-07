@@ -20,6 +20,7 @@ export function DeleteAccountPanel() {
   const clearSession = useAuthStore((s) => s.clearSession);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [expanded, setExpanded] = useState(false);
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -37,7 +38,7 @@ export function DeleteAccountPanel() {
       const msg = toApiError(error).message;
       toastError(
         msg ||
-          'Delete failed. Sign in with email and password (not OTP only), then try again.',
+        'Delete failed. Sign in with email and password (not OTP only), then try again.',
       );
     },
   });
@@ -47,38 +48,68 @@ export function DeleteAccountPanel() {
 
   return (
     <FeatureSection accent={AccountSectionAccent.profile}>
-      <Text className="mb-1 text-base font-bold text-neutral-900 dark:text-white">
-        Delete account
+      <Text className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
+        Security
       </Text>
-      <Banner
-        message="Permanently removes your registration, preferences, notification history, and friends/family contacts. Sign in with email and password (not OTP only). Type DELETE to confirm. This cannot be undone."
-        tone="error"
-      />
+      <Text className="mb-2 text-lg font-extrabold text-ink">Delete account</Text>
+      <Text className="mb-3 text-sm leading-5 text-muted">
+        This permanently removes your registration and personal data. Sign in
+        with email and password (not OTP only).
+      </Text>
 
-      <AuthTextField
-        label="Current password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        placeholder="Your account password"
-        autoCapitalize="none"
-      />
-      <AuthTextField
-        label="Type DELETE to confirm"
-        value={confirm}
-        onChangeText={setConfirm}
-        placeholder="DELETE"
-        autoCapitalize="characters"
-      />
-
-      <View className="mt-1">
+      {!expanded ? (
         <PrimaryButton
-          label={mutation.isPending ? 'Deleting…' : 'Delete my account'}
-          variant="danger"
-          disabled={!canSubmit}
-          onPress={() => mutation.mutate()}
+          label="Open delete account"
+          variant="dangerOutline"
+          onPress={() => setExpanded(true)}
         />
-      </View>
+      ) : (
+        <>
+          <Banner
+            message="Permanently removes your registration, preferences, notification history, and trusted contacts. Type DELETE to confirm. This cannot be undone."
+            tone="error"
+          />
+
+          <AuthTextField
+            label="Current password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            showSecureToggle
+            placeholder="Your account password"
+            autoCapitalize="none"
+          />
+          <AuthTextField
+            label="Type DELETE to confirm"
+            value={confirm}
+            onChangeText={setConfirm}
+            placeholder="DELETE"
+            autoCapitalize="characters"
+          />
+
+          <View className="mt-1 gap-2">
+            <PrimaryButton
+              label={
+                mutation.isPending
+                  ? 'Deleting…'
+                  : 'Permanently delete account'
+              }
+              variant="danger"
+              disabled={!canSubmit}
+              onPress={() => mutation.mutate()}
+            />
+            <PrimaryButton
+              label="Cancel"
+              variant="ghost"
+              onPress={() => {
+                setExpanded(false);
+                setPassword('');
+                setConfirm('');
+              }}
+            />
+          </View>
+        </>
+      )}
     </FeatureSection>
   );
 }

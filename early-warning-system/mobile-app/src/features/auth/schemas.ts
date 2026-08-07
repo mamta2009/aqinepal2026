@@ -40,11 +40,9 @@ export const registerSchema = z
       .array(topicSchema)
       .min(1, "Select at least one topic"),
     language: languageSchema,
-    consent_given: z
-      .boolean()
-      .refine((v) => v === true, {
-        message: "Consent is required to send alerts.",
-      }),
+    consent_given: z.boolean().refine((v) => v === true, {
+      message: "Consent is required to send alerts.",
+    }),
     privacy_agreed: z.boolean().refine((v) => v === true, {
       message: "Accept the privacy policy to continue.",
     }),
@@ -126,6 +124,21 @@ export const channelPrefsSchema = z.object({
 });
 
 export type ChannelPrefsFormValues = z.infer<typeof channelPrefsSchema>;
+
+/** Website Notification preferences editor (channels + topics + consent). */
+export const notificationPrefsSchema = z.object({
+  preferred_channels: z
+    .array(channelSchema)
+    .min(1, "Select at least one channel"),
+  environmental_topics: z
+    .array(topicSchema)
+    .min(1, "Select air quality and/or heat."),
+  consent_given: z.boolean(),
+});
+
+export type NotificationPrefsFormValues = z.infer<
+  typeof notificationPrefsSchema
+>;
 
 /** Build API register payload from form values (drops confirm password and local-only flags). */
 export function toRegisterPayload(values: RegisterFormValues) {
