@@ -6,7 +6,7 @@ import { useRouter } from "expo-router";
 import { openBrowserAsync, WebBrowserPresentationStyle } from "expo-web-browser";
 
 import { CITY_NAMES } from "@/constants/cities";
-import { API_BASE_URL } from "@/constants/api";
+import { SITE_URL } from "@/constants/api";
 import {
   ChipMultiSelect,
   ConsentToggle,
@@ -95,7 +95,7 @@ export function RegisterForm() {
   };
 
   const openPrivacyPolicy = () => {
-    void openBrowserAsync(`${API_BASE_URL}/privacy-policy`, {
+    void openBrowserAsync(`${SITE_URL}/privacy-policy`, {
       presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
     });
   };

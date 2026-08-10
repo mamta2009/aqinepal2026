@@ -41,4 +41,9 @@ export const API_BASE_URL = resolveApiBaseUrl(
   process.env.EXPO_PUBLIC_API_BASE_URL || resolveDefaultApiBaseUrl(),
 );
 
+/** Public Next.js site origin for privacy policy and other web pages. */
+export const SITE_URL = (
+  process.env.EXPO_PUBLIC_SITE_URL || "https://climatecompass.intelladapt.ai"
+).replace(/\/+$/, "");
+
 export const API_TIMEOUT_MS = 15_000;

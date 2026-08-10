@@ -12,7 +12,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets, SafeAreaView } from "react-native-safe-area-context";
 
-import { API_BASE_URL } from "@/constants/api";
+import { SITE_URL } from "@/constants/api";
 import { BrandColors } from "@/constants/brand";
 import {
   DRAWER_NAV,
@@ -174,7 +174,7 @@ export function AppDrawer() {
     const action = item.action;
     if (action.type === "browser") {
       setLastDrawerHref(action.path);
-      await openBrowserAsync(`${API_BASE_URL}${action.path}`, {
+      await openBrowserAsync(`${SITE_URL}${action.path}`, {
         presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
       });
       return;

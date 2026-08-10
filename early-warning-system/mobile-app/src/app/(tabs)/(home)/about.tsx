@@ -3,12 +3,12 @@ import { Stack } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { StackScreen } from "@/components/layout/screen";
 import { SectionTitle } from "@/components/ui";
-import { API_BASE_URL } from "@/constants/api";
+import { SITE_URL } from "@/constants/api";
 import { BrandColors } from "@/constants/brand";
 
 export default function AboutScreen() {
   const openPrivacyPolicy = () => {
-    void openBrowserAsync(`${API_BASE_URL}/privacy-policy`, {
+    void openBrowserAsync(`${SITE_URL}/privacy-policy`, {
       presentationStyle: WebBrowserPresentationStyle.AUTOMATIC,
     });
   };
