@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 const LINKS = [
   { href: "/admin", label: "Status & activity" },
   { href: "/admin/enrollees", label: "Enrollees" },
-  { href: "/admin/blockchain", label: "Blockchain & docs" },
 ] as const;
 
 function normalizePath(pathname: string) {
