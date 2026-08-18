@@ -243,7 +243,7 @@ async def admin_system_status(
         mongo_block["configured"] = mongo_url
         if mongo_url:
             db = db_state.require_mongo_db()
-            await db.admin.command("ping")
+            await db.command("ping")
             mongo_block["ping_ok"] = True
     except Exception as exc:  # noqa: BLE001
         mongo_block["detail"] = str(exc)[:800]

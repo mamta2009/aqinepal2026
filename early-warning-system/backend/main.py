@@ -1512,7 +1512,7 @@ async def public_connection_status() -> dict[str, Any]:
             "detail": None,
         }
         try:
-            await db_state.mongo_db.admin.command("ping")
+            await db_state.mongo_db.command("ping")
             mongo_block["ok"] = True
         except Exception as exc:  # noqa: BLE001
             mongo_block["detail"] = str(exc)[:400]
