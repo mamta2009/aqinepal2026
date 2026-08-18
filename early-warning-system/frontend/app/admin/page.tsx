@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
-import { AdminConsole } from "@/components/admin/admin-console";
+import { OverviewPanel } from "@/components/admin/overview-panel";
 
 export const metadata: Metadata = {
-  title: "Operator console",
-  description:
-    "Secure Climate Compass operator tools for service health, enrolment, audit anchors, and private guidance.",
-  robots: { index: false, follow: false },
+  title: "Status and activity",
 };
 
-export default function AdminPage() {
-  return <AdminConsole />;
+export default function AdminStatusPage() {
+  return <OverviewPanel />;
 }

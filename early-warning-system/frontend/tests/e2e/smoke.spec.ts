@@ -17,6 +17,8 @@ const publicRoutes = [
   "/registration/contacts-directory",
   "/users",
   "/admin",
+  "/admin/enrollees",
+  "/admin/blockchain",
   "/help/aqi-help",
   "/privacy-policy",
   "/delete-account",

@@ -25,6 +25,20 @@ export default function createNextConfig(): NextConfig {
 
   return {
     ...baseConfig,
+    async redirects() {
+      return [
+        {
+          source: "/admin/dashboard",
+          destination: "/admin/",
+          permanent: false,
+        },
+        {
+          source: "/admin/dashboard/",
+          destination: "/admin/",
+          permanent: false,
+        },
+      ];
+    },
     async rewrites() {
       return [
         {
