@@ -14,6 +14,8 @@ import logging
 import os
 from typing import Any
 
+import sms_length
+
 logger = logging.getLogger(__name__)
 
 
@@ -145,11 +147,16 @@ def send_twilio_message_sync(
     if not twilio_configured():
         return {"ok": False, "error": "twilio_not_configured"}
 
-    text = body if len(body) <= 1600 else body[:1597] + "..."
     ch = (channel or _message_channel()).strip().lower()
     if ch not in ("sms", "whatsapp"):
         ch = "sms"
     channel = ch
+    if channel == "sms":
+        text = sms_length.fit_to_single_sms(body or "")
+        if not text:
+            return {"ok": False, "error": "text_cannot_be_empty", "channel": channel}
+    else:
+        text = body if len(body) <= 1600 else body[:1597] + "..."
     from_raw = (os.getenv("TWILIO_PHONE_NUMBER") or "").strip()
 
     try:

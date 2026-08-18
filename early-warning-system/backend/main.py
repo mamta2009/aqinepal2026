@@ -1850,9 +1850,9 @@ async def _maybe_daily_spike_notify(report: DailyReportIn, report_day: str) -> N
         return
 
     message = (
-        f"⚠️ RESPIRATORY SURGE ALERT — {city}\n\n"
+        f"RESPIRATORY SURGE ALERT - {city}\n\n"
         f"Today's reported cases ({report.respiratory_cases}) are about "
-        f"{report.respiratory_cases / max(avg, 0.01):.1f}× the recent daily average ({avg:.1f}).\n\n"
+        f"{report.respiratory_cases / max(avg, 0.01):.1f}x the recent daily average ({avg:.1f}).\n\n"
         f"Facility: {report.facility_id}\n"
         "Review surge capacity and staffing."
     )
@@ -1866,7 +1866,15 @@ async def _maybe_daily_spike_notify(report: DailyReportIn, report_day: str) -> N
     try:
         recipients = await db.contacts.find(query).to_list(length=5000)
         await broadcast_to_recipients(
-            recipients, message, "HIGH", city, hazard_type="respiratory_surge"
+            recipients,
+            message,
+            "HIGH",
+            city,
+            hazard_type="respiratory_surge",
+            headline_value_display=(
+                f"{report.respiratory_cases} cases ~"
+                f"{report.respiratory_cases / max(avg, 0.01):.1f}x avg"
+            ),
         )
     except Exception as exc:  # noqa: BLE001
         logger.warning("Daily spike broadcast failed: %s", exc)
@@ -1996,6 +2004,9 @@ def _system_discovery_payload() -> dict:
             "alerts_broadcast": "POST /api/alerts/broadcast",
             "alerts_latest": "GET /api/alerts/latest",
             "notifications_send": "POST /api/notifications/send",
+            "sms_test": "POST /api/notifications/sms/test",
+            "sparrow_sms_test": "POST /api/notifications/sparrow/test",
+            "sparrow_sms_credits": "GET /api/notifications/sparrow/credits",
             "twilio_test": "POST /api/notifications/twilio/test",
             "whatsapp_sandbox_info": "/api/notifications/whatsapp/sandbox-info",
         },

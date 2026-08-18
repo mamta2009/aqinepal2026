@@ -944,6 +944,22 @@ def integrations_public_status() -> dict[str, Any]:
         twilio_ready = bool(_twilio_configured())
     except Exception:
         twilio_ready = False
+    try:
+        import sparrow_sms as _sparrow_sms
+
+        sparrow_ready = bool(_sparrow_sms.sparrow_configured())
+        sms_selected = _sparrow_sms.sms_provider_name()
+        if _sparrow_sms.should_use_sparrow():
+            sms_active = "sparrow" if sparrow_ready else "none"
+            sms_ready = sparrow_ready
+        else:
+            sms_active = "twilio"
+            sms_ready = twilio_ready
+    except Exception:
+        sparrow_ready = False
+        sms_selected = "auto"
+        sms_active = "twilio"
+        sms_ready = twilio_ready
     return {
         "openrouter_configured": bool(openrouter_api_key()),
         "rapidapi_weather_configured": bool(k_weather and host),
@@ -957,6 +973,10 @@ def integrations_public_status() -> dict[str, Any]:
         "weatherapi_com_direct_configured": integrations_weatherapi_com_configured(),
         "openweathermap_configured": integrations_openweathermap_configured(),
         "twilio_configured": twilio_ready,
+        "sparrow_sms_configured": sparrow_ready,
+        "sms_configured": sms_ready,
+        "sms_provider": sms_active,
+        "sms_provider_selected": sms_selected,
     }
 
 

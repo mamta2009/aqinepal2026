@@ -1,6 +1,6 @@
 """
 Registration, broadcast alerts, webhooks, and analytics (ported from notification_cursor.zip).
-Requires MongoDB and optional Twilio / SendGrid email configuration.
+Requires MongoDB and optional Sparrow SMS / Twilio / SendGrid configuration.
 
 Architecture diagram (on-disk; embedded on **`/guides`**):
 ``docs/tech/NOTIFICATION_FLOW_DIAGRAM.svg``
@@ -34,6 +34,8 @@ import external_integrations
 import facility_auth
 import onchain_hooks
 import registrant_auth
+import sms_length
+import sparrow_sms
 import twilio_notify
 from cities_config import CITIES_CONFIG
 from notification_auth import (
@@ -741,18 +743,35 @@ async def ensure_notification_indexes(db: Any) -> None:
 
 
 def _twilio_legacy(result: dict[str, Any]) -> dict[str, Any]:
-    return {
+    out = {
         "success": bool(result.get("ok")),
         "sid": result.get("sid"),
         "status": "sent" if result.get("ok") else "failed",
         "error": result.get("error"),
+        "provider": result.get("provider"),
     }
+    if result.get("count") is not None:
+        out["count"] = result.get("count")
+    return out
+
+
+def sms_configured() -> bool:
+    """True when the provider selected by ``SMS_PROVIDER`` is ready to send."""
+    if sparrow_sms.should_use_sparrow():
+        return sparrow_sms.sparrow_configured()
+    return twilio_notify.twilio_configured()
 
 
 async def send_sms(phone_number: str, message: str) -> dict[str, Any]:
+    """Send SMS via Sparrow or Twilio according to ``SMS_PROVIDER``. Always one SMS segment."""
+    message = sms_length.fit_to_single_sms(message)
+    if sparrow_sms.should_use_sparrow():
+        r = await sparrow_sms.send_sms_async(phone_number, message)
+        return _twilio_legacy(r)
     r = await twilio_notify.send_twilio_message_async(
         phone_number, message, channel="sms"
     )
+    r = {**r, "provider": r.get("provider") or "twilio"}
     return _twilio_legacy(r)
 
 
@@ -760,6 +779,7 @@ async def send_whatsapp(whatsapp_number: str, message: str) -> dict[str, Any]:
     r = await twilio_notify.send_twilio_message_async(
         whatsapp_number, message, channel="whatsapp"
     )
+    r = {**r, "provider": r.get("provider") or "twilio"}
     return _twilio_legacy(r)
 
 
@@ -1193,7 +1213,7 @@ async def _dispatch_registration_verification_channels(
         else:
             warnings.append("email_verification_skipped_resend_not_configured")
     if "sms" in preferred_channel_values:
-        if twilio_notify.twilio_configured():
+        if sms_configured():
             sr = await _dispatch_verification_sms(
                 db, contact_id, normalized_phone, code
             )
@@ -1202,7 +1222,7 @@ async def _dispatch_registration_verification_channels(
                     f"sms_verification_failed:{sr.get('error', 'unknown')}"
                 )
         else:
-            warnings.append("sms_verification_skipped_twilio_not_configured")
+            warnings.append("sms_verification_skipped_sms_not_configured")
     if "whatsapp" in preferred_channel_values:
         if twilio_notify.twilio_configured():
             wr = await _dispatch_verification_whatsapp(
@@ -1227,7 +1247,7 @@ async def _send_facility_login_code(db: Any, doc: dict[str, Any], code: str) -> 
     chans = doc.get("preferred_channels") or []
     name = str(doc.get("name") or "")
     ttl = facility_auth.facility_login_code_ttl_minutes()
-    hint = f"Climate Compass facility dashboard code: {code}. Valid {ttl} minutes."
+    hint = f"Climate Compass facility code: {code}. Valid {ttl} min."
 
     try:
         if "email" in chans:
@@ -1242,7 +1262,7 @@ async def _send_facility_login_code(db: Any, doc: dict[str, Any], code: str) -> 
             else:
                 warnings.append("email_login_code_skipped_resend_not_configured")
         if "sms" in chans:
-            if twilio_notify.twilio_configured():
+            if sms_configured():
                 result = await send_sms(doc["phone_number"], hint)
                 if result.get("success"):
                     await db.notification_logs.insert_one(
@@ -1259,7 +1279,7 @@ async def _send_facility_login_code(db: Any, doc: dict[str, Any], code: str) -> 
                 else:
                     warnings.append(f"sms_login_failed:{result.get('error', 'unknown')}")
             else:
-                warnings.append("sms_login_code_skipped_twilio_not_configured")
+                warnings.append("sms_login_code_skipped_sms_not_configured")
         if "whatsapp" in chans:
             if twilio_notify.twilio_configured():
                 result = await send_whatsapp(doc.get("whatsapp_number") or doc["phone_number"], hint)
@@ -1297,8 +1317,8 @@ async def _send_account_deletion_code(db: Any, doc: dict[str, Any], code: str) -
     name = str(doc.get("name") or "")
     ttl = _ACCOUNT_DELETION_CODE_TTL_MINUTES
     hint = (
-        f"Climate Compass account deletion code: {code}. "
-        f"Valid {ttl} minutes. If you did not request this, ignore this message."
+        f"Climate Compass delete code: {code}. Valid {ttl} min. "
+        "Ignore if you did not request this."
     )
 
     try:
@@ -1354,7 +1374,7 @@ async def _send_account_deletion_code(db: Any, doc: dict[str, Any], code: str) -
             else:
                 warnings.append("email_deletion_code_skipped_resend_not_configured")
         if "sms" in chans and doc.get("phone_number"):
-            if twilio_notify.twilio_configured():
+            if sms_configured():
                 result = await send_sms(doc["phone_number"], hint)
                 if result.get("success"):
                     await db.notification_logs.insert_one(
@@ -1373,7 +1393,7 @@ async def _send_account_deletion_code(db: Any, doc: dict[str, Any], code: str) -
                         f"sms_deletion_failed:{result.get('error', 'unknown')}"
                     )
             else:
-                warnings.append("sms_deletion_code_skipped_twilio_not_configured")
+                warnings.append("sms_deletion_code_skipped_sms_not_configured")
         if "whatsapp" in chans:
             wa = doc.get("whatsapp_number") or doc.get("phone_number")
             if wa and twilio_notify.twilio_configured():
@@ -1445,8 +1465,8 @@ async def _send_session_reverification_code(
     chans = doc.get("preferred_channels") or []
     name = str(doc.get("name") or "")
     hint = (
-        f"Climate Compass periodic renewal code: {code}. Valid {ttl_minutes} minutes. "
-        "Use it when signing in with your current password and a NEW dashboard password."
+        f"Climate Compass renewal code: {code}. Valid {ttl_minutes} min. "
+        "Sign in with current password, this code, and a new password."
     )
 
     try:
@@ -1462,7 +1482,7 @@ async def _send_session_reverification_code(
             else:
                 warnings.append("email_reverify_skipped_sendgrid_not_configured")
         if "sms" in chans:
-            if twilio_notify.twilio_configured():
+            if sms_configured():
                 result = await send_sms(doc["phone_number"], hint)
                 if result.get("success"):
                     await db.notification_logs.insert_one(
@@ -1479,7 +1499,7 @@ async def _send_session_reverification_code(
                 else:
                     warnings.append(f"sms_reverify_failed:{result.get('error', 'unknown')}")
             else:
-                warnings.append("sms_reverify_skipped_twilio_not_configured")
+                warnings.append("sms_reverify_skipped_sms_not_configured")
         if "whatsapp" in chans:
             if twilio_notify.twilio_configured():
                 result = await send_whatsapp(doc.get("whatsapp_number") or doc["phone_number"], hint)
@@ -3588,12 +3608,19 @@ async def broadcast_to_recipients(
         headline=str(head),
         plain_message=message,
     )
+    sms_text = sms_length.sms_body_for_broadcast(
+        message,
+        hazard=haz,
+        city=city,
+        level=level_label,
+        headline=str(head) if head else None,
+    )
 
     for recipient in recipients:
         for channel in recipient.get("preferred_channels", []):
             result: dict[str, Any] | None = None
             if channel == "sms":
-                result = await send_sms(recipient["phone_number"], message)
+                result = await send_sms(recipient["phone_number"], sms_text)
                 results["sms"]["sent" if result["success"] else "failed"] += 1
             elif channel == "whatsapp":
                 result = await send_whatsapp(recipient["whatsapp_number"], message)
@@ -3706,6 +3733,7 @@ async def broadcast_alert(
         alert.aqi_level.value,
         alert.city,
         hazard_type="air",
+        headline_value_display=str(alert.aqi_value),
     )
 
     return {
@@ -3857,6 +3885,7 @@ async def evaluate_air_alert(
         level.value,
         city,
         hazard_type="air",
+        headline_value_display=str(aqi_value),
     )
 
     return {
@@ -4272,6 +4301,15 @@ class TwilioTestIn(BaseModel):
     )
 
 
+class SmsTestIn(BaseModel):
+    to: str = Field(..., min_length=8, max_length=40)
+    body: str = Field(
+        default="Climate Compass: SMS test.",
+        min_length=1,
+        max_length=1600,
+    )
+
+
 class ResendTestIn(BaseModel):
     to: EmailStr
     subject: str = Field(
@@ -4306,6 +4344,60 @@ async def notifications_twilio_test(
         raise HTTPException(
             status_code=502,
             detail=str(result.get("error", "twilio_send_failed")),
+        )
+    return result
+
+
+@router.post("/api/notifications/sms/test")
+async def notifications_sms_test(
+    payload: SmsTestIn,
+    _: None = Depends(require_notification_api_key),
+):
+    """Send one SMS through the active provider (Sparrow when configured, else Twilio)."""
+    if not sms_configured():
+        raise HTTPException(
+            status_code=503,
+            detail="SMS not configured (set SPARROW_SMS_TOKEN + SPARROW_SMS_FROM, or Twilio)",
+        )
+    result = await send_sms(payload.to, payload.body)
+    if not result.get("success"):
+        raise HTTPException(
+            status_code=502,
+            detail=str(result.get("error", "sms_send_failed")),
+        )
+    return result
+
+
+@router.post("/api/notifications/sparrow/test")
+async def notifications_sparrow_test(
+    payload: SmsTestIn,
+    _: None = Depends(require_notification_api_key),
+):
+    """Send one SMS via Sparrow regardless of SMS_PROVIDER (for Nepal connectivity checks)."""
+    if not sparrow_sms.sparrow_configured():
+        raise HTTPException(
+            status_code=503,
+            detail="Sparrow SMS not configured (SPARROW_SMS_TOKEN and SPARROW_SMS_FROM)",
+        )
+    result = await sparrow_sms.send_sms_async(payload.to, payload.body)
+    if not result.get("ok"):
+        raise HTTPException(
+            status_code=502,
+            detail=str(result.get("error", "sparrow_send_failed")),
+        )
+    return result
+
+
+@router.get("/api/notifications/sparrow/credits")
+async def notifications_sparrow_credits(
+    _: None = Depends(require_notification_api_key),
+):
+    """Check Sparrow SMS credit balance (GET /credit/)."""
+    result = await sparrow_sms.credits_async()
+    if not result.get("ok"):
+        raise HTTPException(
+            status_code=502 if result.get("error") != "sparrow_not_configured" else 503,
+            detail=str(result.get("error", "sparrow_credits_failed")),
         )
     return result
 
