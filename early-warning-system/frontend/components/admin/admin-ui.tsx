@@ -24,18 +24,23 @@ export function TaskDialog({
   title,
   description,
   children,
+  wide = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
   description?: string;
   children: React.ReactNode;
+  wide?: boolean;
 }) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-ink/55 backdrop-blur-[2px]" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 z-50 max-h-[90vh] w-[min(44rem,calc(100%-2rem))] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-border bg-white p-5 shadow-2xl sm:p-7">
+        <Dialog.Content
+          className={`fixed top-1/2 left-1/2 z-50 max-h-[90vh] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-border bg-white p-5 shadow-2xl sm:p-7 ${wide ? "w-[min(56rem,calc(100%-1.25rem))]" : "w-[min(44rem,calc(100%-2rem))]"
+            }`}
+        >
           <div className="mb-5 pr-12">
             <Dialog.Title className="m-0 text-2xl font-extrabold text-ink">
               {title}

@@ -16,38 +16,59 @@ const phone = z
   .trim()
   .regex(/^\+\d{7,15}$/, "Use an international number such as +9779812345678.");
 
-export const registrantSchema = z.object({
-  name: z.string().trim().min(1, "Name is required."),
-  email: z.email("Enter a valid email address."),
-  phone_number: phone,
-  whatsapp_number: z
-    .string()
-    .trim()
-    .refine((value) => !value || /^\+\d{7,15}$/.test(value), {
-      message: "Use an international number beginning with +.",
-    }),
-  password: z
-    .string()
-    .min(8, "Password must contain at least 8 characters.")
-    .max(128),
-  contact_type: z.enum([
-    "health_worker",
-    "parent",
-    "admin",
-    "government",
-    "school_admin",
-  ]),
-  cities: z.array(z.string()).min(1, "Select at least one municipality."),
-  facility_names: z.string(),
-  facility_id: z.string(),
-  preferred_channels: z
-    .array(z.enum(["sms", "whatsapp", "email"]))
-    .min(1, "Select at least one alert channel."),
-  environmental_topics: z.array(z.enum(["air", "heat"])),
-  language: z.string().trim().min(2).max(16),
-  consent_given: z.boolean(),
-  send_verification: z.boolean(),
-});
+export const registrantSchema = z
+  .object({
+    name: z.string().trim().min(1, "Name is required."),
+    email: z.email("Enter a valid email address."),
+    phone_number: phone,
+    whatsapp_number: z
+      .string()
+      .trim()
+      .refine((value) => !value || /^\+\d{7,15}$/.test(value), {
+        message: "Use an international number beginning with +.",
+      }),
+    password: z
+      .string()
+      .min(8, "Password must contain at least 8 characters.")
+      .max(128),
+    password_confirmation: z.string(),
+    contact_type: z.enum([
+      "health_worker",
+      "parent",
+      "admin",
+      "government",
+      "school_admin",
+    ]),
+    cities: z.array(z.string()).min(1, "Select at least one municipality."),
+    facility_names: z.string(),
+    school_name: z.string().max(200),
+    school_contact: z.string().max(200),
+    school_address: z.string().max(500),
+    school_information: z.string().max(2000),
+    facility_id: z.string(),
+    preferred_channels: z
+      .array(z.enum(["sms", "whatsapp", "email"]))
+      .min(1, "Select at least one alert channel."),
+    environmental_topics: z
+      .array(z.enum(["air", "heat"]))
+      .min(1, "Select air quality and/or heat."),
+    language: z.enum(["en", "ne"]),
+    consent_given: z.boolean(),
+    send_verification: z.boolean(),
+  })
+  .refine((data) => data.password === data.password_confirmation, {
+    path: ["password_confirmation"],
+    message: "Passwords do not match.",
+  })
+  .superRefine((data, ctx) => {
+    if (data.contact_type === "school_admin" && !data.school_name.trim()) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["school_name"],
+        message: "School name is required for school administrators.",
+      });
+    }
+  });
 
 export const enrolmentSchema = z.object({
   cities: z.array(z.string()).min(1, "Select at least one municipality."),

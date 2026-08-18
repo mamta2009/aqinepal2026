@@ -2,8 +2,17 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as Tooltip from "@radix-ui/react-tooltip";
+import {
+  Archive,
+  ArchiveRestore,
+  KeyRound,
+  MapPinned,
+  Send,
+  Trash2,
+} from "lucide-react";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { adminApi, Registrant } from "@/lib/api/admin";
@@ -15,7 +24,6 @@ import {
   registrantSchema,
 } from "@/lib/validation/admin";
 import {
-  ConfirmButton,
   ErrorMessage,
   fieldClass,
   helpClass,
@@ -31,6 +39,17 @@ const lines = (value: string) =>
 
 const errorText = (error: unknown) =>
   error instanceof Error ? error.message : "The operation failed.";
+
+const compactFieldClass =
+  "h-9 min-h-9 w-full rounded-lg border border-border-strong bg-white px-2.5 text-sm text-ink focus:border-forest focus:outline-none";
+
+const ROLE_LABELS: Record<RegistrantInput["contact_type"], string> = {
+  health_worker: "Health worker / doctor",
+  parent: "Parent / guardian",
+  admin: "Administrator",
+  government: "Government official",
+  school_admin: "School administrator",
+};
 
 export function RegistrantsPanel() {
   const queryClient = useQueryClient();
@@ -70,55 +89,59 @@ export function RegistrantsPanel() {
   });
 
   const rows = users.data?.registrants ?? [];
+  const cityNames = cities.data?.cities.map((city) => city.name) ?? [];
   const refresh = () =>
     queryClient.invalidateQueries({ queryKey: ["admin", "registrants"] });
 
   return (
     <>
       <Card className="!p-4 sm:!p-6">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="max-w-2xl">
             <h2 className="m-0 text-2xl font-extrabold">Registered enrollees</h2>
             <p className={helpClass}>
-              Search, update coverage, manage verification, or archive accounts.
+              People who signed up for alerts. Add enrollee uses the same details
+              as the public registration form. Verification can be skipped here
+              when you already know the person.
             </p>
           </div>
           <Button onClick={() => setCreating(true)}>Add enrollee</Button>
         </div>
 
         <form
-          className="mt-5 grid gap-3 rounded-xl bg-surface-tint p-4 sm:grid-cols-2 lg:grid-cols-4"
+          className="mt-5 flex flex-wrap items-end gap-3 rounded-xl border border-border bg-surface px-3 py-3"
           onSubmit={(event) => {
             event.preventDefault();
             setSkip(0);
             refresh();
           }}
         >
-          <label className={labelClass}>
-            Status
+          <label className="grid gap-1 text-xs font-bold text-ink">
+            Account status
             <select
-              className={fieldClass}
+              className={compactFieldClass}
               value={filter}
               onChange={(event) => {
                 setFilter(event.target.value);
                 setSkip(0);
               }}
             >
-              <option value="all">All</option>
-              <option value="active">Active</option>
-              <option value="archived">Archived</option>
+              <option value="all">Everyone</option>
+              <option value="active">Active only</option>
+              <option value="archived">Archived only</option>
             </select>
           </label>
-          <label className={labelClass}>
-            Email contains
+          <label className="grid min-w-56 flex-1 gap-1 text-xs font-bold text-ink">
+            Search email
             <input
-              className={fieldClass}
+              className={compactFieldClass}
               type="search"
               value={email}
+              placeholder="part of an email address"
               onChange={(event) => setEmail(event.target.value)}
             />
           </label>
-          <label className="flex min-h-11 items-center gap-2 self-end text-sm font-bold">
+          <label className="flex h-9 items-center gap-2 text-xs font-bold">
             <input
               type="checkbox"
               checked={unmasked}
@@ -126,7 +149,7 @@ export function RegistrantsPanel() {
             />
             Show full phone numbers
           </label>
-          <Button className="self-end" type="submit" variant="secondary">
+          <Button type="submit" size="sm" variant="secondary">
             Apply filters
           </Button>
         </form>
@@ -140,41 +163,39 @@ export function RegistrantsPanel() {
           </p>
         ) : null}
 
-        <div className="mt-4 grid gap-3 md:hidden">
-          {rows.map((user) => (
-            <RegistrantCard
-              key={user._id}
-              user={user}
-              busy={mutate.isPending}
-              onEdit={setEditing}
-              onPassword={setPasswordTarget}
-              onAction={(action) => mutate.mutate({ action, user })}
-            />
-          ))}
-        </div>
-        <div className="mt-4 hidden overflow-x-auto md:block">
-          <table className="w-full min-w-[800px] border-collapse text-left text-sm">
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full table-fixed border-collapse text-left text-sm">
+            <colgroup>
+              <col className="w-[26%]" />
+              <col className="w-[42%]" />
+              <col className="w-[16%]" />
+              <col className="w-[16%]" />
+            </colgroup>
             <thead>
               <tr className="border-b border-border text-muted">
-                <th className="p-3">Identity</th>
-                <th className="p-3">Facility / cities</th>
-                <th className="p-3">Status</th>
-                <th className="p-3">Actions</th>
+                <th className="px-3 py-2 font-extrabold">Name</th>
+                <th className="px-3 py-2 font-extrabold">Coverage</th>
+                <th className="px-3 py-2 font-extrabold">Status</th>
+                <th className="px-3 py-2 font-extrabold">Actions</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((user) => (
-                <tr key={user._id} className="border-b border-border align-top">
-                  <td className="p-3">
-                    <strong>{user.email}</strong>
-                    <br />
-                    <span className="text-muted">{user.name}</span>
-                    <br />
-                    <code className="text-xs text-muted">{user._id}</code>
+                <tr key={user._id} className="border-b border-border align-middle">
+                  <td className="px-3 py-2.5">
+                    <strong className="block truncate">{user.name || "Unnamed enrollee"}</strong>
+                    <span className="block truncate text-xs text-muted">{user.email}</span>
+                    <span className="mt-0.5 block truncate text-xs text-muted">
+                      {String(user.contact_type || "").replaceAll("_", " ") || "Role not set"}
+                      {user.phone_number ? ` · ${user.phone_number}` : ""}
+                      {user.active === false ? " · archived" : ""}
+                    </span>
                   </td>
-                  <td className="p-3">{facilityText(user)}</td>
-                  <td className="p-3">{statusText(user)}</td>
-                  <td className="p-3">
+                  <td className="px-3 py-2.5">{coverageText(user)}</td>
+                  <td className="px-3 py-2.5">
+                    <StatusChips user={user} />
+                  </td>
+                  <td className="px-3 py-2.5">
                     <UserActions
                       user={user}
                       busy={mutate.isPending}
@@ -190,7 +211,9 @@ export function RegistrantsPanel() {
         </div>
 
         {!users.isPending && !rows.length ? (
-          <p className="mt-5 text-center text-muted">No registrants match these filters.</p>
+          <p className="mt-5 text-center text-muted">
+            No registrants match these filters.
+          </p>
         ) : null}
         <div className="mt-5 flex items-center justify-between gap-3">
           <Button
@@ -201,7 +224,7 @@ export function RegistrantsPanel() {
             Previous
           </Button>
           <span className="text-sm text-muted" aria-live="polite">
-            Rows {rows.length ? skip + 1 : 0}–{skip + rows.length}
+            Showing {rows.length ? skip + 1 : 0}–{skip + rows.length}
           </span>
           <Button
             variant="secondary"
@@ -216,12 +239,12 @@ export function RegistrantsPanel() {
       <CreateRegistrantDialog
         open={creating}
         onOpenChange={setCreating}
-        cities={cities.data?.cities.map((city) => city.name) ?? []}
+        cities={cityNames}
       />
       <EnrolmentDialog
         user={editing}
         onOpenChange={(open) => !open && setEditing(null)}
-        cities={cities.data?.cities.map((city) => city.name) ?? []}
+        cities={cityNames}
       />
       <PasswordDialog
         user={passwordTarget}
@@ -231,40 +254,74 @@ export function RegistrantsPanel() {
   );
 }
 
-function facilityText(user: Registrant) {
-  const facilities =
-    user.facility_names?.join(", ") || user.facility_name || "No facility";
+function coverageText(user: Registrant) {
   const cities = user.cities?.join(", ") || user.city || "No municipality";
+  const facilities =
+    user.facility_names?.join(", ") || user.facility_name || "";
   return (
-    <>
-      <strong>{facilities}</strong>
-      {user.facility_id ? <div className="text-xs text-muted">ID: {user.facility_id}</div> : null}
-      <div className="mt-1 text-muted">{cities}</div>
-    </>
+    <div className="min-w-0">
+      <p className="m-0 text-sm leading-5">{cities}</p>
+      {facilities ? (
+        <p className="m-0 mt-0.5 text-xs leading-5 text-muted">{facilities}</p>
+      ) : null}
+    </div>
   );
 }
 
-function statusText(user: Registrant) {
+function StatusChips({ user }: { user: Registrant }) {
+  const verified = String(user.verification_status || "").toLowerCase() === "verified";
+  const approved = String(user.approval_status || "").toLowerCase() === "approved";
   return (
-    <>
-      <strong className={user.active === false ? "text-alert-red" : "text-aq-good"}>
-        {user.active === false ? "Archived" : "Active"}
-      </strong>
-      <div>Verification: {user.verification_status || "—"}</div>
-      <div>Approval: {user.approval_status || "—"}</div>
-    </>
+    <ul className="flex flex-wrap gap-1">
+      <Chip
+        label={verified ? "Verified" : "Pending"}
+        tone={verified ? "good" : "pending"}
+        detail={verified ? "Email or phone confirmed." : "Code not confirmed yet."}
+      />
+      <Chip
+        label={approved ? "Approved" : "Pending"}
+        tone={approved ? "good" : "pending"}
+        detail={approved ? "Can receive alerts." : "Not approved for alerts yet."}
+      />
+    </ul>
   );
 }
 
-function RegistrantCard(props: UserActionProps) {
+function Chip({
+  label,
+  tone,
+  detail,
+}: {
+  label: string;
+  tone: "good" | "pending";
+  detail: string;
+}) {
   return (
-    <article className="rounded-xl border border-border p-4">
-      <h3 className="font-extrabold break-all">{props.user.email}</h3>
-      <p className="text-sm text-muted">{props.user.name}</p>
-      <div className="my-3 text-sm">{facilityText(props.user)}</div>
-      <div className="mb-3 text-sm">{statusText(props.user)}</div>
-      <UserActions {...props} />
-    </article>
+    <li>
+      <Tooltip.Root>
+        <Tooltip.Trigger asChild>
+          <button
+            type="button"
+            className={`w-fit cursor-help rounded-md px-2 py-0.5 text-xs font-extrabold ${tone === "good"
+              ? "bg-green-100 text-green-900"
+              : "bg-yellow-100 text-yellow-900"
+              }`}
+          >
+            {label}
+          </button>
+        </Tooltip.Trigger>
+        <Tooltip.Portal>
+          <Tooltip.Content
+            side="top"
+            sideOffset={6}
+            className="z-50 max-w-64 rounded-lg bg-ink px-2.5 py-2 text-xs font-semibold leading-5 text-white shadow-lg"
+          >
+            {detail}
+            <Tooltip.Arrow className="fill-ink" />
+          </Tooltip.Content>
+        </Tooltip.Portal>
+      </Tooltip.Root>
+    </li>
   );
 }
 
@@ -283,44 +340,91 @@ function UserActions({
   onPassword,
   onAction,
 }: UserActionProps) {
+  const archived = user.active === false;
   return (
     <div className="flex flex-wrap gap-2">
-      <Button size="sm" variant="secondary" onClick={() => onEdit(user)}>
-        Sites / area
-      </Button>
+      <IconAction label="Edit coverage" onClick={() => onEdit(user)}>
+        <MapPinned size={16} />
+      </IconAction>
       {String(user.verification_status).toLowerCase() === "pending" ? (
-        <ConfirmButton
-          size="sm"
-          variant="secondary"
+        <IconAction
+          label="Resend verification"
           disabled={busy}
-          prompt={`Send a fresh verification code to ${user.email || "this enrollee"}?`}
-          onConfirm={() => onAction("resend")}
+          confirm={`Send a fresh verification code to ${user.email || "this enrollee"}?`}
+          onClick={() => onAction("resend")}
         >
-          Resend verify
-        </ConfirmButton>
+          <Send size={16} />
+        </IconAction>
       ) : null}
-      <ConfirmButton
-        size="sm"
-        variant="secondary"
+      <IconAction
+        label={archived ? "Restore account" : "Archive account"}
         disabled={busy}
-        prompt={`${user.active === false ? "Restore" : "Archive"} ${user.email || "this enrollee"}?`}
-        onConfirm={() => onAction(user.active === false ? "restore" : "archive")}
+        confirm={`${archived ? "Restore" : "Archive"} ${user.email || "this enrollee"}?`}
+        onClick={() => onAction(archived ? "restore" : "archive")}
       >
-        {user.active === false ? "Restore" : "Archive"}
-      </ConfirmButton>
-      <Button size="sm" onClick={() => onPassword(user)}>
-        Password
-      </Button>
-      <ConfirmButton
-        size="sm"
-        variant="danger"
+        {archived ? <ArchiveRestore size={16} /> : <Archive size={16} />}
+      </IconAction>
+      <IconAction label="Set password" onClick={() => onPassword(user)}>
+        <KeyRound size={16} />
+      </IconAction>
+      <IconAction
+        label="Delete permanently"
         disabled={busy}
-        prompt={`Permanently delete ${user.email || user._id}? This cannot be undone.`}
-        onConfirm={() => onAction("delete")}
+        danger
+        confirm={`Permanently delete ${user.email || user._id}? This cannot be undone.`}
+        onClick={() => onAction("delete")}
       >
-        Delete
-      </ConfirmButton>
+        <Trash2 size={16} />
+      </IconAction>
     </div>
+  );
+}
+
+function IconAction({
+  label,
+  children,
+  onClick,
+  confirm,
+  disabled,
+  danger,
+}: {
+  label: string;
+  children: React.ReactNode;
+  onClick: () => void;
+  confirm?: string;
+  disabled?: boolean;
+  danger?: boolean;
+}) {
+  return (
+    <Tooltip.Root>
+      <Tooltip.Trigger asChild>
+        <button
+          type="button"
+          className={`inline-grid size-8 place-items-center rounded-lg border disabled:opacity-50 ${danger
+            ? "border-red-200 bg-red-50 text-alert-red hover:bg-red-100"
+            : "border-border bg-white text-ink hover:border-forest hover:text-forest"
+            }`}
+          disabled={disabled}
+          aria-label={label}
+          onClick={() => {
+            if (confirm && !window.confirm(confirm)) return;
+            onClick();
+          }}
+        >
+          {children}
+        </button>
+      </Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content
+          side="top"
+          sideOffset={6}
+          className="z-50 rounded-lg bg-ink px-2.5 py-1.5 text-xs font-bold text-white shadow-lg"
+        >
+          {label}
+          <Tooltip.Arrow className="fill-ink" />
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
   );
 }
 
@@ -342,85 +446,185 @@ function CreateRegistrantDialog({
       phone_number: "",
       whatsapp_number: "",
       password: "",
+      password_confirmation: "",
       contact_type: "health_worker",
       cities: [],
       facility_names: "",
+      school_name: "",
+      school_contact: "",
+      school_address: "",
+      school_information: "",
       facility_id: "",
-      preferred_channels: ["sms", "email"],
+      preferred_channels: ["sms", "whatsapp", "email"],
       environmental_topics: ["air", "heat"],
       language: "en",
-      consent_given: false,
+      consent_given: true,
       send_verification: false,
     },
   });
+  const contactType = useWatch({ control: form.control, name: "contact_type" });
+  const isSchool = contactType === "school_admin";
   const create = useMutation({
-    mutationFn: (value: RegistrantInput) =>
-      adminApi.createRegistrant({
-        ...value,
+    mutationFn: (value: RegistrantInput) => {
+      const facilityNames = isSchool
+        ? [value.school_name.trim()].filter(Boolean)
+        : lines(value.facility_names);
+      return adminApi.createRegistrant({
+        name: value.name,
+        email: value.email,
+        phone_number: value.phone_number,
         whatsapp_number: value.whatsapp_number || undefined,
+        password: value.password,
+        contact_type: value.contact_type,
+        cities: value.cities,
+        facility_names: facilityNames,
         facility_id: value.facility_id || undefined,
-        facility_names: lines(value.facility_names),
-      }),
+        preferred_channels: value.preferred_channels,
+        environmental_topics: value.environmental_topics,
+        language: value.language,
+        consent_given: value.consent_given,
+        send_verification: value.send_verification,
+        ...(isSchool
+          ? {
+            school_contact: value.school_contact.trim() || undefined,
+            school_address: value.school_address.trim() || undefined,
+            school_information: value.school_information.trim() || undefined,
+          }
+          : {}),
+      });
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["admin", "registrants"] });
       form.reset();
       onOpenChange(false);
     },
   });
+
   return (
     <TaskDialog
       open={open}
       onOpenChange={onOpenChange}
+      wide
       title="Add new enrollee"
-      description="Creates the same account as public registration. Verification is immediate unless sending codes is selected."
+      description="Same details as public registration. Leave Send verification codes unchecked to activate the account immediately."
     >
-      <form className="grid gap-4 sm:grid-cols-2" onSubmit={form.handleSubmit((v) => create.mutate(v))}>
-        <TextField label="Name" error={form.formState.errors.name?.message} {...form.register("name")} />
-        <TextField label="Email" type="email" error={form.formState.errors.email?.message} {...form.register("email")} />
-        <TextField label="Phone (+ country code)" error={form.formState.errors.phone_number?.message} {...form.register("phone_number")} />
-        <TextField label="WhatsApp (optional)" error={form.formState.errors.whatsapp_number?.message} {...form.register("whatsapp_number")} />
-        <TextField label="Password" type="password" error={form.formState.errors.password?.message} {...form.register("password")} />
-        <label className={labelClass}>
-          Role
-          <select className={fieldClass} {...form.register("contact_type")}>
-            <option value="health_worker">Health worker</option>
-            <option value="parent">Parent</option>
-            <option value="admin">Administrator</option>
-            <option value="government">Government</option>
-            <option value="school_admin">School administrator</option>
-          </select>
-        </label>
-        <label className={`${labelClass} sm:col-span-2`}>
-          Facility names (one per line)
-          <textarea className={fieldClass} rows={2} {...form.register("facility_names")} />
-        </label>
-        <TextField label="Facility reference ID" {...form.register("facility_id")} />
-        <TextField label="Language code" {...form.register("language")} />
-        <label className={`${labelClass} sm:col-span-2`}>
-          Municipality coverage
-          <select className={`${fieldClass} min-h-36`} multiple {...form.register("cities")}>
-            {cities.map((city) => <option key={city}>{city}</option>)}
-          </select>
-          <ErrorMessage message={form.formState.errors.cities?.message} />
-        </label>
-        <CheckboxGroup
-          legend="Alert channels"
-          options={[["sms", "SMS"], ["whatsapp", "WhatsApp"], ["email", "Email"]]}
-          register={form.register("preferred_channels")}
-          error={form.formState.errors.preferred_channels?.message}
-        />
-        <CheckboxGroup
-          legend="Environmental topics"
-          options={[["air", "Air quality"], ["heat", "Heat"]]}
-          register={form.register("environmental_topics")}
-        />
-        <label className="flex items-center gap-2 text-sm font-bold">
-          <input type="checkbox" {...form.register("consent_given")} /> Consent acknowledged
-        </label>
-        <label className="flex items-center gap-2 text-sm font-bold">
-          <input type="checkbox" {...form.register("send_verification")} /> Send verification codes
-        </label>
-        <div className="sm:col-span-2">
+      <form
+        className="grid gap-5"
+        onSubmit={form.handleSubmit((value) => create.mutate(value))}
+      >
+        <FormSection title="About the person">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <TextField label="Full name" error={form.formState.errors.name?.message} {...form.register("name")} />
+            <TextField label="Email" type="email" error={form.formState.errors.email?.message} {...form.register("email")} />
+            <TextField
+              label="Phone (+ country code)"
+              error={form.formState.errors.phone_number?.message}
+              {...form.register("phone_number")}
+            />
+            <TextField
+              label="WhatsApp (optional)"
+              error={form.formState.errors.whatsapp_number?.message}
+              {...form.register("whatsapp_number")}
+            />
+            <TextField
+              label="Dashboard password"
+              type="password"
+              error={form.formState.errors.password?.message}
+              {...form.register("password")}
+            />
+            <TextField
+              label="Confirm password"
+              type="password"
+              error={form.formState.errors.password_confirmation?.message}
+              {...form.register("password_confirmation")}
+            />
+            <label className={labelClass}>
+              Role
+              <select className={fieldClass} {...form.register("contact_type")}>
+                {Object.entries(ROLE_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className={labelClass}>
+              Language
+              <select className={fieldClass} {...form.register("language")}>
+                <option value="en">English</option>
+                <option value="ne">Nepali</option>
+              </select>
+            </label>
+          </div>
+        </FormSection>
+
+        <FormSection title={isSchool ? "School" : "Facility and coverage"}>
+          <fieldset>
+            <legend className="text-sm font-bold">Municipality coverage</legend>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {cities.map((city) => (
+                <label key={city} className="flex min-h-11 items-center gap-2 rounded-xl border border-border px-3 text-sm font-bold">
+                  <input type="checkbox" value={city} {...form.register("cities")} />
+                  {city}
+                </label>
+              ))}
+            </div>
+            <ErrorMessage message={form.formState.errors.cities?.message} />
+          </fieldset>
+          {isSchool ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <TextField
+                label="School name"
+                error={form.formState.errors.school_name?.message}
+                {...form.register("school_name")}
+              />
+              <TextField label="School contact" {...form.register("school_contact")} />
+              <TextField label="School address" {...form.register("school_address")} />
+              <label className={`${labelClass} sm:col-span-2`}>
+                About the school
+                <textarea className={fieldClass} rows={3} {...form.register("school_information")} />
+              </label>
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className={`${labelClass} sm:col-span-2`}>
+                Facility names (one per line)
+                <textarea className={fieldClass} rows={3} {...form.register("facility_names")} />
+              </label>
+              <TextField label="Facility reference ID (optional)" {...form.register("facility_id")} />
+            </div>
+          )}
+        </FormSection>
+
+        <FormSection title="Alerts">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <CheckboxGroup
+              legend="Alert channels"
+              options={[["sms", "SMS"], ["whatsapp", "WhatsApp"], ["email", "Email"]]}
+              register={form.register("preferred_channels")}
+              error={form.formState.errors.preferred_channels?.message}
+            />
+            <CheckboxGroup
+              legend="Environmental topics"
+              options={[["air", "Air quality"], ["heat", "Heat"]]}
+              register={form.register("environmental_topics")}
+              error={form.formState.errors.environmental_topics?.message}
+            />
+          </div>
+        </FormSection>
+
+        <FormSection title="Activation">
+          <label className="flex items-start gap-2 text-sm font-bold">
+            <input type="checkbox" className="mt-1" {...form.register("consent_given")} />
+            Consent to receive alerts is acknowledged
+          </label>
+          <label className="flex items-start gap-2 text-sm font-bold">
+            <input type="checkbox" className="mt-1" {...form.register("send_verification")} />
+            Send verification codes (leave unchecked to activate now)
+          </label>
+        </FormSection>
+
+        <div>
           <ErrorMessage message={create.isError ? errorText(create.error) : undefined} />
           <Button type="submit" disabled={create.isPending}>
             {create.isPending ? "Creating…" : "Create enrollee"}
@@ -428,6 +632,21 @@ function CreateRegistrantDialog({
         </div>
       </form>
     </TaskDialog>
+  );
+}
+
+function FormSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="grid gap-4 rounded-2xl border border-border bg-surface p-4">
+      <h3 className="m-0 text-base font-extrabold">{title}</h3>
+      {children}
+    </section>
   );
 }
 
@@ -461,22 +680,33 @@ function EnrolmentDialog({
     },
   });
   return (
-    <TaskDialog open={Boolean(user)} onOpenChange={onOpenChange} title="Facilities and coverage areas">
+    <TaskDialog
+      open={Boolean(user)}
+      onOpenChange={onOpenChange}
+      title="Facilities and coverage areas"
+    >
       <form className="grid gap-4" onSubmit={form.handleSubmit((value) => save.mutate(value))}>
         <label className={labelClass}>
           Facility names (one per line)
           <textarea className={fieldClass} rows={4} {...form.register("facility_names")} />
         </label>
         <TextField label="Facility reference ID" {...form.register("facility_id")} />
-        <label className={labelClass}>
-          Municipality coverage
-          <select className={`${fieldClass} min-h-36`} multiple {...form.register("cities")}>
-            {cities.map((city) => <option key={city}>{city}</option>)}
-          </select>
+        <fieldset>
+          <legend className="text-sm font-bold">Municipality coverage</legend>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {cities.map((city) => (
+              <label key={city} className="flex min-h-11 items-center gap-2 rounded-xl border border-border px-3 text-sm font-bold">
+                <input type="checkbox" value={city} {...form.register("cities")} />
+                {city}
+              </label>
+            ))}
+          </div>
           <ErrorMessage message={form.formState.errors.cities?.message} />
-        </label>
+        </fieldset>
         <ErrorMessage message={save.isError ? errorText(save.error) : undefined} />
-        <Button type="submit" disabled={save.isPending}>{save.isPending ? "Saving…" : "Save changes"}</Button>
+        <Button type="submit" disabled={save.isPending}>
+          {save.isPending ? "Saving…" : "Save changes"}
+        </Button>
       </form>
     </TaskDialog>
   );
@@ -551,7 +781,7 @@ function CheckboxGroup({
   error?: string;
 }) {
   return (
-    <fieldset className="rounded-xl border border-border p-3">
+    <fieldset className="rounded-xl border border-border bg-white p-3">
       <legend className="px-1 text-sm font-bold">{legend}</legend>
       <div className="flex flex-wrap gap-4">
         {options.map(([value, label]) => (
