@@ -2088,6 +2088,7 @@ async def registrant_dashboard_login(
         )
     if not registrant_auth.verify_password(body.password, str(pwd_hash)):
         raise HTTPException(status_code=401, detail="Invalid email or password")
+    registrant_auth.reject_if_contact_archived(doc)
     apr = str(doc.get("approval_status") or "").strip().lower()
     if apr == "revoked":
         raise HTTPException(status_code=403, detail="Account revoked.")
@@ -2225,6 +2226,7 @@ async def registrant_profile(
     doc = await db.contacts.find_one({"_id": oid})
     if not doc:
         raise HTTPException(status_code=404, detail="Contact not found")
+    registrant_auth.reject_if_contact_archived(doc)
     out = dict(doc)
     oid = out.pop("_id", None)
     out["_id"] = str(oid) if oid is not None else ""
@@ -2305,6 +2307,7 @@ async def dashboard_registration_profile(
     doc = await db.contacts.find_one({"_id": oid})
     if not doc:
         raise HTTPException(status_code=404, detail="Contact not found")
+    registrant_auth.reject_if_contact_archived(doc)
     if str(doc.get("approval_status") or "").strip().lower() == "revoked":
         raise HTTPException(status_code=403, detail="This registration has been revoked")
     out = dict(doc)
@@ -2488,6 +2491,7 @@ async def registrant_patch_own_preferences(
     doc = await db.contacts.find_one({"_id": oid})
     if not doc:
         raise HTTPException(status_code=404, detail="Contact not found")
+    registrant_auth.reject_if_contact_archived(doc)
     if str(doc.get("approval_status") or "").strip().lower() == "revoked":
         raise HTTPException(status_code=403, detail="This registration has been revoked")
     vs = str(doc.get("verification_status") or "").strip().lower()
@@ -2705,6 +2709,7 @@ async def registrant_list_shared_contacts(
     doc = await db.contacts.find_one({"_id": oid})
     if not doc:
         raise HTTPException(status_code=404, detail="Contact not found")
+    registrant_auth.reject_if_contact_archived(doc)
     if str(doc.get("approval_status") or "").strip().lower() == "revoked":
         raise HTTPException(status_code=403, detail="This registration has been revoked")
     rows = doc.get("shared_alert_contacts")
@@ -2763,6 +2768,7 @@ async def registrant_create_shared_contact(
     doc = await db.contacts.find_one({"_id": oid})
     if not doc:
         raise HTTPException(status_code=404, detail="Contact not found")
+    registrant_auth.reject_if_contact_archived(doc)
     if str(doc.get("approval_status") or "").strip().lower() == "revoked":
         raise HTTPException(status_code=403, detail="This registration has been revoked")
     vs = str(doc.get("verification_status") or "").strip().lower()
@@ -2824,6 +2830,7 @@ async def registrant_notify_shared_contacts(
     doc = await db.contacts.find_one({"_id": oid})
     if not doc:
         raise HTTPException(status_code=404, detail="Contact not found")
+    registrant_auth.reject_if_contact_archived(doc)
     if str(doc.get("approval_status") or "").strip().lower() == "revoked":
         raise HTTPException(status_code=403, detail="This registration has been revoked")
     vs = str(doc.get("verification_status") or "").strip().lower()
@@ -2993,6 +3000,7 @@ async def registrant_update_shared_contact(
     doc = await db.contacts.find_one({"_id": oid})
     if not doc:
         raise HTTPException(status_code=404, detail="Contact not found")
+    registrant_auth.reject_if_contact_archived(doc)
     if str(doc.get("approval_status") or "").strip().lower() == "revoked":
         raise HTTPException(status_code=403, detail="This registration has been revoked")
     vs = str(doc.get("verification_status") or "").strip().lower()
@@ -3055,6 +3063,7 @@ async def registrant_delete_shared_contact(
     doc = await db.contacts.find_one({"_id": oid})
     if not doc:
         raise HTTPException(status_code=404, detail="Contact not found")
+    registrant_auth.reject_if_contact_archived(doc)
     cur = doc.get("shared_alert_contacts")
     lst: list[dict[str, Any]] = [x for x in cur if isinstance(x, dict)] if isinstance(cur, list) else []
     nid = contact_row_id.strip()
@@ -3132,6 +3141,8 @@ async def registrant_notification_inbox(
 
 
 def _facility_scope_ok_for_login(doc: dict[str, Any]) -> tuple[bool, str]:
+    if registrant_auth.contact_is_archived(doc):
+        return False, "archived"
     apr_raw = doc.get("approval_status")
     if apr_raw is not None:
         a = str(apr_raw).strip().lower()
@@ -3163,6 +3174,11 @@ async def facility_dashboard_login_challenge(body: FacilityLoginEmailIn):
     )
     doc = await db.contacts.find_one({"email": email_key})
     if doc:
+        if registrant_auth.contact_is_archived(doc):
+            raise HTTPException(
+                status_code=403,
+                detail=registrant_auth.ARCHIVED_ACCOUNT_DETAIL,
+            )
         ok, _reason = _facility_scope_ok_for_login(doc)
         if ok:
             code = _verification_code()
@@ -3207,6 +3223,11 @@ async def facility_dashboard_token(
         raise HTTPException(status_code=400, detail="Invalid email or code")
     ok, why = _facility_scope_ok_for_login(doc)
     if not ok:
+        if why == "archived":
+            raise HTTPException(
+                status_code=403,
+                detail=registrant_auth.ARCHIVED_ACCOUNT_DETAIL,
+            )
         raise HTTPException(
             status_code=403 if why in ("revoked", "pending", "blocked") else 400,
             detail="Account cannot issue facility reporting tokens yet",
@@ -3523,6 +3544,11 @@ async def send_notification(
     recipient = await db.contacts.find_one({"_id": oid})
     if not recipient:
         raise HTTPException(status_code=404, detail="Contact not found")
+    if registrant_auth.contact_is_archived(recipient):
+        raise HTTPException(
+            status_code=403,
+            detail="Archived contacts cannot receive directed notifications.",
+        )
     if not recipient.get("consent_given"):
         raise HTTPException(status_code=403, detail="Contact has not given consent")
     apr_raw = recipient.get("approval_status")

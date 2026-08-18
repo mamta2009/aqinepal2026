@@ -111,7 +111,23 @@ def registrant_jwt_signing_secret() -> str:
     return digest
 
 
+ARCHIVED_ACCOUNT_DETAIL = (
+    "This account has been archived. Contact an operator if you need access restored."
+)
+
+
+def contact_is_archived(doc: dict[str, Any] | None) -> bool:
+    return bool(doc) and doc.get("active") is False
+
+
+def reject_if_contact_archived(doc: dict[str, Any] | None) -> None:
+    if contact_is_archived(doc):
+        raise HTTPException(status_code=403, detail=ARCHIVED_ACCOUNT_DETAIL)
+
+
 def registrant_can_facility_actions(doc: dict[str, Any]) -> bool:
+    if contact_is_archived(doc):
+        return False
     vs = str(doc.get("verification_status") or "").strip().lower()
     if vs != "verified":
         return False
@@ -126,6 +142,8 @@ def registrant_can_facility_actions(doc: dict[str, Any]) -> bool:
 
 
 def compute_registrant_scopes(doc: dict[str, Any]) -> list[str]:
+    if contact_is_archived(doc):
+        return []
     vs = str(doc.get("verification_status") or "").strip().lower()
     if vs != "verified":
         return []
@@ -198,6 +216,7 @@ async def resolve_registrant_session(*, bearer_token: str | None) -> RegistrantS
     doc = await db.contacts.find_one({"_id": oid})
     if doc is None:
         raise HTTPException(status_code=401, detail="Contact no longer registered")
+    reject_if_contact_archived(doc)
     if str(doc.get("approval_status") or "").strip().lower() == "revoked":
         raise HTTPException(status_code=403, detail="This registration has been revoked")
     vs = str(doc.get("verification_status") or "").strip().lower()

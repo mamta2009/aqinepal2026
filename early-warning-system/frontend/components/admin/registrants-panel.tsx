@@ -7,12 +7,14 @@ import {
   Archive,
   ArchiveRestore,
   KeyRound,
+  LoaderCircle,
   MapPinned,
   Send,
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { adminApi, Registrant } from "@/lib/api/admin";
@@ -84,10 +86,31 @@ export function RegistrantsPanel() {
       if (action === "resend") return adminApi.resendVerification(user._id);
       return adminApi.deleteRegistrant(user._id);
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["admin", "registrants"] }),
+    onSuccess: (_data, { action, user }) => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "registrants"] });
+      const who = user.email || user.name || "Enrollee";
+      if (action === "archive") toast.success(`${who} archived.`);
+      else if (action === "restore") toast.success(`${who} restored.`);
+      else if (action === "resend") toast.success(`Verification code sent to ${who}.`);
+      else toast.success(`${who} deleted.`);
+    },
+    onError: (error, { action }) => {
+      const fail =
+        action === "archive"
+          ? "Could not archive enrollee."
+          : action === "restore"
+            ? "Could not restore enrollee."
+            : action === "resend"
+              ? "Could not send verification code."
+              : "Could not delete enrollee.";
+      toast.error(errorText(error) || fail);
+    },
   });
 
+  const deletingId =
+    mutate.isPending && mutate.variables?.action === "delete"
+      ? mutate.variables.user._id
+      : null;
   const rows = users.data?.registrants ?? [];
   const cityNames = cities.data?.cities.map((city) => city.name) ?? [];
   const refresh = () =>
@@ -157,11 +180,6 @@ export function RegistrantsPanel() {
         {users.isPending ? <p role="status">Loading registrants…</p> : null}
         {users.isError ? <ErrorMessage message={errorText(users.error)} /> : null}
         {mutate.isError ? <ErrorMessage message={errorText(mutate.error)} /> : null}
-        {mutate.isSuccess ? (
-          <p className="mt-3 text-sm font-bold text-aq-good" role="status">
-            Enrollee operation completed.
-          </p>
-        ) : null}
 
         <div className="mt-5 overflow-x-auto">
           <table className="w-full table-fixed border-collapse text-left text-sm">
@@ -180,32 +198,42 @@ export function RegistrantsPanel() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((user) => (
-                <tr key={user._id} className="border-b border-border align-middle">
-                  <td className="px-3 py-2.5">
-                    <strong className="block truncate">{user.name || "Unnamed enrollee"}</strong>
-                    <span className="block truncate text-xs text-muted">{user.email}</span>
-                    <span className="mt-0.5 block truncate text-xs text-muted">
-                      {String(user.contact_type || "").replaceAll("_", " ") || "Role not set"}
-                      {user.phone_number ? ` · ${user.phone_number}` : ""}
-                      {user.active === false ? " · archived" : ""}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2.5">{coverageText(user)}</td>
-                  <td className="px-3 py-2.5">
-                    <StatusChips user={user} />
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <UserActions
-                      user={user}
-                      busy={mutate.isPending}
-                      onEdit={setEditing}
-                      onPassword={setPasswordTarget}
-                      onAction={(action) => mutate.mutate({ action, user })}
-                    />
-                  </td>
-                </tr>
-              ))}
+              {rows.map((user) => {
+                const deleting = deletingId === user._id;
+                return (
+                  <tr key={user._id} className={`border-b border-border align-middle ${deleting ? "bg-red-50/70" : ""}`}>
+                    <td className="px-3 py-2.5">
+                      <strong className="block truncate">{user.name || "Unnamed enrollee"}</strong>
+                      <span className="block truncate text-xs text-muted">{user.email}</span>
+                      <span className="mt-0.5 block truncate text-xs text-muted">
+                        {String(user.contact_type || "").replaceAll("_", " ") || "Role not set"}
+                        {user.phone_number ? ` · ${user.phone_number}` : ""}
+                        {user.active === false ? " · archived" : ""}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5">{coverageText(user)}</td>
+                    <td className="px-3 py-2.5">
+                      <StatusChips user={user} />
+                    </td>
+                    <td className="px-3 py-2.5">
+                      {deleting ? (
+                        <p className="m-0 flex items-center gap-2 text-xs font-extrabold text-alert-red" role="status">
+                          <LoaderCircle className="size-4 animate-spin" aria-hidden />
+                          Deleting…
+                        </p>
+                      ) : (
+                        <UserActions
+                          user={user}
+                          busy={mutate.isPending}
+                          onEdit={setEditing}
+                          onPassword={setPasswordTarget}
+                          onAction={(action) => mutate.mutate({ action, user })}
+                        />
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -495,9 +523,11 @@ function CreateRegistrantDialog({
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["admin", "registrants"] });
+      toast.success("Enrollee created.");
       form.reset();
       onOpenChange(false);
     },
+    onError: (error) => toast.error(errorText(error) || "Could not create enrollee."),
   });
 
   return (
@@ -676,8 +706,10 @@ function EnrolmentDialog({
       }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["admin", "registrants"] });
+      toast.success("Coverage updated.");
       onOpenChange(false);
     },
+    onError: (error) => toast.error(errorText(error) || "Could not update coverage."),
   });
   return (
     <TaskDialog
@@ -727,9 +759,11 @@ function PasswordDialog({
     mutationFn: ({ new_password }: { new_password: string }) =>
       adminApi.resetPassword(user!._id, new_password),
     onSuccess: () => {
+      toast.success("Password updated.");
       form.reset();
       onOpenChange(false);
     },
+    onError: (error) => toast.error(errorText(error) || "Could not update password."),
   });
   return (
     <TaskDialog

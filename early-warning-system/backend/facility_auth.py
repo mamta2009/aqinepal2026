@@ -185,6 +185,7 @@ async def resolve_facility_caller(
             doc_pre = await db_pre.contacts.find_one({"_id": oid_pre})
             if doc_pre is None:
                 raise HTTPException(status_code=401, detail="Contact no longer registered")
+            _reg.reject_if_contact_archived(doc_pre)
             if "facility_actions" not in _reg.compute_registrant_scopes(doc_pre):
                 raise HTTPException(
                     status_code=403,
@@ -206,6 +207,9 @@ async def resolve_facility_caller(
     doc = await db.contacts.find_one({"_id": oid})
     if doc is None:
         raise HTTPException(status_code=401, detail="Contact no longer registered")
+    import registrant_auth as _reg_live
+
+    _reg_live.reject_if_contact_archived(doc)
     vs = str(doc.get("verification_status") or "").strip().lower()
     apr_raw = doc.get("approval_status")
     if vs != "verified":
