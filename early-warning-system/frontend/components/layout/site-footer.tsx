@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { AppStoreBadges } from "@/components/layout/app-store-badges";
 
 const links = [
   ["/", "Home"],
@@ -30,7 +31,8 @@ export function SiteFooter() {
               across Nepal.
             </p>
           </div>
-          <nav className="flex max-w-xl flex-wrap gap-x-5 gap-y-2" aria-label="Footer">
+          <AppStoreBadges tone="dark" heading="Get the app" />
+          <nav className="flex max-w-sm flex-wrap gap-x-5 gap-y-2 lg:justify-end" aria-label="Footer">
             {links.map(([href, label]) => (
               <Link
                 key={href}

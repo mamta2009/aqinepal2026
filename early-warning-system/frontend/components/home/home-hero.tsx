@@ -1,5 +1,6 @@
 import { Check, CloudSun, Sun } from "lucide-react";
 import Image from "next/image";
+import { AppStoreBadges } from "@/components/layout/app-store-badges";
 import { ButtonLink } from "@/components/ui/button";
 import { Reveal } from "@/components/ui/reveal";
 
@@ -66,6 +67,9 @@ export function HomeHero() {
                 ),
               )}
             </ul>
+            <div className="mt-8">
+              <AppStoreBadges heading="Also on your phone" />
+            </div>
           </div>
         </Reveal>
         <Reveal delay={0.08}>

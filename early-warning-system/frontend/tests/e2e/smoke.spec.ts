@@ -49,6 +49,13 @@ test.describe("education-first homepage", () => {
       page.getByRole("link", { name: /Check today|conditions|today/i }).first(),
     ).toBeVisible();
     await expect(page.getByRole("heading").first()).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Google Play/i }).first(),
+    ).toHaveAttribute(
+      "href",
+      /play\.google\.com\/store\/apps\/details\?id=com\.intelladapt\.earlywarningsystem/,
+    );
+    await expect(page.getByText(/Coming soon/i).first()).toBeVisible();
   });
 });
 
