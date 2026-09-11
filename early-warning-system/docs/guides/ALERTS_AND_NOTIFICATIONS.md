@@ -151,14 +151,14 @@ Outbound SMS / email / WhatsApp happen when something **HTTP POSTs** evaluate (o
 
 ### Prerequisites on the production server
 
-1. **MongoDB** connected (`MONGODB_URL` / `DATABASE_URL`) — contacts + cooldown + broadcast logs  
-2. **`NOTIFICATION_API_KEY`** set (strong secret) — required for evaluate / broadcast  
+1. **MongoDB** connected (`MONGODB_URL` / `DATABASE_URL`) — contacts + cooldown + broadcast logs
+2. **`NOTIFICATION_API_KEY`** set (strong secret) — required for evaluate / broadcast
 3. Delivery providers configured and tested:
-   - Email: Resend  
-   - SMS: Sparrow and/or Twilio (`SMS_PROVIDER`)  
-   - WhatsApp: Twilio (optional)  
-4. **`WAQI_TOKEN`** (and WeatherAPI as needed) so evaluate can fetch live air  
-5. At least one **verified, consented, approved** contact covering the city, with topic `air` / `heat` and preferred channels  
+   - Email: Resend
+   - SMS: Sparrow and/or Twilio (`SMS_PROVIDER`)
+   - WhatsApp: Twilio (optional)
+4. **`WAQI_TOKEN`** (and WeatherAPI as needed) so evaluate can fetch live air
+5. At least one **verified, consented, approved** contact covering the city, with topic `air` / `heat` and preferred channels
 6. **`NOTIFICATION_DASHBOARD_URL`** set to your public site (link inside messages)
 
 ### Recommended pattern: scheduled evaluate (cron)
@@ -170,7 +170,9 @@ Call **once per city** on an interval that respects cooldown (default 60 minutes
 # save as scripts/cron-evaluate-air.sh — run on a scheduler, not inside the request path
 set -euo pipefail
 
-API_BASE="${API_BASE:-https://YOUR-PRODUCTION-HOST}"
+API_BASE="${API_BASE:-https://YOUR-PRODUCTION-API-HOST}"
+# Example for this deployment: https://ews-api.intelladapt.ai
+# (Frontend https://climatecompass.intelladapt.ai does not host /api/alerts/evaluate.)
 API_KEY="${NOTIFICATION_API_KEY:?set NOTIFICATION_API_KEY}"
 
 CITIES=(Kathmandu Pokhara Bharatpur Birgunj Biratnagar Janakpur Nepalgunj Dhangadhi)
@@ -196,31 +198,33 @@ curl -sS -X POST "${API_BASE}/api/alerts/evaluate-heat" \
 
 **Where to run the cron**
 
-| Hosting | Approach |
-|---------|----------|
-| Render | Add a **Cron Job** service that runs the script (or a one-liner curl loop) on a schedule; share the same `NOTIFICATION_API_KEY` secret as the web service |
-| Linux VPS | `crontab -e` → e.g. `5 * * * * /path/to/cron-evaluate-air.sh >> /var/log/cc-eval.log 2>&1` |
-| GitHub Actions | `schedule:` workflow with repository secret `NOTIFICATION_API_KEY` and production `API_BASE` |
+| Hosting        | Approach                                                                                                                                                  |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Render         | Add a **Cron Job** service that runs the script (or a one-liner curl loop) on a schedule; share the same `NOTIFICATION_API_KEY` secret as the web service |
+| Linux VPS      | `crontab -e` → e.g. `5 * * * * /path/to/cron-evaluate-air.sh >> /var/log/cc-eval.log 2>&1`                                                                |
+| GitHub Actions | `schedule:` workflow with repository secret `NOTIFICATION_API_KEY` and production `API_BASE`                                                              |
 
 Do **not** put the API key in the frontend or mobile app.
 
 ### One-off / operator test (production)
 
 ```bash
-curl -sS -X POST "https://YOUR-PRODUCTION-HOST/api/alerts/evaluate" \
+curl -sS -X POST "https://ews-api.intelladapt.ai/api/alerts/evaluate" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: YOUR_NOTIFICATION_API_KEY" \
   -d '{"city":"Kathmandu","min_level":"MODERATE"}'
 ```
 
+(Frontend is `https://climatecompass.intelladapt.ai` — call evaluate on the **API** host only.)
+
 Read the JSON:
 
-| Field | Meaning |
-|-------|---------|
+| Field                        | Meaning                                                               |
+| ---------------------------- | --------------------------------------------------------------------- |
 | `skipped: "below_min_level"` | Live reading too clean for the gate (e.g. AQI 58 → LOW) — **no send** |
-| `skipped: "cooldown"` | Already broadcast for that city/hazard within the cooldown window |
-| `recipients_count` | Eligible contacts found; send scheduled in background |
-| `aqi_value` / `aqi_level` | What evaluate computed from live data |
+| `skipped: "cooldown"`        | Already broadcast for that city/hazard within the cooldown window     |
+| `recipients_count`           | Eligible contacts found; send scheduled in background                 |
+| `aqi_value` / `aqi_level`    | What evaluate computed from live data                                 |
 
 To force past cooldown for a real drill (still respects `min_level`):
 
@@ -237,7 +241,7 @@ To force a send even when air is LOW (use carefully in production):
 Or use **manual broadcast** with an explicit level (no live gate):
 
 ```bash
-curl -sS -X POST "https://YOUR-PRODUCTION-HOST/api/alerts/broadcast" \
+curl -sS -X POST "https://ews-api.intelladapt.ai/api/alerts/broadcast" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: YOUR_NOTIFICATION_API_KEY" \
   -d '{"city":"Kathmandu","aqi_value":120,"aqi_level":"MODERATE","recipient_type":"all"}'
@@ -247,11 +251,11 @@ curl -sS -X POST "https://YOUR-PRODUCTION-HOST/api/alerts/broadcast" \
 
 ### Production checklist
 
-1. Confirm providers with a single test send / Twilio or Sparrow test route if available  
-2. Enrol yourself, verify, approve, subscribe to `air`, cover Kathmandu  
-3. Dry-run evaluate and expect `below_min_level` when AQI is good — that proves the pipeline without spamming  
-4. Install cron for all cities  
-5. Monitor Mongo `notification_logs`, `alert_broadcasts`, and `GET /api/alerts/latest?city=Kathmandu`  
+1. Confirm providers with a single test send / Twilio or Sparrow test route if available
+2. Enrol yourself, verify, approve, subscribe to `air`, cover Kathmandu
+3. Dry-run evaluate and expect `below_min_level` when AQI is good — that proves the pipeline without spamming
+4. Install cron for all cities
+5. Monitor Mongo `notification_logs`, `alert_broadcasts`, and `GET /api/alerts/latest?city=Kathmandu`
 6. Keep `ALERT_EVAL_COOLDOWN_MINUTES` ≥ your cron interval so you do not double-send
 
 ### What “triggers” a real user message in production

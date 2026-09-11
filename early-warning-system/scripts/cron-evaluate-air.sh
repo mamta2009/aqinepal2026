@@ -6,9 +6,15 @@
 # - Render / cloud: set NOTIFICATION_API_KEY (and API_BASE) in the service env —
 #   same place as the web API secrets. Do not put the key in frontend/.env.local.
 #
-# Usage:
+# Usage (on the API server, with backend/.env present):
 #   ./cron-evaluate-air.sh
-#   API_BASE="https://climatecompass.intelladapt.ai" ./cron-evaluate-air.sh
+# Explicit override:
+#   API_BASE="https://ews-api.intelladapt.ai" ./cron-evaluate-air.sh
+#
+# Production layout:
+#   API      https://ews-api.intelladapt.ai
+#   Frontend https://climatecompass.intelladapt.ai
+#   PUBLIC_API_ORIGIN in backend/.env should match the API host.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
