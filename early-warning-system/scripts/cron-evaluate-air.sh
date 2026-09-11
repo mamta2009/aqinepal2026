@@ -20,11 +20,29 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="${ENV_FILE:-${SCRIPT_DIR}/../backend/.env}"
 
+# Load KEY=VALUE from .env without `source` (avoids executing comments / bare text
+# like "Warning: ..." as shell commands — common when a note lacks a leading #).
+load_dotenv() {
+  local file="$1"
+  local line key val
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    line="${line%$'\r'}"
+    [[ -z "${line}" || "${line}" =~ ^[[:space:]]*# ]] && continue
+    [[ "${line}" =~ ^[[:space:]]*export[[:space:]]+ ]] && line="${line#*export }"
+    [[ "${line}" =~ ^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]] || continue
+    key="${BASH_REMATCH[1]}"
+    val="${BASH_REMATCH[2]}"
+    if [[ "${val}" =~ ^\"(.*)\"$ ]]; then
+      val="${BASH_REMATCH[1]}"
+    elif [[ "${val}" =~ ^\'(.*)\'$ ]]; then
+      val="${BASH_REMATCH[1]}"
+    fi
+    export "${key}=${val}"
+  done < "${file}"
+}
+
 if [[ -f "${ENV_FILE}" ]]; then
-  set -a
-  # shellcheck disable=SC1090
-  source "${ENV_FILE}"
-  set +a
+  load_dotenv "${ENV_FILE}"
 fi
 
 # Prefer explicit API_BASE; else PUBLIC_API_ORIGIN from .env; else local API.
