@@ -7,6 +7,7 @@ Do **not** put partner-restricted material here — that belongs in **`docs-priv
 | Topic                                          | File                                                                     | Rendered route (when backend is running)        |
 | ---------------------------------------------- | ------------------------------------------------------------------------ | ----------------------------------------------- |
 | App overview & quick start                     | [APPLICATION_OVERVIEW.md](APPLICATION_OVERVIEW.md)                       | `/guides/md/APPLICATION_OVERVIEW.md`            |
+| How live air / heat / weather data is fetched  | [DATA_FETCHING.md](DATA_FETCHING.md)                                     | `/guides/md/DATA_FETCHING.md`                   |
 | Dashboard, registration, users & admin         | [DASHBOARD_FEATURES.md](DASHBOARD_FEATURES.md)                           | `/guides/md/DASHBOARD_FEATURES.md`              |
 | Student clean-air activity                     | [STUDENT_CLEAN_AIR_ACTIVITY.md](STUDENT_CLEAN_AIR_ACTIVITY.md)           | `/guides/md/STUDENT_CLEAN_AIR_ACTIVITY.md`      |
 | Teacher clean-air lesson                       | [TEACHER_CLEAN_AIR_LESSON.md](TEACHER_CLEAN_AIR_LESSON.md)               | `/guides/md/TEACHER_CLEAN_AIR_LESSON.md`        |

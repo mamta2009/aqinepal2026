@@ -6,14 +6,15 @@
 
 ## What’s in this tree
 
-| Path                                                                                                                         | Purpose                                                                                                                                                                |
-| ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `[early-warning-system/](early-warning-system/)`                                                                             | **Application root** — run from `early-warning-system/backend/`; `[README.md](early-warning-system/README.md)` is the product entry                                    |
-| `[early-warning-system/docs/guides/](early-warning-system/docs/guides/README.md)`                                            | **All non-private Markdown** (implementation snapshot, Cursor guide, prompts, blockchain notes, landing guide)                                                         |
-| `[early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md](early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md)` | **Canonical technical reference** (APIs, env load order, Mongo, AQ resolver, admin routes)                                                                             |
-| `[early-warning-system/frontend/](early-warning-system/frontend/)`                                                           | Next.js static UI (dashboard, landing, guides)                                                                                                                         |
-| `[early-warning-system/mobile-app/](early-warning-system/mobile-app/)`                                                       | Expo / React Native Climate Compass app                                                                                                                                |
-| `[early-warning-system/docs-private/](early-warning-system/docs-private/)`                                                   | Partner-restricted drafts — `docs-private/` **Markdown is not linked on** `/guides`; preview from **Admin → Private documentation** (requires `NOTIFICATION_API_KEY`). |
+| Path | Purpose |
+|------|---------|
+| [`early-warning-system/`](early-warning-system/) | **Application root** — run from `early-warning-system/backend/`; [`README.md`](early-warning-system/README.md) is the product entry |
+| [`early-warning-system/docs/guides/`](early-warning-system/docs/guides/README.md) | **All non-private Markdown** (data fetching, implementation snapshot, Cursor guide, prompts, blockchain notes) |
+| [`early-warning-system/docs/guides/DATA_FETCHING.md`](early-warning-system/docs/guides/DATA_FETCHING.md) | **How live air / heat / weather is fetched** and how UIs use AQI vs PM2.5 |
+| [`early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md`](early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md) | **Canonical technical reference** (APIs, env load order, Mongo, AQ resolver, admin routes) |
+| [`early-warning-system/frontend/`](early-warning-system/frontend/) | Next.js static UI (dashboard, landing, guides) |
+| [`early-warning-system/mobile-app/`](early-warning-system/mobile-app/) | Expo / React Native Climate Compass app |
+| [`early-warning-system/docs-private/`](early-warning-system/docs-private/) | Partner-restricted drafts — `docs-private/` Markdown is not linked on `/guides`; preview from **Admin → Private documentation** (requires `NOTIFICATION_API_KEY`). |
 
 ## Headline air quality (current behaviour)
 
@@ -22,7 +23,7 @@
 - Broken WAQI `/feed/` paths are skipped so clients are not delayed
 - UI charts and compare views prefer **station AQI** when PM2.5 µg/m³ is not reported; WeatherAPI remains preferred for **heat / rain**
 
-See `IMPLEMENTATION_SNAPSHOT.md` for env keys and route detail.
+See [`DATA_FETCHING.md`](early-warning-system/docs/guides/DATA_FETCHING.md) and [`IMPLEMENTATION_SNAPSHOT.md`](early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md) for env keys and route detail.
 
 ## Quick start
 

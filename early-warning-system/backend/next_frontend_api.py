@@ -20,6 +20,7 @@ EndpointFetcher = Callable[..., Awaitable[dict[str, Any]]]
 PUBLIC_GUIDE_PATHS = (
     "README.md",
     "APPLICATION_OVERVIEW.md",
+    "DATA_FETCHING.md",
     "DASHBOARD_FEATURES.md",
     "STUDENT_CLEAN_AIR_ACTIVITY.md",
     "TEACHER_CLEAN_AIR_LESSON.md",
@@ -37,6 +38,7 @@ PUBLIC_GUIDE_PATHS = (
 _AUDIENCE_BY_PATH = {
     "README.md": "Project users and contributors",
     "APPLICATION_OVERVIEW.md": "New users and implementers",
+    "DATA_FETCHING.md": "Developers and operators",
     "DASHBOARD_FEATURES.md": "Operators and implementers",
     "STUDENT_CLEAN_AIR_ACTIVITY.md": "Students ages 10 and up",
     "TEACHER_CLEAN_AIR_LESSON.md": "Teachers of grades 6–8",

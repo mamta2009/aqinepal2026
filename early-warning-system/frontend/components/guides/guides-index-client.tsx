@@ -39,12 +39,12 @@ export function GuidesIndexClient() {
             Explore climate learning with Climate Compass
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted">
-            Practical guides for using Climate Compass and understanding air,
-            heat, and outdoor conditions at school and at home.
+            Practical guides for schools and families, plus technical notes on
+            how Climate Compass fetches live air, heat, and weather data.
           </p>
         </header>
       </Reveal>
-      <section className="mt-12" aria-label="Climate Compass resources">
+      <section className="mt-4" aria-label="Climate Compass resources">
         {query.isPending ? (
           <p className="text-muted" role="status">
             Loading guides…

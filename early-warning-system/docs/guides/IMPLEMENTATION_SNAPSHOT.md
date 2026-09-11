@@ -43,6 +43,8 @@ Concise technical truth for **Climate Compass** (`early-warning-system/`) backen
 
 ## Air quality resolver (`GET /api/air-quality/current`)
 
+**Narrative walkthrough (providers, normalization, UI seeding, curls):** see **[`DATA_FETCHING.md`](DATA_FETCHING.md)**.
+
 Order (see **`air_quality_current_waqi_then_rapid`** in `external_integrations.py`):
 
 1. **WAQI local stations** when **`WAQI_TOKEN`** / **`WAQI_API_TOKEN`** etc. are set — **map/bounds** median AQI of nearby live stations (default ~30 km), then **city search** if needed. Broken **`/feed/`** paths are skipped so clients are not delayed by `can not connect`.

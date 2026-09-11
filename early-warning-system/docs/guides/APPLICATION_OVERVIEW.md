@@ -2,7 +2,7 @@
 
 **Climate Compass** is Nepal’s air quality and respiratory readiness platform: FastAPI backend, Next.js **landing** and dashboard, Expo **mobile app**, **guides hub** (`/guides`), **registration** for alerts, facility tools, and an **operator admin console**.
 
-Headline air uses **WAQI local stations first** (median nearby AQI), with WeatherAPI / RapidAPI as air fallback; WeatherAPI remains preferred for heat and rain. Technical behaviour (env keys, AQ resolver order, MongoDB, notifications, provenance JSON) is maintained in **`docs/guides/IMPLEMENTATION_SNAPSHOT.md`** — prefer that file over older marketing summaries when describing what the deployment actually does.
+Headline air uses **WAQI local stations first** (median nearby AQI), with WeatherAPI / RapidAPI as air fallback; WeatherAPI remains preferred for heat and rain. **How live data is fetched end-to-end:** **[`DATA_FETCHING.md`](DATA_FETCHING.md)**. Compact API/env truth: **[`IMPLEMENTATION_SNAPSHOT.md`](IMPLEMENTATION_SNAPSHOT.md)**.
 
 **Repository:** [github.com/mamta2009/aqinepal2026](https://github.com/mamta2009/aqinepal2026)
 
@@ -82,4 +82,4 @@ Public markdown is under **`early-warning-system/docs/guides/`**. Private partne
 
 Diagrams (**SVG**) live in **`early-warning-system/docs/tech/`** (`/guides/media/tech/` on the wire).
 
-See **[README.md](./README.md)** in this folder for a full guides index table.
+See **[README.md](./README.md)** in this folder for a full guides index table. For live provider order and UI seeding, read **[DATA_FETCHING.md](./DATA_FETCHING.md)**.

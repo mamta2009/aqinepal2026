@@ -3,7 +3,7 @@
 You can work from a **git clone** (recommended) or from an **`early-warning-system.zip`** extract. Both contain the same **Climate Compass** application tree under **`early-warning-system/`**.
 
 **Public repository:** [https://github.com/mamta2009/aqinepal2026](https://github.com/mamta2009/aqinepal2026)  
-**Technical truth (API resolver, env vars, provenance/A2A, notifications, admin APIs):** [`early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md`](IMPLEMENTATION_SNAPSHOT.md) — update it when wiring integrations. Headline air is **WAQI-station-first** (WeatherAPI for heat/rain and air fallback).
+**Technical truth:** [`IMPLEMENTATION_SNAPSHOT.md`](IMPLEMENTATION_SNAPSHOT.md) (APIs/env) and [`DATA_FETCHING.md`](DATA_FETCHING.md) (live air/heat/weather flow). Headline air is **WAQI-station-first** (WeatherAPI for heat/rain and air fallback).
 
 ---
 
@@ -33,6 +33,7 @@ early-warning-system/
 │   └── .env.example            ← Optional second file; fills only unset vars after backend/.env
 ├── docs/
 │   ├── guides/
+│   │   ├── DATA_FETCHING.md          ← How live air/heat/weather is fetched
 │   │   ├── IMPLEMENTATION_SNAPSHOT.md
 │   │   ├── CURSOR_SETUP_GUIDE.md …
 │   │   └── blockchain-ai/ …

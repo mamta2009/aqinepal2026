@@ -54,6 +54,7 @@ Use **`http://127.0.0.1:8000`** in the browser (avoid **`http://0.0.0.0:8000`** 
 | ---------------------------------------------------------- | --------------------------------------------------------------------------- |
 | [`README.md`](../../../README.md)                          | Repository root — points into `early-warning-system/`                       |
 | [`../../README.md`](../../README.md)                       | App **`early-warning-system/README.md`** stub (links here)                  |
+| [`DATA_FETCHING.md`](DATA_FETCHING.md)                 | How live air / heat / weather is fetched and used by the UI         |
 | [`IMPLEMENTATION_SNAPSHOT.md`](IMPLEMENTATION_SNAPSHOT.md) | Canonical APIs, env, Mongo, AQ resolver, **`/api/admin/*`**                 |
 | [`CURSOR_SETUP_GUIDE.md`](CURSOR_SETUP_GUIDE.md)           | Cursor-centric setup                                                        |
 | [`README.md`](README.md)                                   | **Guides index** — lists every **`docs/guides/*.md`** topic                 |

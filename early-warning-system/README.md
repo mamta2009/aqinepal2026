@@ -4,7 +4,7 @@
 
 **Repository:** [github.com/mamta2009/aqinepal2026](https://github.com/mamta2009/aqinepal2026)
 
-- **Guides:** [`docs/guides/`](docs/guides/) — start with [`APPLICATION_OVERVIEW.md`](docs/guides/APPLICATION_OVERVIEW.md) and [`IMPLEMENTATION_SNAPSHOT.md`](docs/guides/IMPLEMENTATION_SNAPSHOT.md)
+- **Guides:** [`docs/guides/`](docs/guides/) — start with [`APPLICATION_OVERVIEW.md`](docs/guides/APPLICATION_OVERVIEW.md), [`DATA_FETCHING.md`](docs/guides/DATA_FETCHING.md), and [`IMPLEMENTATION_SNAPSHOT.md`](docs/guides/IMPLEMENTATION_SNAPSHOT.md)
 - **API + static UI:** FastAPI in [`backend/`](backend/) — OpenAPI at `/docs`
 - **Frontend source:** Next.js static export in [`frontend/`](frontend/)
 - **Mobile:** Expo app in [`mobile-app/`](mobile-app/)

@@ -4,6 +4,7 @@ import { GuideDocumentClient } from "@/components/guides/guide-document-client";
 const PUBLIC_GUIDE_PATHS = [
   "README.md",
   "APPLICATION_OVERVIEW.md",
+  "DATA_FETCHING.md",
   "DASHBOARD_FEATURES.md",
   "STUDENT_CLEAN_AIR_ACTIVITY.md",
   "TEACHER_CLEAN_AIR_LESSON.md",
