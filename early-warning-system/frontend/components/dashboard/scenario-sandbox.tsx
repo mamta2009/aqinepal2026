@@ -20,21 +20,28 @@ function heatFactor(temperature: number) {
 export function ScenarioSandbox({
   city,
   livePm25,
+  liveAqi,
   liveHeat,
   caseDays,
 }: {
   city: string;
   livePm25?: number | null;
+  liveAqi?: number | null;
   liveHeat?: number | null;
   caseDays: number[];
 }) {
-  const liveValues = useMemo(
-    () => ({
-      pm25: clamp(Math.round(livePm25 ?? 72), 5, 320),
+  const liveValues = useMemo(() => {
+    const seed =
+      typeof livePm25 === "number" && Number.isFinite(livePm25)
+        ? livePm25
+        : typeof liveAqi === "number" && Number.isFinite(liveAqi)
+          ? liveAqi
+          : 72;
+    return {
+      pm25: clamp(Math.round(seed), 5, 320),
       heat: Math.round(clamp(liveHeat ?? 30, 22, 46) * 2) / 2,
-    }),
-    [liveHeat, livePm25],
-  );
+    };
+  }, [liveAqi, liveHeat, livePm25]);
   const [pm25Override, setPm25Override] = useState<number | null>(null);
   const [heatOverride, setHeatOverride] = useState<number | null>(null);
   const pm25 = pm25Override ?? liveValues.pm25;

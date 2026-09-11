@@ -656,7 +656,7 @@ async def weather_openweathermap_air_pollution(
 ):
     """
     **OpenWeatherMap** Air Pollution 2.5 — PM2.5 / component concentrations for **shadow / cross-check** only.
-    ``GET /api/air-quality/current`` remains WeatherAPI.com-first when ``WEATHERAPI_COM_API_KEY`` is set.
+    ``GET /api/air-quality/current`` remains WAQI-station-first (WeatherAPI is air fallback only).
 
     Requires ``OPENWEATHER_API_KEY``. Use ``city=<configured city>`` or both ``lat`` and ``lon``.
     """
@@ -717,7 +717,7 @@ async def weather_openweathermap_air_pollution(
             "openweathermap_air_pollution"
         ),
         "role": "cross_check_only",
-        "note": "Does not replace WeatherAPI.com-first resolver for headline air quality.",
+        "note": "Does not replace WAQI-station-first resolver for headline air quality.",
         "data": payload,
     }
 
@@ -731,10 +731,12 @@ async def air_quality_current(
     """
     Air quality at a configured city or arbitrary latitude/longitude.
 
-    Resolver order when ``WEATHERAPI_COM_API_KEY`` is set: **WeatherAPI.com direct** first, then **WAQI**, then **RapidAPI**.
-    Without that key: **WAQI**, then **RapidAPI**.
+    Resolver order: **WAQI local stations** (map/bounds median, then city search), then
+    **WeatherAPI.com** model estimate, then **RapidAPI**.
 
-    Response ``source`` may be ``weatherapi_com``, ``waqi``, or ``rapidapi_weather_air_quality``.
+    Broken WAQI ``/feed/`` paths are skipped so clients are not delayed by ``can not connect``.
+
+    Response ``source`` may be ``waqi``, ``weatherapi_com``, or ``rapidapi_weather_air_quality``.
 
     ``provenance`` adds human + A2A-friendly ``confidence`` tier/score, ``deployment_role``, and ``a2a`` hints (heuristic, not CIs).
     """

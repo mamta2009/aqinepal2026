@@ -50,7 +50,7 @@ export function formatCompareThreshold(
   pm25: number | null | undefined,
   thr: number,
 ): string {
-  if (typeof pm25 !== "number" || Number.isNaN(pm25)) return "No PM2.5";
+  if (typeof pm25 !== "number" || Number.isNaN(pm25)) return "—";
   if (pm25 > thr + 35) return `High (${pm25} vs ${thr})`;
   if (pm25 > thr) return `Alert (${pm25} vs ${thr})`;
   return `Below (${pm25} vs ${thr})`;
@@ -60,6 +60,55 @@ export function compareRowPm25(row: CompareCityRow): number | null {
   const pm = row.aq?.pm25_ug_m3 ?? row.aq?.pm25;
   if (typeof pm !== "number" || Number.isNaN(pm)) return null;
   return Math.round(pm);
+}
+
+/** Prefer true PM2.5 µg/m³; for WAQI station readings fall back to reported AQI for charts. */
+export function compareRowChartValue(row: CompareCityRow): {
+  value: number | null;
+  kind: "pm25" | "aqi" | "none";
+} {
+  const pm = compareRowPm25(row);
+  if (pm != null) return { value: pm, kind: "pm25" };
+  const aqi = row.aq?.aqi;
+  if (typeof aqi === "number" && Number.isFinite(aqi)) {
+    return { value: Math.round(aqi), kind: "aqi" };
+  }
+  return { value: null, kind: "none" };
+}
+
+export function formatCompareReadingCell(row: CompareCityRow): string {
+  const chart = compareRowChartValue(row);
+  if (chart.kind === "pm25" && chart.value != null) {
+    return `${chart.value} µg/m³`;
+  }
+  if (chart.kind === "aqi" && chart.value != null) {
+    return `AQI ${chart.value}`;
+  }
+  return "—";
+}
+
+export function formatCompareVsGuide(row: CompareCityRow, thr: number): string {
+  const chart = compareRowChartValue(row);
+  if (chart.kind === "pm25") return formatCompareThreshold(chart.value, thr);
+  if (chart.kind === "aqi" && chart.value != null) {
+    if (chart.value <= 50) return `Good (AQI ${chart.value})`;
+    if (chart.value <= 100) return `Moderate (AQI ${chart.value})`;
+    if (chart.value <= 150) return `Sensitive (AQI ${chart.value})`;
+    return `Unhealthy (AQI ${chart.value})`;
+  }
+  return "No air data";
+}
+
+/** Bar colors for station AQI (0–500) when PM2.5 µg/m³ is unavailable. */
+export function compareBarColorFromAqi(
+  aqi: number | null | undefined,
+  isCurrent: boolean,
+): string {
+  if (typeof aqi !== "number" || Number.isNaN(aqi)) return "#8a9199";
+  if (aqi > 150) return isCurrent ? "#ef4444" : "#c62828";
+  if (aqi > 100) return isCurrent ? "#fbbf24" : "#f57c00";
+  if (aqi > 50) return isCurrent ? "#fbbf24" : "#f57c00";
+  return isCurrent ? "#34d399" : "#2e7d32";
 }
 
 export function compareSourceLabel(row: CompareCityRow): string {

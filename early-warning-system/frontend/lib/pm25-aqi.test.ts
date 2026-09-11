@@ -38,6 +38,12 @@ describe("air measurement copy", () => {
     expect(text).toContain("Good");
   });
 
+  it("prefers reported AQI over converting PM2.5", () => {
+    expect(briefAirMeasurement({ pm25: 42.3, aqiScore: 63 })).toBe(
+      "Air score (AQI) 63",
+    );
+  });
+
   it("falls back to reported AQI when PM2.5 is missing", () => {
     expect(briefAirMeasurement({ aqiScore: 42 })).toBe("Air score (AQI) 42");
     expect(explainAirMeasurement({ aqiScore: 42 })).toContain(

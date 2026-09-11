@@ -62,6 +62,20 @@ export function clampLivePm25(pmRaw: number | null | undefined): number {
   return Math.min(320, Math.max(5, Math.round(pm)));
 }
 
+/** Prefer live PM2.5; fall back to station AQI so the sandbox starts near today's reading. */
+export function clampLiveAirSeed(input: {
+  pm25?: number | null;
+  aqi?: number | null;
+}): number {
+  if (typeof input.pm25 === "number" && !Number.isNaN(input.pm25)) {
+    return clampLivePm25(input.pm25);
+  }
+  if (typeof input.aqi === "number" && Number.isFinite(input.aqi)) {
+    return clampLivePm25(input.aqi);
+  }
+  return clampLivePm25(null);
+}
+
 export function clampLiveHeat(htRaw: number | null | undefined): number {
   const ht = typeof htRaw === "number" && !Number.isNaN(htRaw) ? htRaw : 30;
   return Math.round(clampScenario(ht, 22, 46) * 2) / 2;

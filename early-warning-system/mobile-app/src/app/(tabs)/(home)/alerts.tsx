@@ -40,16 +40,22 @@ export default function AlertsScreen() {
     runtimeConfig.data?.dashboard.pm25_alert_threshold_ugm3 ??
     DEFAULT_PM25_THRESHOLD;
   const pm25 = airQuality.data?.air_quality?.pm25_ug_m3 ?? null;
+  const aqi =
+    typeof airQuality.data?.air_quality?.aqi === "number" &&
+      Number.isFinite(airQuality.data.air_quality.aqi)
+      ? airQuality.data.air_quality.aqi
+      : null;
 
   const alerts = useMemo(
     () =>
       buildRecentAlerts({
         cityLabel: city,
         pm25,
+        aqi,
         thresholdUgM3: threshold,
         latestAlert: latestAlert.data,
       }),
-    [city, pm25, threshold, latestAlert.data],
+    [city, pm25, aqi, threshold, latestAlert.data],
   );
 
   const onSelectCity = useCallback(

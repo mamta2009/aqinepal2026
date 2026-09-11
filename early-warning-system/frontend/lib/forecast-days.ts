@@ -9,17 +9,20 @@ export type WeekForecastTrend = {
 
 export type ForecastDay = {
   day: number;
-  pm25: number;
+  value: number;
   cases: number;
 };
 
+export type ForecastMetric = "pm25" | "aqi";
+
 /**
- * Expands a week-trend next-day estimate (+ optional live PM2.5 baseline)
+ * Expands a week-trend next-day estimate (+ optional live air baseline)
  * into five day cells — same approach as the legacy dashboard strip.
+ * Prefer PM2.5 µg/m³; fall back to station AQI so cards still populate.
  */
 export function buildFiveDayForecast(
   forecast: WeekForecastTrend | undefined,
-  pm25Baseline: number | null | undefined,
+  baseline: number | null | undefined,
 ): ForecastDay[] {
   const nextRaw = forecast?.next_day_estimate ?? forecast?.predicted_next_day;
   const next = typeof nextRaw === "number" ? nextRaw : 12;
@@ -27,16 +30,36 @@ export function buildFiveDayForecast(
   const days: ForecastDay[] = [];
   for (let day = 1; day <= 5; day++) {
     const cases = Math.max(0, Math.round(next * (1 + (day - 1) * 0.04)));
-    let pm25Day: number;
-    if (typeof pm25Baseline === "number" && !Number.isNaN(pm25Baseline)) {
-      pm25Day = Math.min(
+    let valueDay: number;
+    if (typeof baseline === "number" && !Number.isNaN(baseline)) {
+      valueDay = Math.min(
         280,
-        Math.round(pm25Baseline * (1 + (day - 1) * 0.035) + (day - 1) * 2),
+        Math.round(baseline * (1 + (day - 1) * 0.035) + (day - 1) * 2),
       );
     } else {
-      pm25Day = Math.min(280, Math.round(cases * 12 + day * 3));
+      valueDay = Math.min(280, Math.round(cases * 12 + day * 3));
     }
-    days.push({ day, pm25: pm25Day, cases });
+    days.push({ day, value: valueDay, cases });
   }
   return days;
+}
+
+/** @deprecated Use `day.value` — kept for callers that still read `pm25`. */
+export function withLegacyPm25Field(
+  days: ForecastDay[],
+): Array<ForecastDay & { pm25: number }> {
+  return days.map((day) => ({ ...day, pm25: day.value }));
+}
+
+export function resolveForecastBaseline(input: {
+  pm25?: number | null;
+  aqi?: number | null;
+}): { value: number; metric: ForecastMetric } | null {
+  if (typeof input.pm25 === "number" && Number.isFinite(input.pm25)) {
+    return { value: input.pm25, metric: "pm25" };
+  }
+  if (typeof input.aqi === "number" && Number.isFinite(input.aqi)) {
+    return { value: input.aqi, metric: "aqi" };
+  }
+  return null;
 }

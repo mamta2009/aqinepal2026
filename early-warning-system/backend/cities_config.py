@@ -1,7 +1,8 @@
 """Configured municipalities for demos and air-quality resolution (single source of truth).
 
-Optional per-city ``aqicn_station_uid`` (WAQI / AQICN station id) improves persisted snapshot sync
-when ``AQ_SNAPSHOT_SYNC_ENABLED`` is true; live ``GET /api/air-quality/current`` is unchanged.
+Optional per-city ``aqicn_station_uid`` (WAQI / AQICN numeric station id, e.g. ``14868``)
+is retained for reference/docs. Live ``GET /api/air-quality/current`` uses WAQI map/bounds
+median of nearby stations (skips broken ``/feed/`` paths that only delay responses).
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ CITIES_CONFIG: dict[str, dict[str, Any]] = {
         "population": 1500000,
         "hospitals": 15,
         "province": "Bagmati",
-        "aqicn_station_uid": "H14868",
+        "aqicn_station_uid": "14868",
     },
     "Pokhara": {
         "lat": 28.2096,

@@ -5,18 +5,25 @@ import { Card, CardKicker } from "@/components/ui/card";
 import { DefinitionHelp } from "@/components/ui/definition-help";
 import {
   buildFiveDayForecast,
+  resolveForecastBaseline,
   type WeekForecastTrend,
 } from "@/lib/forecast-days";
 
 export function FiveDayForecast({
   city,
   pm25,
+  aqi,
   weekTrend,
 }: {
   city: string;
   pm25?: number | null;
+  aqi?: number | null;
   weekTrend?: WeekForecastTrend | null;
 }) {
+  const baseline = useMemo(
+    () => resolveForecastBaseline({ pm25, aqi }),
+    [aqi, pm25],
+  );
   const days = useMemo(() => {
     const trend = weekTrend
       ? {
@@ -25,9 +32,12 @@ export function FiveDayForecast({
           weekTrend.next_day_estimate ?? weekTrend.predicted_next_day,
       }
       : undefined;
-    return buildFiveDayForecast(trend, pm25);
-  }, [pm25, weekTrend]);
+    return buildFiveDayForecast(trend, baseline?.value);
+  }, [baseline?.value, weekTrend]);
   const modelLabel = weekTrend?.model ? ` · ${weekTrend.model}` : "";
+  const unitLabel = baseline?.metric === "aqi" ? "AQI" : "µg/m³ PM2.5";
+  const readingWord =
+    baseline?.metric === "aqi" ? "station air score" : "air quality";
 
   return (
     <Card className="h-full">
@@ -37,17 +47,17 @@ export function FiveDayForecast({
           <h2 className="flex flex-wrap items-center gap-2 text-2xl font-bold">
             5-day forecast
             <DefinitionHelp label="5-day forecast">
-              Cards for the next five days with example PM2.5 and breathing-related
-              case guesses for {city}, starting from today&apos;s reading when we
-              have one.
+              Cards for the next five days with example {unitLabel} and
+              breathing-related case guesses for {city}, starting from
+              today&apos;s reading when we have one.
               <span className="mt-2 block text-xs">
                 Demo / discussion only — not an official forecast.
               </span>
             </DefinitionHelp>
           </h2>
           <p className="mt-1 max-w-3xl text-sm text-muted">
-            Predicted respiratory cases based on air quality and the weekly case
-            trend for {city}.
+            Predicted respiratory cases based on {readingWord} and the weekly
+            case trend for {city}.
           </p>
         </div>
       </div>
@@ -70,9 +80,9 @@ export function FiveDayForecast({
               Day {day.day}
             </p>
             <p className="mt-2 font-heading text-2xl font-extrabold text-ink sm:text-3xl">
-              {day.pm25}
+              {day.value}
             </p>
-            <p className="text-xs text-muted">µg/m³ PM2.5</p>
+            <p className="text-xs text-muted">{unitLabel}</p>
             <p className="mt-2 text-sm font-extrabold text-forest">
               {day.cases} cases
             </p>

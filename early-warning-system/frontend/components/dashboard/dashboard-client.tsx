@@ -471,6 +471,7 @@ export function DashboardClient() {
                 <AirQuality24h
                   city={city}
                   pm25={pm25}
+                  aqi={aqiScore}
                   source={data.air?.source}
                 />
               </Reveal>
@@ -597,12 +598,20 @@ export function DashboardClient() {
                 <FiveDayForecast
                   city={city}
                   pm25={pm25}
+                  aqi={aqiScore}
                   weekTrend={data.forecast?.legacy_week_trend}
                 />
               </Reveal>
 
               <Reveal delay={0.1} className="h-full">
-                <ScenarioSandbox key={city} city={city} livePm25={pm25} liveHeat={effectiveHeat} caseDays={caseDays} />
+                <ScenarioSandbox
+                  key={city}
+                  city={city}
+                  livePm25={pm25}
+                  liveAqi={aqiScore}
+                  liveHeat={effectiveHeat}
+                  caseDays={caseDays}
+                />
               </Reveal>
 
               <Reveal delay={0.12} className="lg:col-span-2">

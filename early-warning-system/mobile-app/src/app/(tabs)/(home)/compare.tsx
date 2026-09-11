@@ -18,11 +18,13 @@ import { InfoSheet, InfoSheetParagraph } from '@/components/ui';
 import { useRuntimeConfig } from '@/hooks/useRuntimeConfig';
 import {
   compareBarColor,
-  compareRowPm25,
+  compareBarColorFromAqi,
+  compareRowChartValue,
   compareSourceLabel,
   fetchAirCompareSequential,
   formatCompareAirIndexCell,
-  formatCompareThreshold,
+  formatCompareReadingCell,
+  formatCompareVsGuide,
   type CompareCityRow,
 } from '@/utils/compareCities';
 
@@ -68,8 +70,11 @@ function CompareResultCard({
   row: CompareCityRow;
   threshold: number;
 }) {
-  const pm25 = compareRowPm25(row);
-  const accent = compareBarColor(pm25, threshold, false);
+  const chart = compareRowChartValue(row);
+  const accent =
+    chart.kind === 'aqi'
+      ? compareBarColorFromAqi(chart.value, false)
+      : compareBarColor(chart.value, threshold, false);
 
   if (!row.ok) {
     return (
@@ -91,9 +96,9 @@ function CompareResultCard({
       </Text>
       <View className="mt-2 gap-1">
         <Text className="text-sm text-neutral-600">
-          PM2.5:{' '}
+          Reading:{' '}
           <Text className="font-mono font-bold text-neutral-900">
-            {pm25 != null ? `${pm25} µg/m³` : '—'}
+            {formatCompareReadingCell(row)}
           </Text>
         </Text>
         <Text className="text-sm text-neutral-600">
@@ -106,7 +111,7 @@ function CompareResultCard({
           Source: {compareSourceLabel(row)}
         </Text>
         <Text className="text-sm text-neutral-600">
-          vs threshold: {formatCompareThreshold(pm25, threshold)}
+          Guide: {formatCompareVsGuide(row, threshold)}
         </Text>
         {row.aq?.station_name ? (
           <Text className="text-xs text-neutral-400">
@@ -152,15 +157,13 @@ export default function CompareCitiesScreen() {
     setProgress({ done: 0, total: selected.length });
     setStatus(`Fetching ${selected.length} city snapshot sequentially…`);
     try {
-      const refreshed = await runtimeConfig.refetch();
-      const thr =
-        refreshed.data?.dashboard.pm25_alert_threshold_ugm3 ?? threshold;
+      await runtimeConfig.refetch();
       const settled = await fetchAirCompareSequential(selected, {
         onProgress: (done, total) => setProgress({ done, total }),
       });
       setRows(settled);
       setStatus(
-        `Compared ${settled.length} cit${settled.length === 1 ? 'y' : 'ies'} · threshold ${thr} µg/m³`,
+        `Updated ${settled.length} city snapshot${settled.length === 1 ? '' : 's'}.`,
       );
       setHasFetched(true);
     } catch (err) {
@@ -169,27 +172,51 @@ export default function CompareCitiesScreen() {
       setLoading(false);
       setProgress(null);
     }
-  }, [selected, runtimeConfig, threshold]);
+  }, [selected, runtimeConfig]);
+
+  const chartRows = useMemo(
+    () =>
+      rows.filter((row) => {
+        if (!row.ok) return false;
+        return compareRowChartValue(row).value != null;
+      }),
+    [rows],
+  );
+
+  const chartKinds = useMemo(
+    () => chartRows.map((row) => compareRowChartValue(row).kind),
+    [chartRows],
+  );
+  const aqiOnly =
+    chartKinds.length > 0 &&
+    chartKinds.every((kind) => kind === 'aqi' || kind === 'none');
+  const showPm25Threshold = chartKinds.some((kind) => kind === 'pm25');
 
   const chartBars = useMemo(() => {
-    return rows
-      .filter((r) => r.ok)
-      .map((row) => {
-        const pm = compareRowPm25(row);
-        const short =
-          row.city.length > 6 ? `${row.city.slice(0, 5)}…` : row.city;
-        return {
-          value: pm ?? 0,
-          label: short,
-          frontColor: compareBarColor(pm, threshold, false),
-          topLabelComponent: () => (
-            <Text className="mb-0.5 text-[10px] font-mono text-neutral-500">
-              {pm != null ? String(pm) : '—'}
-            </Text>
-          ),
-        };
-      });
-  }, [rows, threshold]);
+    return chartRows.map((row) => {
+      const chart = compareRowChartValue(row);
+      const short =
+        row.city.length > 6 ? `${row.city.slice(0, 5)}…` : row.city;
+      const color =
+        chart.kind === 'aqi'
+          ? compareBarColorFromAqi(chart.value, false)
+          : compareBarColor(chart.value, threshold, false);
+      return {
+        value: chart.value ?? 0,
+        label: short,
+        frontColor: color,
+        topLabelComponent: () => (
+          <Text className="mb-0.5 text-[10px] font-mono text-neutral-500">
+            {chart.value != null
+              ? chart.kind === 'aqi'
+                ? `A${chart.value}`
+                : String(chart.value)
+              : '—'}
+          </Text>
+        ),
+      };
+    });
+  }, [chartRows, threshold]);
 
   const chartWidth = Math.max(windowWidth - 48, chartBars.length * 56);
 
@@ -202,24 +229,25 @@ export default function CompareCitiesScreen() {
       <View>
         <View className="mb-2 flex-row flex-wrap items-center gap-2">
           <Text className="text-lg font-extrabold text-ink">
-            Compare cities · live PM2.5
+            Compare cities · live air
           </Text>
           <InfoSheet label="City air comparison chart">
             <InfoSheetParagraph>
-              Pick cities to compare their live PM2.5 (tiny pollution particles)
-              side by side. The dashed line is an alert guide line at about{' '}
-              {threshold} µg/m³.
+              Pick cities to compare live air side by side. Local station
+              readings show as WAQI AQI. Model sources may show PM2.5 (µg/m³)
+              instead.
             </InfoSheetParagraph>
             <InfoSheetParagraph>
-              Read the numbers in the table too — do not rely on colour alone.
+              Read the numbers in the results too — do not rely on colour alone.
             </InfoSheetParagraph>
           </InfoSheet>
         </View>
         <Text className="text-sm leading-5 text-muted">
-          Select cities to fetch live PM2.5 side by side. Requests run one at a
-          time to limit upstream rate pressure. Threshold band uses {threshold}{' '}
-          µg/m³ (operator runtime setting when available). Keep selections small
-          (about {MAX_RECOMMENDED} or fewer).
+          Select cities to fetch live air side by side. Requests run one at a
+          time to limit upstream rate pressure. Prefer station AQI when
+          available; PM2.5 threshold ({threshold} µg/m³) applies only when a
+          source provides concentrations. Keep selections small (about{' '}
+          {MAX_RECOMMENDED} or fewer).
         </Text>
 
         <Text className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-muted">
@@ -287,8 +315,11 @@ export default function CompareCitiesScreen() {
           Snapshot chart
         </Text>
         <Text className="mb-3 text-xs text-muted">
-          PM2.5 (µg/m³) by city. Bar color follows alert tiers. Dashed line is the stored
-          threshold ({threshold} µg/m³).
+          {aqiOnly
+            ? 'Station AQI bars by city. Bar color follows AQI bands.'
+            : showPm25Threshold
+              ? `Live air bars. Dashed line is the PM2.5 threshold (${threshold} µg/m³) when concentrations are available.`
+              : 'Live air bars by city.'}
         </Text>
 
         {loading && chartBars.length === 0 ? (
@@ -297,7 +328,7 @@ export default function CompareCitiesScreen() {
           <View className="min-h-[140px] items-center justify-center py-8">
             <Text className="text-center text-sm text-muted">
               {hasFetched
-                ? 'No successful PM2.5 readings to chart.'
+                ? 'No successful air readings to chart.'
                 : 'Tap Compare after selecting cities — the chart loads with the results.'}
             </Text>
           </View>
@@ -318,20 +349,24 @@ export default function CompareCitiesScreen() {
               xAxisLabelTextStyle={{ color: isDark ? '#a3a3a3' : '#737373', fontSize: 10 }}
               noOfSections={4}
               maxValue={Math.max(
-                threshold * 1.15,
+                showPm25Threshold ? threshold * 1.15 : 0,
                 ...chartBars.map((b) => b.value),
-                80,
+                aqiOnly ? 100 : 80,
               )}
-              showReferenceLine1
-              referenceLine1Position={threshold}
-              referenceLine1Config={{
-                color: BrandColors.accent,
-                dashWidth: 4,
-                dashGap: 4,
-                thickness: 2,
-                labelText: `Thr ${threshold}`,
-                labelTextStyle: { color: BrandColors.accent, fontSize: 10 },
-              }}
+              {...(showPm25Threshold
+                ? {
+                  showReferenceLine1: true,
+                  referenceLine1Position: threshold,
+                  referenceLine1Config: {
+                    color: BrandColors.accent,
+                    dashWidth: 4,
+                    dashGap: 4,
+                    thickness: 2,
+                    labelText: `Thr ${threshold}`,
+                    labelTextStyle: { color: BrandColors.accent, fontSize: 10 },
+                  },
+                }
+                : { showReferenceLine1: false })}
             />
           </ScrollView>
         )}

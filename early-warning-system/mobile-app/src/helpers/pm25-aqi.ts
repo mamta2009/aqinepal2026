@@ -56,20 +56,20 @@ export function formatPm25UgM3(pm25: number): string {
 
 /**
  * Short line for the dashboard air chip.
- * Prefer PM2.5 plus approximate EPA AQI; else reported continuous AQI.
+ * Prefer a reported continuous AQI (local stations) over converting model PM2.5.
  */
 export function briefAirMeasurement(input: {
   pm25?: number | null;
   aqiScore?: number | null;
 }): string | null {
+  if (finite(input.aqiScore)) {
+    return `Air score (AQI) ${Math.round(input.aqiScore)}`;
+  }
   if (finite(input.pm25)) {
     const amount = formatPm25UgM3(input.pm25);
     const estimate = pm25ToUsAqi(input.pm25);
     if (!estimate) return `PM2.5 ${amount} µg/m³`;
     return `PM2.5 ${amount} µg/m³ · ~AQI ${estimate.aqi}`;
-  }
-  if (finite(input.aqiScore)) {
-    return `Air score (AQI) ${Math.round(input.aqiScore)}`;
   }
   return null;
 }
@@ -81,15 +81,15 @@ export function explainAirMeasurement(input: {
   pm25?: number | null;
   aqiScore?: number | null;
 }): string | null {
+  if (finite(input.aqiScore)) {
+    return `The air score shown is ${Math.round(input.aqiScore)}. On the usual 0 to 500 scale, lower numbers mean cleaner air. This value comes from the live reading used for this place.`;
+  }
   if (finite(input.pm25)) {
     const amount = formatPm25UgM3(input.pm25);
     const estimate = pm25ToUsAqi(input.pm25);
     const base = `Right now PM2.5 is ${amount} µg/m³. That means each cubic meter of air holds about ${amount} micrograms of tiny dust-like particles.`;
     if (!estimate) return base;
     return `${base} On a common U.S. air score (about 0 to 500), that is roughly AQI ${estimate.aqi} (${estimate.category}).`;
-  }
-  if (finite(input.aqiScore)) {
-    return `The air score shown is ${Math.round(input.aqiScore)}. On the usual 0 to 500 scale, lower numbers mean cleaner air.`;
   }
   return null;
 }

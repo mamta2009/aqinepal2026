@@ -12,6 +12,7 @@ import {
   Tooltip,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
+import type { AirReadingMetric } from "@/lib/chart-series";
 
 ChartJS.register(
   LineController,
@@ -27,10 +28,15 @@ ChartJS.register(
 export default function AirQuality24hChart({
   labels,
   values,
+  metric = "pm25",
 }: {
   labels: string[];
   values: number[];
+  metric?: AirReadingMetric;
 }) {
+  const datasetLabel = metric === "aqi" ? "Air score (AQI)" : "PM2.5 (µg/m³)";
+  const yTitle = metric === "aqi" ? "AQI" : "µg/m³";
+
   return (
     <div className="relative h-72 w-full" aria-label="Air quality 24 hour chart">
       <Line
@@ -38,7 +44,7 @@ export default function AirQuality24hChart({
           labels,
           datasets: [
             {
-              label: "PM2.5 (µg/m³)",
+              label: datasetLabel,
               data: values,
               borderColor: "#1f794b",
               backgroundColor: "rgba(84,178,96,.18)",
@@ -57,7 +63,7 @@ export default function AirQuality24hChart({
           scales: {
             y: {
               beginAtZero: true,
-              title: { display: true, text: "µg/m³" },
+              title: { display: true, text: yTitle },
             },
             x: {
               ticks: {

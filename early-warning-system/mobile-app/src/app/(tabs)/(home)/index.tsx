@@ -265,12 +265,18 @@ export default function HomeScreen() {
                   the air is: Good, Moderate, Use extra care, or Unhealthy.
                 </InfoSheetParagraph>
                 <InfoSheetParagraph>
-                  The small line may show PM2.5 (tiny pollution particles in
-                  the air) and ~AQI (a common air score from about 0 to 500).
-                  Higher PM2.5 or AQI usually means dirtier air.
+                  The small line prefers the live station air score (AQI, about
+                  0 to 500) when available. If only PM2.5 is available from a
+                  model source, we show that concentration and an approximate
+                  AQI. Higher AQI usually means dirtier air.
                 </InfoSheetParagraph>
                 {airHelp ? (
                   <InfoSheetParagraph>{airHelp}</InfoSheetParagraph>
+                ) : null}
+                {aqPayload?.station_name ? (
+                  <InfoSheetParagraph>
+                    Station: {aqPayload.station_name}
+                  </InfoSheetParagraph>
                 ) : null}
                 <InfoSheetParagraph>
                   {provenanceHelpLine(
@@ -426,6 +432,7 @@ export default function HomeScreen() {
         <View className="mt-1 gap-4 px-4">
           <AirQualityChart
             pm25={pm25}
+            aqi={continuousAqi}
             cityLabel={selectedCity}
             sourceLabel={airQuality.data?.source ?? "API"}
           />
@@ -458,6 +465,7 @@ export default function HomeScreen() {
           <FiveDayForecastCard
             cityLabel={selectedCity}
             pm25={pm25}
+            aqi={continuousAqi}
             data={weekForecast.data}
             isLoading={weekForecast.isLoading}
             isError={weekForecast.isError}
@@ -466,6 +474,7 @@ export default function HomeScreen() {
           <StressSandboxCard
             cityLabel={selectedCity}
             livePm25={pm25}
+            liveAqi={continuousAqi}
             liveHeatC={heat.data?.heat_temperature_display}
             casesWeek={casesWeek.data}
           />

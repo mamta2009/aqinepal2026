@@ -13,7 +13,10 @@ import {
   Tooltip,
 } from "chart.js";
 import { Chart } from "react-chartjs-2";
-import { compareBarColor } from "@/lib/compare-cities";
+import {
+  compareBarColor,
+  compareBarColorFromAqi,
+} from "@/lib/compare-cities";
 
 // Chart.js tree-shaking requires controllers as well as elements.
 ChartJS.register(
@@ -28,9 +31,12 @@ ChartJS.register(
   Legend,
 );
 
+export type CompareChartKind = "pm25" | "aqi" | "mixed";
+
 export type ComparePm25ChartProps = {
   labels: string[];
   values: Array<number | null>;
+  kinds: Array<"pm25" | "aqi" | "none">;
   threshold: number;
   currentCity?: string;
 };
@@ -38,17 +44,29 @@ export type ComparePm25ChartProps = {
 export default function ComparePm25Chart({
   labels,
   values,
+  kinds,
   threshold,
   currentCity,
 }: ComparePm25ChartProps) {
-  const colors = labels.map((label, index) =>
-    compareBarColor(values[index], threshold, label === currentCity),
-  );
+  const aqiOnly =
+    kinds.length > 0 && kinds.every((kind) => kind === "aqi" || kind === "none");
+  const colors = labels.map((label, index) => {
+    const kind = kinds[index];
+    const value = values[index];
+    if (kind === "aqi") {
+      return compareBarColorFromAqi(value, label === currentCity);
+    }
+    return compareBarColor(value, threshold, label === currentCity);
+  });
+
+  const yTitle = aqiOnly ? "Air score (AQI)" : "PM2.5 µg/m³ or AQI";
+  const barLabel = aqiOnly ? "Station AQI" : "Live air reading";
+  const showPm25Threshold = kinds.some((kind) => kind === "pm25");
 
   return (
     <div
       className="relative h-64 w-full"
-      aria-label="PM2.5 comparison across selected cities"
+      aria-label="Air quality comparison across selected cities"
     >
       <Chart
         type="bar"
@@ -57,22 +75,26 @@ export default function ComparePm25Chart({
           datasets: [
             {
               type: "bar",
-              label: "PM2.5 (µg/m³)",
+              label: barLabel,
               data: values.map((value) => value ?? 0),
               backgroundColor: colors,
               borderRadius: 8,
               maxBarThickness: 48,
             },
-            {
-              type: "line",
-              label: `Threshold (${threshold})`,
-              data: labels.map(() => threshold),
-              borderColor: "#176b8c",
-              borderDash: [6, 5],
-              borderWidth: 2,
-              pointRadius: 0,
-              tension: 0,
-            },
+            ...(showPm25Threshold
+              ? [
+                {
+                  type: "line" as const,
+                  label: `PM2.5 threshold (${threshold})`,
+                  data: labels.map(() => threshold),
+                  borderColor: "#176b8c",
+                  borderDash: [6, 5],
+                  borderWidth: 2,
+                  pointRadius: 0,
+                  tension: 0,
+                },
+              ]
+              : []),
           ],
         }}
         options={{
@@ -81,7 +103,7 @@ export default function ComparePm25Chart({
           scales: {
             y: {
               beginAtZero: true,
-              title: { display: true, text: "PM2.5 µg/m³" },
+              title: { display: true, text: yTitle },
             },
           },
           plugins: {
@@ -90,10 +112,13 @@ export default function ComparePm25Chart({
               callbacks: {
                 label(context) {
                   if (context.dataset.type === "line") {
-                    return `Threshold ${threshold} µg/m³`;
+                    return `PM2.5 threshold ${threshold} µg/m³`;
                   }
                   const raw = values[context.dataIndex];
-                  return raw == null ? "No PM2.5" : `PM2.5 ${raw} µg/m³`;
+                  const kind = kinds[context.dataIndex];
+                  if (raw == null || kind === "none") return "No reading";
+                  if (kind === "aqi") return `AQI ${raw}`;
+                  return `PM2.5 ${raw} µg/m³`;
                 },
               },
             },

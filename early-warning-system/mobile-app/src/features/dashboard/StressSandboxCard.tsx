@@ -8,8 +8,8 @@ import {
   DashboardSectionAccent,
 } from '@/features/dashboard/DashboardSection';
 import {
+  clampLiveAirSeed,
   clampLiveHeat,
-  clampLivePm25,
   computeScenarioSandbox,
   syncScenarioBaselineFromCases,
 } from '@/utils/scenarioSandbox';
@@ -18,6 +18,7 @@ import type { CasesWeekResponse } from '@/types/cases';
 interface StressSandboxCardProps {
   cityLabel: string;
   livePm25: number | null | undefined;
+  liveAqi?: number | null | undefined;
   liveHeatC: number | null | undefined;
   casesWeek: CasesWeekResponse | undefined;
 }
@@ -53,13 +54,19 @@ function OutcomeCard({
 export function StressSandboxCard({
   cityLabel,
   livePm25,
+  liveAqi,
   liveHeatC,
   casesWeek,
 }: StressSandboxCardProps) {
   const scheme = useColorScheme();
   const isDark = scheme === 'dark';
 
-  const [pm25, setPm25] = useState(() => clampLivePm25(livePm25));
+  const liveSeed = useMemo(
+    () => clampLiveAirSeed({ pm25: livePm25, aqi: liveAqi }),
+    [liveAqi, livePm25],
+  );
+
+  const [pm25, setPm25] = useState(() => liveSeed);
   const [heatC, setHeatC] = useState(() => clampLiveHeat(liveHeatC));
   const [userTouched, setUserTouched] = useState(false);
 
@@ -76,9 +83,9 @@ export function StressSandboxCard({
 
   useEffect(() => {
     if (userTouched) return;
-    setPm25(clampLivePm25(livePm25));
+    setPm25(liveSeed);
     setHeatC(clampLiveHeat(liveHeatC));
-  }, [livePm25, liveHeatC, userTouched, cityLabel]);
+  }, [liveSeed, liveHeatC, userTouched, cityLabel]);
   const result = useMemo(
     () => computeScenarioSandbox({ pm25, heatC, baseline }),
     [pm25, heatC, baseline],
@@ -86,7 +93,7 @@ export function StressSandboxCard({
 
   const useLiveReadings = () => {
     setUserTouched(false);
-    setPm25(clampLivePm25(livePm25));
+    setPm25(liveSeed);
     setHeatC(clampLiveHeat(liveHeatC));
   };
 

@@ -18,8 +18,11 @@ import httpx
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 WAQI_FEED_BASE = "https://api.waqi.info/feed"
+WAQI_API_BASE = "https://api.waqi.info"
 WEATHERAPI_COM_V1 = "https://api.weatherapi.com/v1"
 OPENWEATHERMAP_DATA25_DEFAULT = "https://api.openweathermap.org/data/2.5"
+# Local-station search radius for city headline AQI (map/bounds + search).
+WAQI_STATION_RADIUS_KM = 30.0
 
 logger = logging.getLogger(__name__)
 
@@ -140,7 +143,32 @@ async def waqi_feed_station(
         return r.json()
 
 
+def _parse_waqi_aqi(raw: Any) -> int | None:
+    if raw in (None, "-", ""):
+        return None
+    try:
+        return int(float(raw))
+    except (TypeError, ValueError):
+        return None
+
+
+def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    from math import asin, cos, radians, sin, sqrt
+
+    r = 6371.0
+    p1, p2 = radians(lat1), radians(lat2)
+    dphi = radians(lat2 - lat1)
+    dl = radians(lon2 - lon1)
+    a = sin(dphi / 2) ** 2 + cos(p1) * cos(p2) * sin(dl / 2) ** 2
+    return 2 * r * asin(sqrt(a))
+
+
 def _normalize_waqi_payload(body: Any) -> dict[str, Any] | None:
+    """Normalize a WAQI ``/feed/`` body.
+
+    AQICN ``iaqi.pm25.v`` is a pollutant **sub-index on the AQI scale**, not µg/m³.
+    Do not put it in ``pm25_ug_m3`` (that caused the UI to double-convert into ~AQI 118).
+    """
     if not isinstance(body, dict):
         return None
     if (body.get("status") or "").lower() != "ok":
@@ -149,26 +177,8 @@ def _normalize_waqi_payload(body: Any) -> dict[str, Any] | None:
     if not isinstance(data, dict):
         return None
 
-    pm25: float | None = None
-    iaqi = data.get("iaqi")
-    if isinstance(iaqi, dict):
-        pm25_block = iaqi.get("pm25")
-        if isinstance(pm25_block, dict) and "v" in pm25_block:
-            try:
-                pm25 = float(pm25_block["v"])
-            except (TypeError, ValueError):
-                pm25 = None
-
-    raw_aqi = data.get("aqi")
-    aqi_val: int | None = None
-    if raw_aqi not in (None, "-", ""):
-        try:
-            aqi_val = int(float(raw_aqi))
-        except (TypeError, ValueError):
-            aqi_val = None
-
-    # Use PM2.5-only payloads when aqicn omits composite AQI (-) but still publishes iaqi.
-    if aqi_val is None and pm25 is None:
+    aqi_val = _parse_waqi_aqi(data.get("aqi"))
+    if aqi_val is None:
         return None
 
     dominant = data.get("dominentpol")
@@ -195,8 +205,9 @@ def _normalize_waqi_payload(body: Any) -> dict[str, Any] | None:
 
     return {
         "aqi": aqi_val,
-        "aqi_scale": "waqi" if aqi_val is not None else None,
-        "pm25_ug_m3": pm25,
+        "aqi_scale": "waqi",
+        # Station feeds rarely expose true µg/m³; leave null so the UI uses reported AQI.
+        "pm25_ug_m3": None,
         "dominant_pollutant": dominant,
         "station_name": station_name,
         "observed_at": observed,
@@ -206,6 +217,168 @@ def _normalize_waqi_payload(body: Any) -> dict[str, Any] | None:
 def waqi_feed_json_to_air_quality(body: Any) -> dict[str, Any] | None:
     """Normalize a raw WAQI ``/feed/`` JSON body to the same shape as other AQ payloads."""
     return _normalize_waqi_payload(body)
+
+
+def _station_rows_from_waqi_map(body: Any) -> list[dict[str, Any]]:
+    if not isinstance(body, dict) or (body.get("status") or "").lower() != "ok":
+        return []
+    rows = body.get("data")
+    if not isinstance(rows, list):
+        return []
+    out: list[dict[str, Any]] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        aqi_val = _parse_waqi_aqi(row.get("aqi"))
+        if aqi_val is None:
+            continue
+        try:
+            lat = float(row["lat"])
+            lon = float(row["lon"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        station = row.get("station") if isinstance(row.get("station"), dict) else {}
+        name = station.get("name") if isinstance(station, dict) else None
+        observed = None
+        if isinstance(station, dict):
+            t = station.get("time")
+            if isinstance(t, str) and t.strip():
+                observed = t.strip()
+        out.append(
+            {
+                "aqi": aqi_val,
+                "lat": lat,
+                "lon": lon,
+                "uid": row.get("uid"),
+                "station_name": name.strip() if isinstance(name, str) and name.strip() else None,
+                "observed_at": observed,
+            }
+        )
+    return out
+
+
+def _station_rows_from_waqi_search(body: Any) -> list[dict[str, Any]]:
+    if not isinstance(body, dict) or (body.get("status") or "").lower() != "ok":
+        return []
+    rows = body.get("data")
+    if not isinstance(rows, list):
+        return []
+    out: list[dict[str, Any]] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        aqi_val = _parse_waqi_aqi(row.get("aqi"))
+        if aqi_val is None:
+            continue
+        station = row.get("station") if isinstance(row.get("station"), dict) else {}
+        geo = station.get("geo") if isinstance(station, dict) else None
+        if not isinstance(geo, (list, tuple)) or len(geo) < 2:
+            continue
+        try:
+            lat = float(geo[0])
+            lon = float(geo[1])
+        except (TypeError, ValueError):
+            continue
+        name = station.get("name") if isinstance(station, dict) else None
+        observed = None
+        time_block = row.get("time")
+        if isinstance(time_block, dict):
+            stime = time_block.get("stime")
+            if isinstance(stime, str) and stime.strip():
+                observed = stime.strip()
+        out.append(
+            {
+                "aqi": aqi_val,
+                "lat": lat,
+                "lon": lon,
+                "uid": row.get("uid"),
+                "station_name": name.strip() if isinstance(name, str) and name.strip() else None,
+                "observed_at": observed,
+            }
+        )
+    return out
+
+
+def _pick_waqi_area_reading(
+    rows: list[dict[str, Any]],
+    *,
+    lat: float,
+    lon: float,
+    radius_km: float = WAQI_STATION_RADIUS_KM,
+) -> dict[str, Any] | None:
+    """Median AQI of nearby live stations — more stable than a single nearest sensor."""
+    nearby: list[tuple[float, dict[str, Any]]] = []
+    for row in rows:
+        try:
+            dist = _haversine_km(lat, lon, float(row["lat"]), float(row["lon"]))
+        except (KeyError, TypeError, ValueError):
+            continue
+        if dist <= radius_km:
+            nearby.append((dist, row))
+    if not nearby:
+        return None
+    nearby.sort(key=lambda item: item[1]["aqi"])
+    mid = nearby[len(nearby) // 2][1]
+    aqis = sorted(int(item[1]["aqi"]) for item in nearby)
+    median = aqis[len(aqis) // 2]
+    station = mid.get("station_name") or "local monitors"
+    label = (
+        f"{station} (median of {len(nearby)} stations)"
+        if len(nearby) > 1
+        else station
+    )
+    return {
+        "aqi": median,
+        "aqi_scale": "waqi",
+        "pm25_ug_m3": None,
+        "dominant_pollutant": None,
+        "station_name": label,
+        "observed_at": mid.get("observed_at"),
+        "station_count": len(nearby),
+    }
+
+
+async def waqi_map_bounds(
+    *,
+    lat: float,
+    lon: float,
+    radius_deg: float = 0.25,
+    timeout_s: float = 12.0,
+) -> dict[str, Any]:
+    """WAQI stations inside a lat/lng box — works when ``/feed/`` returns can not connect."""
+    token = waqi_api_token()
+    if not token:
+        raise ValueError("WAQI token required for map/bounds.")
+    lat1, lon1 = lat - radius_deg, lon - radius_deg
+    lat2, lon2 = lat + radius_deg, lon + radius_deg
+    url = f"{WAQI_API_BASE}/map/bounds/"
+    params = {
+        "latlng": f"{lat1},{lon1},{lat2},{lon2}",
+        "token": token,
+    }
+    async with httpx.AsyncClient(timeout=timeout_s) as client:
+        r = await client.get(url, params=params)
+        r.raise_for_status()
+        return r.json()
+
+
+async def waqi_search(
+    *,
+    keyword: str,
+    timeout_s: float = 12.0,
+) -> dict[str, Any]:
+    """WAQI station search by city/place name."""
+    token = waqi_api_token()
+    if not token:
+        raise ValueError("WAQI token required for search.")
+    kw = (keyword or "").strip()
+    if not kw:
+        raise ValueError("search keyword is required")
+    url = f"{WAQI_API_BASE}/search/"
+    async with httpx.AsyncClient(timeout=timeout_s) as client:
+        r = await client.get(url, params={"keyword": kw, "token": token})
+        r.raise_for_status()
+        return r.json()
 
 
 def _rapid_json_key_map(d: dict[str, Any]) -> dict[str, Any]:
@@ -404,36 +577,37 @@ def _normalize_rapid_weather_air_quality(
 
 INTEGRATION_SOURCE_PROVENANCE: dict[str, dict[str, Any]] = {
     "weatherapi_com": {
-        "provider_name": "WeatherAPI.com (direct API)",
-        "confidence_score": 0.9,
-        "confidence_tier": "high",
-        "deployment_role": "primary_designated_upstream",
-        "confidence_basis": "heuristic_designated_primary_paid_provider",
+        "provider_name": "WeatherAPI.com (model estimate)",
+        "confidence_score": 0.55,
+        "confidence_tier": "medium_low",
+        "deployment_role": "air_quality_model_fallback",
+        "confidence_basis": "heuristic_global_model_not_local_monitor",
         "a2a_usable_as_primary_measurement": True,
         "a2a_recommended_use": (
-            "Use as headline weather/AQ when this source_key is returned; prefer over WAQI/Rapid fallbacks."
+            "Use for weather always; use for air quality only when local WAQI stations are unavailable. "
+            "Disclose that this is a model estimate, not a Kathmandu ground station."
         ),
     },
     "waqi": {
-        "provider_name": "WAQI / AQICN (world air quality index)",
-        "confidence_score": 0.72,
-        "confidence_tier": "medium",
-        "deployment_role": "secondary_station_network",
-        "confidence_basis": "heuristic_open_index_geo_or_keyword_station_unknown_distance",
+        "provider_name": "WAQI / AQICN local monitoring stations",
+        "confidence_score": 0.88,
+        "confidence_tier": "high",
+        "deployment_role": "primary_air_quality_stations",
+        "confidence_basis": "heuristic_ground_station_network_median",
         "a2a_usable_as_primary_measurement": True,
         "a2a_recommended_use": (
-            "Usable AQ signal; correlate with geography — station spacing and uptime vary (e.g. Bagmati region)."
+            "Prefer as headline air quality. Matches the same station family clients see on AQICN."
         ),
     },
     "rapidapi_weather_air_quality": {
         "provider_name": "RapidAPI weather proxy (WeatherAPI-compatible JSON path)",
-        "confidence_score": 0.58,
+        "confidence_score": 0.5,
         "confidence_tier": "medium_low",
         "deployment_role": "resolver_fallback_air_quality",
         "confidence_basis": "heuristic_third_chain_fallback_http_marketplace",
         "a2a_usable_as_primary_measurement": True,
         "a2a_recommended_use": (
-            "Use when WeatherAPI/WAQI failed only; disclose fallback; watch HTTP 429/403 from RapidAPI quotas."
+            "Use when WAQI and WeatherAPI failed only; disclose fallback; watch HTTP 429/403 from RapidAPI quotas."
         ),
     },
     "rapidapi_weather": {
@@ -484,7 +658,7 @@ INTEGRATION_SOURCE_PROVENANCE: dict[str, dict[str, Any]] = {
         "confidence_basis": "heuristic_secondary_pollution_snapshot_not_resolver_chained_yet",
         "a2a_usable_as_primary_measurement": False,
         "a2a_recommended_use": (
-            "Shadow PM/component read — contrast with WeatherAPI-first /api/air-quality/current when alerting."
+            "Shadow PM/component read — contrast with WAQI-station-first /api/air-quality/current when alerting."
         ),
     },
 }
@@ -711,19 +885,70 @@ async def air_quality_current_waqi_then_rapid(
     lat: float,
     lon: float,
     waqi_city_fallback: str | None = None,
-    waqi_timeout_s: float = 15.0,
+    waqi_timeout_s: float = 12.0,
     rapid_timeout_s: float = 25.0,
 ) -> tuple[str, dict[str, Any]]:
     """
-    Resolve current air readings (paid WeatherAPI preferred when configured):
+    Resolve current air readings for the dashboard headline:
 
-    1. **WeatherAPI.com direct** — when ``WEATHERAPI_COM_API_KEY`` is set (``api.weatherapi.com/v1/current.json``).
-    2. **WAQI** — geo feed, then optional keyword fallback.
-    3. **RapidAPI** — ``rapidapi_weather_current`` (proxy / other products).
+    1. **WAQI local stations** via ``map/bounds`` (median of nearby live stations).
+    2. **WAQI search** by city name when bounds are empty.
+    3. **WeatherAPI.com** model estimate (fallback only — not a ground station).
+    4. **RapidAPI** weather proxy (last resort).
 
-    Returns ``(source, payload)`` where source is ``weatherapi_com``, ``waqi``, or ``rapidapi_weather_air_quality``.
+    Broken WAQI ``/feed/`` geo/keyword/station paths are skipped on purpose: they often
+    return ``can not connect`` and only delay the client. Keep WeatherAPI for heat/rain.
     """
     errors: list[str] = []
+
+    wtok = waqi_api_token()
+    placeholder = bool(wtok) and _looks_like_placeholder_waqi_token(wtok)
+    waqi_live = bool(wtok) and not placeholder
+
+    if waqi_live:
+        try:
+            body = await waqi_map_bounds(lat=lat, lon=lon, timeout_s=waqi_timeout_s)
+            rows = _station_rows_from_waqi_map(body)
+            picked = _pick_waqi_area_reading(rows, lat=lat, lon=lon)
+            if picked is not None:
+                return "waqi", picked
+            errors.append("waqi_map_bounds:no_live_stations_nearby")
+        except ValueError as exc:
+            errors.append(f"waqi_map_bounds:{exc}")
+        except httpx.HTTPStatusError as exc:
+            errors.append(f"waqi_map_bounds_http_{exc.response.status_code}")
+            logger.warning(
+                "WAQI map/bounds HTTP %s lat=%s lon=%s",
+                exc.response.status_code,
+                lat,
+                lon,
+            )
+        except httpx.RequestError as exc:
+            errors.append(f"waqi_map_bounds_network:{exc!s}"[:200])
+            logger.warning("WAQI map/bounds failed: %s", exc)
+
+        if waqi_city_fallback:
+            try:
+                sbody = await waqi_search(
+                    keyword=waqi_city_fallback, timeout_s=waqi_timeout_s
+                )
+                srows = _station_rows_from_waqi_search(sbody)
+                spicked = _pick_waqi_area_reading(srows, lat=lat, lon=lon)
+                if spicked is not None:
+                    return "waqi", spicked
+                errors.append("waqi_search:no_live_stations_nearby")
+            except ValueError as exc:
+                errors.append(f"waqi_search:{exc}")
+            except httpx.HTTPStatusError as exc:
+                errors.append(f"waqi_search_http_{exc.response.status_code}")
+            except httpx.RequestError as exc:
+                errors.append(f"waqi_search_network:{exc!s}"[:200])
+    elif placeholder:
+        errors.append(
+            "waqi:WAQI_TOKEN_still_placeholder_replace_with_real_token_from_https://aqicn.org/api/"
+        )
+    else:
+        errors.append("waqi:not_configured")
 
     wai = weatherapi_com_api_key()
     if wai:
@@ -757,55 +982,6 @@ async def air_quality_current_waqi_then_rapid(
         except httpx.RequestError as exc:
             errors.append(f"weatherapi_com_network:{exc!s}"[:200])
             logger.warning("WeatherAPI.com request failed: %s", exc)
-
-    wtok = waqi_api_token()
-    placeholder = bool(wtok) and _looks_like_placeholder_waqi_token(wtok)
-    waqi_live = bool(wtok) and not placeholder
-
-    if waqi_live:
-        try:
-            body = await waqi_feed_geo(lat=lat, lon=lon, timeout_s=waqi_timeout_s)
-            norm = _normalize_waqi_payload(body)
-            if norm is not None:
-                return "waqi", norm
-            if waqi_city_fallback:
-                try:
-                    kbody = await waqi_feed_keyword(
-                        keyword=waqi_city_fallback, timeout_s=waqi_timeout_s
-                    )
-                    knorm = _normalize_waqi_payload(kbody)
-                    if knorm is not None:
-                        return "waqi", knorm
-                    err_kw = kbody.get("data")
-                    errors.append(f"waqi_keyword_unusable:{err_kw!s}"[:220])
-                except ValueError as kexc:
-                    errors.append(f"waqi_keyword:{kexc}")
-                except httpx.HTTPStatusError as kexc:
-                    errors.append(f"waqi_keyword_http_{kexc.response.status_code}")
-                except httpx.RequestError as kexc:
-                    errors.append(f"waqi_keyword_network:{kexc!s}"[:200])
-
-            err = body.get("data")
-            errors.append(f"waqi_geo_unusable:{err!s}"[:240])
-        except ValueError as exc:
-            errors.append(f"waqi:{exc}")
-        except httpx.HTTPStatusError as exc:
-            snippet = ""
-            try:
-                snippet = (exc.response.text or "")[:300]
-            except Exception:  # noqa: BLE001
-                snippet = ""
-            errors.append(f"waqi_http_{exc.response.status_code}:{snippet}")
-            logger.warning("WAQI HTTP %s lat=%s lon=%s", exc.response.status_code, lat, lon)
-        except httpx.RequestError as exc:
-            errors.append(f"waqi_network:{exc!s}"[:200])
-            logger.warning("WAQI request failed: %s", exc)
-    elif placeholder:
-        errors.append(
-            "waqi:WAQI_TOKEN_still_placeholder_replace_with_real_token_from_https://aqicn.org/api/"
-        )
-    else:
-        errors.append("waqi:not_configured")
 
     api_key, host, path = rapidapi_weather_credentials()
     if api_key and host:

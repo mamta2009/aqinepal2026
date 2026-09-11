@@ -10,6 +10,7 @@ export interface AirQualityPayload {
   station_name: string | null;
   observed_at: string | null;
   us_epa_index?: number | null;
+  station_count?: number | null;
   co_micro_g_m3?: number | null;
   no2_micro_g_m3?: number | null;
 }

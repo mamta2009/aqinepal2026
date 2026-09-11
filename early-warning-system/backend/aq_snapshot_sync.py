@@ -33,18 +33,9 @@ async def ensure_operational_data_indexes(db: Any) -> None:
 
 
 async def _fetch_payload_for_city(city: str, cfg: dict[str, Any]) -> tuple[str, dict[str, Any]]:
-    station_uid = (cfg.get("aqicn_station_uid") or "").strip()
     lat_v, lon_v = float(cfg["lat"]), float(cfg["lon"])
-
-    if station_uid and external_integrations.integrations_waqi_configured():
-        try:
-            body = await external_integrations.waqi_feed_station(station_uid=station_uid)
-            norm = external_integrations.waqi_feed_json_to_air_quality(body)
-            if norm is not None:
-                return "waqi_station", norm
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("WAQI station %s for %s failed: %s — falling back", station_uid, city, exc)
-
+    # Use the same WAQI map/bounds → WeatherAPI path as live /api/air-quality/current.
+    # Skip broken WAQI /feed/station calls that only delay sync.
     source, payload = await external_integrations.air_quality_current_waqi_then_rapid(
         lat=lat_v,
         lon=lon_v,

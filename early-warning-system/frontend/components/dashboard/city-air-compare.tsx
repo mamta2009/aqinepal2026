@@ -8,12 +8,13 @@ import { Card, CardKicker } from "@/components/ui/card";
 import { DefinitionHelp } from "@/components/ui/definition-help";
 import { browserApi } from "@/lib/api/browser";
 import {
-  compareRowPm25,
+  compareRowChartValue,
   compareSourceLabel,
   DEFAULT_PM25_THRESHOLD_UGM3,
   fetchAirCompareSequential,
   formatCompareAirIndexCell,
-  formatCompareThreshold,
+  formatCompareReadingCell,
+  formatCompareVsGuide,
   type CompareCityRow,
 } from "@/lib/compare-cities";
 import { cn } from "@/lib/utils/cn";
@@ -66,9 +67,22 @@ export function CityAirCompare({ cities, currentCity }: CityAirCompareProps) {
   }, [cities, currentCity]);
 
   const chartRows = useMemo(
-    () => rows.filter((row) => row.ok && compareRowPm25(row) != null),
+    () =>
+      rows.filter((row) => {
+        if (!row.ok) return false;
+        const chart = compareRowChartValue(row);
+        return chart.value != null;
+      }),
     [rows],
   );
+
+  const chartKinds = useMemo(
+    () => chartRows.map((row) => compareRowChartValue(row).kind),
+    [chartRows],
+  );
+  const aqiOnly =
+    chartKinds.length > 0 &&
+    chartKinds.every((kind) => kind === "aqi" || kind === "none");
 
   async function runCompare(cityList: string[], signal?: AbortSignal) {
     if (!cityList.length) {
@@ -138,20 +152,21 @@ export function CityAirCompare({ cities, currentCity }: CityAirCompareProps) {
         <div>
           <CardKicker>Live air check</CardKicker>
           <h2 className="flex flex-wrap items-center gap-2 text-2xl font-bold">
-            Compare cities · live PM2.5
+            Compare cities · live air
             <DefinitionHelp label="City air comparison chart">
-              Pick cities to compare their live PM2.5 (tiny pollution particles)
-              side by side. The dashed line is an alert guide line at about{" "}
-              {threshold} µg/m³.
+              Pick cities to compare live air side by side. Local station
+              readings show as WAQI AQI. Model sources may show PM2.5 (µg/m³)
+              instead.
               <span className="mt-2 block text-xs">
                 Read the numbers in the table too — do not rely on colour alone.
               </span>
             </DefinitionHelp>
           </h2>
           <p className="mt-1 max-w-3xl text-sm text-muted">
-            Select cities to fetch live PM2.5 side by side. Requests run one at a
-            time to limit upstream rate pressure. Threshold band uses{" "}
-            {threshold} µg/m³ (operator runtime setting when available).
+            Select cities to fetch live air side by side. Requests run one at a
+            time to limit upstream rate pressure. Prefer station AQI when
+            available; PM2.5 threshold ({threshold} µg/m³) applies only when a
+            source provides concentrations.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -216,11 +231,14 @@ export function CityAirCompare({ cities, currentCity }: CityAirCompareProps) {
       {chartRows.length > 0 ? (
         <div className="mt-4 rounded-xl border border-border bg-surface/60 p-4">
           <p className="mb-3 text-xs font-extrabold tracking-wide text-ink-muted uppercase">
-            PM2.5 bars with dashed threshold · current dashboard city highlighted when selected
+            {aqiOnly
+              ? "Station AQI bars · current dashboard city highlighted when selected"
+              : "Live air bars · PM2.5 threshold shown when concentrations are available"}
           </p>
           <ComparePm25Chart
             labels={chartRows.map((row) => row.city)}
-            values={chartRows.map((row) => compareRowPm25(row))}
+            values={chartRows.map((row) => compareRowChartValue(row).value)}
+            kinds={chartKinds}
             threshold={threshold}
             currentCity={currentCity}
           />
@@ -232,10 +250,10 @@ export function CityAirCompare({ cities, currentCity }: CityAirCompareProps) {
           <thead>
             <tr className="border-b border-border bg-surface">
               <th className="px-3 py-2.5 font-extrabold">City</th>
-              <th className="px-3 py-2.5 font-extrabold">PM2.5</th>
+              <th className="px-3 py-2.5 font-extrabold">Reading</th>
               <th className="px-3 py-2.5 font-extrabold">Air index</th>
               <th className="px-3 py-2.5 font-extrabold">Source / confidence</th>
-              <th className="px-3 py-2.5 font-extrabold">vs threshold</th>
+              <th className="px-3 py-2.5 font-extrabold">Guide</th>
             </tr>
           </thead>
           <tbody>
@@ -253,7 +271,6 @@ export function CityAirCompare({ cities, currentCity }: CityAirCompareProps) {
               </tr>
             ) : (
               rows.map((row) => {
-                const pm25 = compareRowPm25(row);
                 const isCurrent = row.city === currentCity;
                 return (
                   <tr
@@ -266,7 +283,7 @@ export function CityAirCompare({ cities, currentCity }: CityAirCompareProps) {
                   >
                     <td className="px-3 py-2.5">{row.city}</td>
                     <td className="px-3 py-2.5 font-mono">
-                      {pm25 != null ? `${pm25} µg/m³` : "—"}
+                      {row.ok ? formatCompareReadingCell(row) : "—"}
                     </td>
                     <td className="px-3 py-2.5">
                       {row.ok
@@ -275,7 +292,7 @@ export function CityAirCompare({ cities, currentCity }: CityAirCompareProps) {
                     </td>
                     <td className="px-3 py-2.5">{compareSourceLabel(row)}</td>
                     <td className="px-3 py-2.5">
-                      {row.ok ? formatCompareThreshold(pm25, threshold) : "—"}
+                      {row.ok ? formatCompareVsGuide(row, threshold) : "—"}
                     </td>
                   </tr>
                 );

@@ -14,6 +14,7 @@ const PREVIEW_LIMIT = 2;
 interface RecentAlertsCardProps {
   cityLabel: string;
   pm25: number | null | undefined;
+  aqi?: number | null | undefined;
   thresholdUgM3: number;
   latestAlert: LatestAlertResponse | undefined;
   isLoadingLatestAlert: boolean;
@@ -25,6 +26,7 @@ interface RecentAlertsCardProps {
 export function RecentAlertsCard({
   cityLabel,
   pm25,
+  aqi,
   thresholdUgM3,
   latestAlert,
   isLoadingLatestAlert,
@@ -36,10 +38,11 @@ export function RecentAlertsCard({
       buildRecentAlerts({
         cityLabel,
         pm25,
+        aqi,
         thresholdUgM3,
         latestAlert,
       }),
-    [cityLabel, pm25, thresholdUgM3, latestAlert],
+    [cityLabel, pm25, aqi, thresholdUgM3, latestAlert],
   );
 
   const preview = allAlerts.slice(0, PREVIEW_LIMIT);

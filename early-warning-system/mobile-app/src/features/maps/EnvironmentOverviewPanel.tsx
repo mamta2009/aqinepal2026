@@ -252,7 +252,9 @@ export function EnvironmentOverviewPanel() {
                       <Text className="w-[116px] pr-2 text-sm text-muted">
                         {city.air_quality.pm25_ug_m3 != null
                           ? `${city.air_quality.pm25_ug_m3} µg/m³`
-                          : "No data"}
+                          : city.air_quality.aqi != null
+                            ? "—"
+                            : "No data"}
                       </Text>
                       <Text className="w-[116px] pr-2 text-sm text-muted">
                         {city.air_quality.source || "Air source unavailable"};{" "}

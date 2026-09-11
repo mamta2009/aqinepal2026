@@ -10,6 +10,12 @@ export interface RecentAlertItem {
   message: string;
 }
 
+function alertLevelFromAqi(aqi: number): string {
+  if (aqi > 150) return "HIGH";
+  if (aqi > 100) return "MODERATE";
+  return "LOW";
+}
+
 /**
  * Builds the Recent Alerts feed: same synthetic rows as web `displayAlerts()`,
  * plus the latest broadcast summary from `GET /api/alerts/latest`.
@@ -17,40 +23,54 @@ export interface RecentAlertItem {
 export function buildRecentAlerts(options: {
   cityLabel: string;
   pm25: number | null | undefined;
+  aqi?: number | null | undefined;
   thresholdUgM3: number;
   latestAlert?: LatestAlertResponse;
 }): RecentAlertItem[] {
-  const { cityLabel, pm25, thresholdUgM3, latestAlert } = options;
-  const level = alertLevelFromPm25(pm25, thresholdUgM3);
+  const { cityLabel, pm25, aqi, thresholdUgM3, latestAlert } = options;
   const rows: RecentAlertItem[] = [];
 
-  if (level === "NO DATA") {
+  const hasPm25 = typeof pm25 === "number" && !Number.isNaN(pm25);
+  const hasAqi = typeof aqi === "number" && Number.isFinite(aqi);
+
+  if (hasPm25) {
+    const level = alertLevelFromPm25(pm25, thresholdUgM3);
+    if (level === "HIGH" || level === "SEVERE") {
+      rows.push({
+        id: "synthetic-pm25",
+        level: "HIGH",
+        time: "Just now",
+        message: `${cityLabel}: PM2.5 ${Math.round(pm25)} µg/m³ (threshold ${thresholdUgM3}). Elevated respiratory load possible.`,
+      });
+    } else if (level === "MODERATE") {
+      rows.push({
+        id: "synthetic-pm25",
+        level: "MODERATE",
+        time: "Just now",
+        message: `${cityLabel}: PM2.5 ${Math.round(pm25)} µg/m³ exceeds alert threshold (${thresholdUgM3}). Monitor.`,
+      });
+    } else {
+      rows.push({
+        id: "synthetic-pm25",
+        level: "LOW",
+        time: "Just now",
+        message: `${cityLabel}: PM2.5 ${Math.round(pm25)} µg/m³ below threshold (${thresholdUgM3}).`,
+      });
+    }
+  } else if (hasAqi) {
+    const level = alertLevelFromAqi(aqi);
     rows.push({
-      id: "synthetic-pm25",
-      level: "INFO",
+      id: "synthetic-aqi",
+      level,
       time: "Just now",
-      message: `${cityLabel}: no PM2.5 from API yet.`,
-    });
-  } else if (level === "HIGH") {
-    rows.push({
-      id: "synthetic-pm25",
-      level: "HIGH",
-      time: "Just now",
-      message: `${cityLabel}: PM2.5 ${Math.round(pm25 as number)} µg/m³ (threshold ${thresholdUgM3}). Elevated respiratory load possible.`,
-    });
-  } else if (level === "MODERATE") {
-    rows.push({
-      id: "synthetic-pm25",
-      level: "MODERATE",
-      time: "Just now",
-      message: `${cityLabel}: PM2.5 ${Math.round(pm25 as number)} µg/m³ exceeds alert threshold (${thresholdUgM3}). Monitor.`,
+      message: `${cityLabel}: station air score (AQI) ${Math.round(aqi)}.`,
     });
   } else {
     rows.push({
-      id: "synthetic-pm25",
-      level: "LOW",
+      id: "synthetic-air",
+      level: "INFO",
       time: "Just now",
-      message: `${cityLabel}: PM2.5 ${Math.round(pm25 as number)} µg/m³ below threshold (${thresholdUgM3}).`,
+      message: `${cityLabel}: no live air reading from API yet.`,
     });
   }
 

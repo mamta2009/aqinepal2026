@@ -246,7 +246,9 @@ export function EnvironmentOverview() {
                         <td className="px-5 py-3 text-muted">
                           {city.air_quality.pm25_ug_m3 != null
                             ? `${city.air_quality.pm25_ug_m3} µg/m³`
-                            : "No data"}
+                            : city.air_quality.aqi != null
+                              ? "—"
+                              : "No data"}
                         </td>
                         <td className="px-5 py-3 text-muted">
                           {city.air_quality.source || "Air source unavailable"};{" "}
