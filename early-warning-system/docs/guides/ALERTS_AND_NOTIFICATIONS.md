@@ -142,6 +142,134 @@ This path is about **case counts**, not WAQI AQI. Typical target: eligible `heal
 
 ---
 
+## Production: how to trigger alerts properly
+
+Climate Compass does **not** auto-evaluate on a timer inside the web process today.  
+`APScheduler` (when enabled) only syncs **air quality snapshots** to Mongo — it does **not** call `/api/alerts/evaluate`.
+
+Outbound SMS / email / WhatsApp happen when something **HTTP POSTs** evaluate (or manual broadcast) against the **production API URL**.
+
+### Prerequisites on the production server
+
+1. **MongoDB** connected (`MONGODB_URL` / `DATABASE_URL`) — contacts + cooldown + broadcast logs  
+2. **`NOTIFICATION_API_KEY`** set (strong secret) — required for evaluate / broadcast  
+3. Delivery providers configured and tested:
+   - Email: Resend  
+   - SMS: Sparrow and/or Twilio (`SMS_PROVIDER`)  
+   - WhatsApp: Twilio (optional)  
+4. **`WAQI_TOKEN`** (and WeatherAPI as needed) so evaluate can fetch live air  
+5. At least one **verified, consented, approved** contact covering the city, with topic `air` / `heat` and preferred channels  
+6. **`NOTIFICATION_DASHBOARD_URL`** set to your public site (link inside messages)
+
+### Recommended pattern: scheduled evaluate (cron)
+
+Call **once per city** on an interval that respects cooldown (default 60 minutes). Example every hour for all configured municipalities:
+
+```bash
+#!/usr/bin/env bash
+# save as scripts/cron-evaluate-air.sh — run on a scheduler, not inside the request path
+set -euo pipefail
+
+API_BASE="${API_BASE:-https://YOUR-PRODUCTION-HOST}"
+API_KEY="${NOTIFICATION_API_KEY:?set NOTIFICATION_API_KEY}"
+
+CITIES=(Kathmandu Pokhara Bharatpur Birgunj Biratnagar Janakpur Nepalgunj Dhangadhi)
+
+for city in "${CITIES[@]}"; do
+  curl -sS -X POST "${API_BASE}/api/alerts/evaluate" \
+    -H "Content-Type: application/json" \
+    -H "X-API-Key: ${API_KEY}" \
+    -d "{\"city\":\"${city}\",\"recipient_type\":\"all\",\"min_level\":\"MODERATE\"}"
+  echo
+  sleep 2
+done
+```
+
+Optional heat loop (same schedule or less frequent):
+
+```bash
+curl -sS -X POST "${API_BASE}/api/alerts/evaluate-heat" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: ${API_KEY}" \
+  -d '{"city":"Kathmandu","recipient_type":"all","min_level":"MODERATE"}'
+```
+
+**Where to run the cron**
+
+| Hosting | Approach |
+|---------|----------|
+| Render | Add a **Cron Job** service that runs the script (or a one-liner curl loop) on a schedule; share the same `NOTIFICATION_API_KEY` secret as the web service |
+| Linux VPS | `crontab -e` → e.g. `5 * * * * /path/to/cron-evaluate-air.sh >> /var/log/cc-eval.log 2>&1` |
+| GitHub Actions | `schedule:` workflow with repository secret `NOTIFICATION_API_KEY` and production `API_BASE` |
+
+Do **not** put the API key in the frontend or mobile app.
+
+### One-off / operator test (production)
+
+```bash
+curl -sS -X POST "https://YOUR-PRODUCTION-HOST/api/alerts/evaluate" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: YOUR_NOTIFICATION_API_KEY" \
+  -d '{"city":"Kathmandu","min_level":"MODERATE"}'
+```
+
+Read the JSON:
+
+| Field | Meaning |
+|-------|---------|
+| `skipped: "below_min_level"` | Live reading too clean for the gate (e.g. AQI 58 → LOW) — **no send** |
+| `skipped: "cooldown"` | Already broadcast for that city/hazard within the cooldown window |
+| `recipients_count` | Eligible contacts found; send scheduled in background |
+| `aqi_value` / `aqi_level` | What evaluate computed from live data |
+
+To force past cooldown for a real drill (still respects `min_level`):
+
+```bash
+-d '{"city":"Kathmandu","min_level":"MODERATE","force":true}'
+```
+
+To force a send even when air is LOW (use carefully in production):
+
+```bash
+-d '{"city":"Kathmandu","min_level":"LOW","force":true}'
+```
+
+Or use **manual broadcast** with an explicit level (no live gate):
+
+```bash
+curl -sS -X POST "https://YOUR-PRODUCTION-HOST/api/alerts/broadcast" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: YOUR_NOTIFICATION_API_KEY" \
+  -d '{"city":"Kathmandu","aqi_value":120,"aqi_level":"MODERATE","recipient_type":"all"}'
+```
+
+(Confirm the exact `AlertBroadcastIn` field names in OpenAPI `/docs` on your deployment if the body differs slightly.)
+
+### Production checklist
+
+1. Confirm providers with a single test send / Twilio or Sparrow test route if available  
+2. Enrol yourself, verify, approve, subscribe to `air`, cover Kathmandu  
+3. Dry-run evaluate and expect `below_min_level` when AQI is good — that proves the pipeline without spamming  
+4. Install cron for all cities  
+5. Monitor Mongo `notification_logs`, `alert_broadcasts`, and `GET /api/alerts/latest?city=Kathmandu`  
+6. Keep `ALERT_EVAL_COOLDOWN_MINUTES` ≥ your cron interval so you do not double-send
+
+### What “triggers” a real user message in production
+
+```text
+Cron / operator
+    → POST /api/alerts/evaluate (per city)
+        → fetch live AQ (WAQI-first)
+        → map to LOW / MODERATE / HIGH / SEVERE
+        → if level ≥ min_level AND cooldown OK
+            → BackgroundTasks send to eligible contacts
+                → SMS / email / WhatsApp per preferred channels
+```
+
+Nothing else on the production site (dashboard load, mobile refresh, AQ snapshot sync) sends environmental alerts.
+
+---
+
 ## Env keys (alerts)
 
 | Variable                                              | Role                                                              |
