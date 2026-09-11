@@ -12,6 +12,7 @@ const educationalPaths = new Set([
 /** Technical / implementer docs shown under the learning cards on /guides. */
 const technicalPaths = [
   "DATA_FETCHING.md",
+  "ALERTS_AND_NOTIFICATIONS.md",
   "APPLICATION_OVERVIEW.md",
   "IMPLEMENTATION_SNAPSHOT.md",
   "DASHBOARD_FEATURES.md",

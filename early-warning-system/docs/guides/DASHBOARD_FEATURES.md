@@ -58,12 +58,12 @@ These cards update for the **selected city**. Air and heat come from live provid
 
 ### Current air reading (PM2.5 and/or station AQI)
 
-| Item           | Detail                                                                                          |
-| -------------- | ----------------------------------------------------------------------------------------------- |
+| Item           | Detail                                                                                             |
+| -------------- | -------------------------------------------------------------------------------------------------- |
 | Meaning        | Live air for the selected city: **PM2.5 µg/m³** when the provider reports it, else **station AQI** |
-| Source         | `GET /api/air-quality/current?city=…`                                                           |
-| Provider order | **WAQI** local stations (map/bounds median, then search) → **WeatherAPI.com** → **RapidAPI**    |
-| Units          | µg/m³ for concentrations; continuous **0–500-style AQI** for WAQI station scores                |
+| Source         | `GET /api/air-quality/current?city=…`                                                              |
+| Provider order | **WAQI** local stations (map/bounds median, then search) → **WeatherAPI.com** → **RapidAPI**       |
+| Units          | µg/m³ for concentrations; continuous **0–500-style AQI** for WAQI station scores                   |
 
 WAQI often returns **AQI without µg/m³**. The dashboard seeds Alert Level, Recent Alerts (UI), the 24H chart, trajectory, compare bars, 5-day forecast baseline, and stress sandbox from **PM2.5 when present, otherwise station AQI**.
 
@@ -126,6 +126,8 @@ A compound note may appear when both air and heat are elevated at the same time.
 
 ## What triggers email / SMS to registered users
 
+**Full walkthrough (thresholds, gates, eligibility, env, curls):** see **[`ALERTS_AND_NOTIFICATIONS.md`](ALERTS_AND_NOTIFICATIONS.md)**.
+
 **Important:** refreshing the dashboard does **not** send messages. Outbound alerts are started by API / operator workflows.
 
 ### Who can receive broadcasts
@@ -139,20 +141,16 @@ A contact must typically meet all of:
 - Coverage matches the alert city (`city` or multi-city `cities`)
 - Environmental topic interest matches the hazard (`air`, `heat`, or legacy “both”)
 
-Channels follow each contact’s preferred channels (email via Resend, SMS / WhatsApp via Twilio when configured).
+Channels follow each contact’s preferred channels (email via Resend, SMS / WhatsApp via Twilio or Sparrow when configured).
 
 ### Air alerts — `POST /api/alerts/evaluate`
 
-The server fetches / uses air quality for a city and maps PM2.5 (preferred) to a level:
+Live AQ uses the WAQI-first resolver. Level comes from **`_air_quality_index_and_level`**:
 
-| PM2.5 (µg/m³) | Server alert level |
-| ------------- | ------------------ |
-| ≤ 35          | LOW                |
-| > 35          | MODERATE           |
-| > 100         | HIGH               |
-| > 150         | SEVERE             |
-
-If PM2.5 is missing, AQI number fallbacks are used (≥101 MODERATE, ≥151 HIGH, ≥201 SEVERE).
+| When                             | Thresholds that set the level                   |
+| -------------------------------- | ----------------------------------------------- |
+| PM2.5 µg/m³ present              | ≤35 LOW; >35 MODERATE; >100 HIGH; >150 SEVERE   |
+| PM2.5 missing (station AQI only) | ≤100 LOW; ≥101 MODERATE; ≥151 HIGH; ≥201 SEVERE |
 
 **Dispatch gates:**
 
@@ -162,7 +160,7 @@ If PM2.5 is missing, AQI number fallbacks are used (≥101 MODERATE, ≥151 HIGH
 
 ### Heat alerts — `POST /api/alerts/evaluate-heat`
 
-Same eligibility + cooldown pattern using heat effective °C tiers above. Topic filter: `heat`.
+Same eligibility + cooldown pattern. Effective °C defaults: ≥30 MODERATE, ≥35 HIGH, ≥40 SEVERE (`HEAT_THRESHOLD_*_C`). Topic filter: `heat`.
 
 ### Manual broadcast — `POST /api/alerts/broadcast`
 
@@ -174,7 +172,7 @@ Optional path via daily case reporting (`POST /api/health/cases/daily-report`) w
 
 ### What the dashboard “Recent Alerts” list is
 
-The **Recent Alerts** panel is a **client-side illustration** from the current city’s PM2.5 vs the dashboard threshold. It is **not** the Mongo broadcast log.
+The **Recent Alerts** panel is a **client-side illustration** from the current city’s live air vs the dashboard threshold. It is **not** the Mongo broadcast log.
 
 The header **Alerts** strip uses real stored broadcasts: `GET /api/alerts/latest`.
 
@@ -184,11 +182,11 @@ Facility-specific PM2.5 thresholds on a user profile are for account / facility 
 
 ## Air Quality 24H chart
 
-| Item            | Detail                                                                                          |
-| --------------- | ----------------------------------------------------------------------------------------------- |
-| What you see    | Smooth green line chart of 24 hourly-looking points                                             |
+| Item            | Detail                                                                                                                                                     |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| What you see    | Smooth green line chart of 24 hourly-looking points                                                                                                        |
 | How it is built | Deterministic “wobble” around the **latest** live reading (± about 38%), seeded by city + calendar day — **PM2.5 µg/m³ if present, otherwise station AQI** |
-| What it is not  | Observed hourly station history                                                                 |
+| What it is not  | Observed hourly station history                                                                                                                            |
 
 Use it to visualise how a day _might_ vary around the current reading. The chart caption on the page also states it is not observed hourly AQ.
 
@@ -196,10 +194,10 @@ Use it to visualise how a day _might_ vary around the current reading. The chart
 
 ## 5-Day Forecast
 
-| Item        | Detail                                                                                                                                   |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Source      | `GET /api/models/predict/week/{city}`                                                                                                    |
-| Model input | Synthetic week case series (until DHIS2 / real case feeds are connected)                                                                 |
+| Item        | Detail                                                                                                                                     |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Source      | `GET /api/models/predict/week/{city}`                                                                                                      |
+| Model input | Synthetic week case series (until DHIS2 / real case feeds are connected)                                                                   |
 | UI days 1–5 | Estimated **cases** grown gently from `next_day_estimate`; air values grown from the live **PM2.5 or AQI** baseline (labelled accordingly) |
 
 Treat this strip as a discussion / demo forecast, not clinical prediction.
@@ -268,31 +266,31 @@ Use this for “what if pollution and heat stayed this high?” conversations �
 
 Side-by-side live air check across the eight cities.
 
-| Behaviour     | Detail                                                                                                             |
-| ------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Selection     | Check one or more cities (no fetch until at least one is checked)                                                  |
-| Fetch         | Sequential `GET /api/air-quality/current?city=…` with a short pause between cities                                 |
-| Table columns | City, Reading (µg/m³ or AQI), air index, source / confidence, Guide (threshold or AQI band)                        |
-| Vs threshold  | For PM2.5: Below / Alert / High vs dashboard threshold; for AQI-only rows: Good / Moderate / Sensitive / Unhealthy bands |
+| Behaviour     | Detail                                                                                                                                   |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Selection     | Check one or more cities (no fetch until at least one is checked)                                                                        |
+| Fetch         | Sequential `GET /api/air-quality/current?city=…` with a short pause between cities                                                       |
+| Table columns | City, Reading (µg/m³ or AQI), air index, source / confidence, Guide (threshold or AQI band)                                              |
+| Vs threshold  | For PM2.5: Below / Alert / High vs dashboard threshold; for AQI-only rows: Good / Moderate / Sensitive / Unhealthy bands                 |
 | Chart         | Bar chart of live air (PM2.5 or station AQI); PM2.5 threshold line only when concentrations exist; current city highlighted when present |
 
 ---
 
 ## Quick map: panel → data character
 
-| Panel                            | Live provider data           | Synthetic / illustrative      | Can send email/SMS by itself |
-| -------------------------------- | ---------------------------- | ----------------------------- | ---------------------------- |
-| Current PM2.5 / AQI / heat       | Yes (when APIs configured)        | —                             | No                           |
-| Alert Level (card)               | Derived from live air (PM2.5 or AQI) | Threshold / band guidance  | No                           |
-| PM2.5 trajectory                 | Derived from live reading when present | Simple ×0.9 scalar         | No                           |
-| Air Quality 24H                  | Seeded by live PM2.5 or AQI       | Synthetic hourly shape        | No                           |
-| 5-Day Forecast                   | Optional live PM2.5 or AQI baseline | Model on synthetic cases    | No                           |
-| Recent Alerts (panel)            | Live PM2.5 or AQI                 | Client-built rows             | No                           |
-| Cases This Week                  | —                            | Synthetic                     | No                           |
-| Scenario A sandbox               | Optional “use live” seed     | Purely local math             | No                           |
-| Compare cities                   | Live per city                | —                             | No                           |
-| Header Alerts strip              | Latest stored broadcast      | —                             | Reflects prior sends         |
-| Evaluate / broadcast APIs        | Live or operator input       | —                             | **Yes** (eligible contacts)  |
+| Panel                      | Live provider data                     | Synthetic / illustrative  | Can send email/SMS by itself |
+| -------------------------- | -------------------------------------- | ------------------------- | ---------------------------- |
+| Current PM2.5 / AQI / heat | Yes (when APIs configured)             | —                         | No                           |
+| Alert Level (card)         | Derived from live air (PM2.5 or AQI)   | Threshold / band guidance | No                           |
+| PM2.5 trajectory           | Derived from live reading when present | Simple ×0.9 scalar        | No                           |
+| Air Quality 24H            | Seeded by live PM2.5 or AQI            | Synthetic hourly shape    | No                           |
+| 5-Day Forecast             | Optional live PM2.5 or AQI baseline    | Model on synthetic cases  | No                           |
+| Recent Alerts (panel)      | Live PM2.5 or AQI                      | Client-built rows         | No                           |
+| Cases This Week            | —                                      | Synthetic                 | No                           |
+| Scenario A sandbox         | Optional “use live” seed               | Purely local math         | No                           |
+| Compare cities             | Live per city                          | —                         | No                           |
+| Header Alerts strip        | Latest stored broadcast                | —                         | Reflects prior sends         |
+| Evaluate / broadcast APIs  | Live or operator input                 | —                         | **Yes** (eligible contacts)  |
 
 ---
 
@@ -783,13 +781,13 @@ Without approval / facility link, login still works for inbox, channels, friends
 
 ### What is live vs illustrative today
 
-| More “real” when configured                           | Often synthetic / illustrative                                   |
-| ----------------------------------------------------- | ---------------------------------------------------------------- |
-| Live air (WAQI-first AQI / PM2.5) and heat from WeatherAPI / Rapid | Cases This Week generator                                 |
-| Outbound SMS / WhatsApp / email via Twilio / SendGrid | Air Quality 24H chart (wobble around latest reading)             |
-| Registration, verify, admin enrollee management       | 5-Day Forecast strip (model on synthetic week)                   |
-| Facility action logs in Mongo                         | Scenario A stress sandbox (local sliders only)                   |
-| Dashboard Alert Level vs admin Mongo threshold        | Dashboard “Recent Alerts” list (client-built from current PM2.5) |
+| More “real” when configured                                        | Often synthetic / illustrative                                   |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| Live air (WAQI-first AQI / PM2.5) and heat from WeatherAPI / Rapid | Cases This Week generator                                        |
+| Outbound SMS / WhatsApp / email via Twilio / SendGrid              | Air Quality 24H chart (wobble around latest reading)             |
+| Registration, verify, admin enrollee management                    | 5-Day Forecast strip (model on synthetic week)                   |
+| Facility action logs in Mongo                                      | Scenario A stress sandbox (local sliders only)                   |
+| Dashboard Alert Level vs admin Mongo threshold                     | Dashboard “Recent Alerts” list (client-built from current PM2.5) |
 
 Refreshing the dashboard **never** sends alerts by itself. Real pushes need evaluate / broadcast / related APIs (and eligible contacts).
 

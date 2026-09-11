@@ -241,6 +241,7 @@ Unit tests for WAQI picking / normalization: `backend/tests/test_waqi_area_readi
 | Doc | Use when |
 |-----|----------|
 | [`IMPLEMENTATION_SNAPSHOT.md`](IMPLEMENTATION_SNAPSHOT.md) | Full API / Mongo / admin truth |
+| [`ALERTS_AND_NOTIFICATIONS.md`](ALERTS_AND_NOTIFICATIONS.md) | When evaluate sends SMS / email |
 | [`DASHBOARD_FEATURES.md`](DASHBOARD_FEATURES.md) | What each dashboard card means |
 | [`APPLICATION_OVERVIEW.md`](APPLICATION_OVERVIEW.md) | Setup and main URLs |
 
