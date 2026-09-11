@@ -1,4 +1,4 @@
-# UNICEF Venture Fund: Open-Source, Blockchain & AI Strategy
+# UNICEF Venture Fund: Open-Source, Blockchain & AI Strategy (Climate Compass)
 
 ## Executive Summary
 
@@ -7,9 +7,9 @@ UNICEF wants solutions that are:
 ✅ **Blockchain-enabled** → Immutable data, trust, decentralization  
 ✅ **AI-powered** → Smart predictions, automation, intelligence  
 
-This guide shows how to **realistically integrate all three** without adding unnecessary complexity.
+This guide shows how to **realistically integrate all three** into **Climate Compass** without adding unnecessary complexity.
 
-**Product implementation reference (fact-check before claims):** canonical technical snapshot in the repo — **`early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md`** (resolver order, env, `provenance`/`deployment_role`, deployment JSON).
+**Product implementation reference (fact-check before claims):** canonical technical snapshot in the repo — **`early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md`** (WAQI-station-first AQ resolver, env, `provenance`/`deployment_role`, deployment JSON). Product name: **Climate Compass**.
 
 ---
 

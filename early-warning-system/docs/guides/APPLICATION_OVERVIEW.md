@@ -1,6 +1,8 @@
-# Climate Compass (Nepal AQI demo)
+# Climate Compass
 
-FastAPI backend, static **landing**, **guides hub** (`/guides`), **registration**, dashboard UI, and **operator admin console**. Technical behaviour (env keys, AQ resolver order, MongoDB, notifications, provenance JSON) is maintained in **`docs/guides/IMPLEMENTATION_SNAPSHOT.md`** — prefer that file over older marketing summaries when describing what the deployment actually does.
+**Climate Compass** is Nepal’s air quality and respiratory readiness platform: FastAPI backend, Next.js **landing** and dashboard, Expo **mobile app**, **guides hub** (`/guides`), **registration** for alerts, facility tools, and an **operator admin console**.
+
+Headline air uses **WAQI local stations first** (median nearby AQI), with WeatherAPI / RapidAPI as air fallback; WeatherAPI remains preferred for heat and rain. Technical behaviour (env keys, AQ resolver order, MongoDB, notifications, provenance JSON) is maintained in **`docs/guides/IMPLEMENTATION_SNAPSHOT.md`** — prefer that file over older marketing summaries when describing what the deployment actually does.
 
 **Repository:** [github.com/mamta2009/aqinepal2026](https://github.com/mamta2009/aqinepal2026)
 

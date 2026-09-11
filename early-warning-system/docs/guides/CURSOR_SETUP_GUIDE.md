@@ -1,9 +1,9 @@
-# 🎯 COMPLETE PACKAGE GUIDE - Use in Cursor Code
+# Climate Compass — complete package guide (Cursor)
 
-You can work from a **git clone** (recommended) or from an **`early-warning-system.zip`** extract. Both contain the same application tree under **`early-warning-system/`**.
+You can work from a **git clone** (recommended) or from an **`early-warning-system.zip`** extract. Both contain the same **Climate Compass** application tree under **`early-warning-system/`**.
 
 **Public repository:** [https://github.com/mamta2009/aqinepal2026](https://github.com/mamta2009/aqinepal2026)  
-**Technical truth (API resolver, env vars, provenance/A2A, notifications, admin APIs):** [`early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md`](early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md) — update it when wiring integrations.
+**Technical truth (API resolver, env vars, provenance/A2A, notifications, admin APIs):** [`early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md`](IMPLEMENTATION_SNAPSHOT.md) — update it when wiring integrations. Headline air is **WAQI-station-first** (WeatherAPI for heat/rain and air fallback).
 
 ---
 
@@ -218,7 +218,7 @@ Point **Twilio** webhook URLs at your public API host + these paths when testing
 ✅ Header links: /registration (Register for alerts), /guides
 ✅ Weekly respiratory bar chart: GET /api/cases/week/{city}
 ✅ Footer Chain line from GET /api/blockchain/status + last payload verification
-✅ AQ card + compare: GET /api/air-quality/current (server resolver: WeatherAPI → WAQI → Rapid)
+✅ AQ card + compare: GET /api/air-quality/current (server resolver: WAQI stations → WeatherAPI → Rapid)
 ✅ provenance on JSON: deployment_role + confidence tier for tooling / agents
 
 If you deploy elsewhere, open via that host so runtime-config resolves correctly.
@@ -228,8 +228,8 @@ If you deploy elsewhere, open via that host so runtime-config resolves correctly
 ```
 Copy to config/.env. Key integrations (see docs/guides/IMPLEMENTATION_SNAPSHOT.md for full resolver order):
 
-- WEATHERAPI_COM_API_KEY — direct WeatherAPI.com (preferred for AQ + /api/weather/current)
-- WAQI_TOKEN — WAQI / aqicn (AQ fallback)
+- WAQI_TOKEN — WAQI / aqicn (primary headline air via map/bounds + search)
+- WEATHERAPI_COM_API_KEY — preferred for heat/rain (/api/weather/current); air fallback after WAQI
 - RAPIDAPI_WEATHER_* — Rapid marketplace weather/air fallback + related products
 - OPENWEATHER_API_KEY — supplementary OWM routes only (/api/weather/openweather/…)
 - OPENROUTER_API_KEY — POST /api/ai/openrouter
@@ -322,7 +322,7 @@ Browser: http://localhost:8000/frontend/index.html
 You should see:
 - City selector (8 cities); cases chart filled from the API
 - Footer: data status (cases + AQ source/confidence snippet) and blockchain / anchor line (expand tooltip for JSON)
-- AQ from live resolver when configured (WeatherAPI-first); compare table staggers requests (~0.65s) to ease Rapid quota
+- AQ from live resolver when configured (WAQI-station-first); compare table staggers requests (~0.65s) to ease Rapid quota
 ```
 
 ---

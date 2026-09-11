@@ -1,6 +1,6 @@
-## CURSOR AI PROMPTS — STATUS
+## CURSOR AI PROMPTS — STATUS (Climate Compass)
 
-These were the suggested prompts vs what the repo implements now.
+These were the suggested prompts vs what **Climate Compass** implements now.
 
 **Resolver order, env variables, and provenance fields:** see **`early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md`**.
 
@@ -8,7 +8,7 @@ These were the suggested prompts vs what the repo implements now.
 
 | Prompt | Status |
 |--------|--------|
-| Weather / AQ upstreams (WeatherAPI direct, WAQI, Rapid fallback; OpenWeather supplementary) | **Done** — `external_integrations.py` + `GET /api/air-quality/current`, `GET /api/weather/current`, `GET /api/weather/openweather/*`. |
+| Weather / AQ upstreams (WAQI stations first, WeatherAPI + Rapid air fallback; WeatherAPI preferred for heat/rain; OpenWeather supplementary) | **Done** — `external_integrations.py` + `GET /api/air-quality/current`, `GET /api/weather/current`, `GET /api/weather/openweather/*`. |
 | Provenance for agents / A2A | **Done** — **`provenance.deployment_role`**, **`confidence`**, **`a2a`** on applicable JSON (see snapshot). |
 | MongoDB endpoint to store respiratory case reports | **Done** — `POST /api/health/cases/daily-report` (JSON body) inserts into **`respiratory_daily_reports`** when `MONGODB_URL` is set to a **real** connection string (not the `username:password` placeholder). |
 | Blockchain verification on health endpoints via `blockchain_integration` | **Done** — `GET /api/health` plus case/daily-report responses include **`verification`** (SHA-256 + optional EIP-191 sign). Existing case routes unchanged for verification. |

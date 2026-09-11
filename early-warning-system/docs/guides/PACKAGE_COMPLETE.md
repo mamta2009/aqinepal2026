@@ -1,10 +1,12 @@
-# 📦 Climate Compass (Nepal AQI) — package summary
+# Climate Compass — package summary
 
-## ✅ What you have
+## What you have
 
 ### Source code (GitHub — recommended)
 
 **Repository:** [https://github.com/mamta2009/aqinepal2026](https://github.com/mamta2009/aqinepal2026)
+
+**Product:** **Climate Compass** — Nepal air quality and respiratory readiness (WAQI-first station AQI, heat/rain via WeatherAPI, alerts, guides, admin).
 
 ```bash
 git clone https://github.com/mamta2009/aqinepal2026.git
@@ -66,7 +68,7 @@ Older “`/outputs`” or duplicate guides elsewhere may exist from packaging hi
 
 - FastAPI backend, static **`/frontend`**, **`landing/`** pages, **`GET /guides`**, **`GET /admin/dashboard`**
 - Synthetic weekly health patterns (**`health_data_generator.py`**) unless you integrate DHIS2 or other feeds
-- Air-quality resolver (**WeatherAPI → WAQI → Rapid**, per snapshot) plus supplementary weather routes where keys exist
+- Air-quality resolver (**WAQI stations → WeatherAPI → Rapid**, per snapshot) plus WeatherAPI-first heat/rain routes where keys exist
 - **`provenance`** / A2A-style hints on responses when integrations return data
 - Regional/national demo mode flags in payloads
 - Optional MongoDB enrollees, logs, broadcasts when **`MONGODB_URL`** (or **`DATABASE_URL`**) is set
@@ -130,4 +132,4 @@ Weekly case curves are **synthetic WHO-style patterns** suitable to prove dashbo
 
 ---
 
-**Last aligned with docs:** May 2026 (repository **aqinepal2026**, branch **main**). Update this file if the canonical snapshot or URLs change.
+**Last aligned with docs:** Sep 2026 (repository **aqinepal2026**, product name **Climate Compass**, branch **main**). Update this file if the canonical snapshot or URLs change.

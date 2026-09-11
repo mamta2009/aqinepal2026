@@ -1,10 +1,13 @@
 # Climate Compass
 
+**Climate Compass** is the Nepal air quality and respiratory readiness application in this repository: FastAPI APIs, Next.js static UI, Expo mobile app, public guides, registration / alerts, facility tools, and an operator admin console.
+
 **Repository:** [github.com/mamta2009/aqinepal2026](https://github.com/mamta2009/aqinepal2026)
 
-- **Guides:** [`docs/guides/`](docs/guides/)
+- **Guides:** [`docs/guides/`](docs/guides/) — start with [`APPLICATION_OVERVIEW.md`](docs/guides/APPLICATION_OVERVIEW.md) and [`IMPLEMENTATION_SNAPSHOT.md`](docs/guides/IMPLEMENTATION_SNAPSHOT.md)
 - **API + static UI:** FastAPI in [`backend/`](backend/) — OpenAPI at `/docs`
 - **Frontend source:** Next.js static export in [`frontend/`](frontend/)
+- **Mobile:** Expo app in [`mobile-app/`](mobile-app/)
 
 ## Architecture
 
@@ -15,6 +18,16 @@
    - `/`, `/dashboard/`, … — static files from `frontend/out`
 
 Browser auth uses HttpOnly cookies on the FastAPI host (`cc_registrant_token`, `ew_admin_session`).
+
+### Air quality vs weather
+
+| Concern            | Primary path                                             | Notes                                                           |
+| ------------------ | -------------------------------------------------------- | --------------------------------------------------------------- |
+| Headline air score | **WAQI** local stations (map/bounds median, then search) | Prefer reported **AQI**; do not treat WAQI `iaqi.pm25` as µg/m³ |
+| Air fallback       | WeatherAPI.com, then RapidAPI                            | Model estimate when stations are unavailable                    |
+| Heat / rain        | WeatherAPI.com (then RapidAPI)                           | Separate from headline AQ                                       |
+
+Broken WAQI `/feed/` paths are skipped. Dashboard and mobile charts/compare/forecast seed from **PM2.5 when present, otherwise station AQI**.
 
 ## Quick start
 
@@ -43,6 +56,15 @@ cd frontend
 # NEXT_PUBLIC_API_BASE=http://127.0.0.1:8000
 # NEXT_PUBLIC_SITE_URL=http://localhost:3000
 npm run dev
+```
+
+### Optional: mobile app
+
+```bash
+cd mobile-app
+cp .env.example .env   # if present; point API base at the FastAPI host
+npm install
+npx expo start
 ```
 
 ## Docker (backend only)

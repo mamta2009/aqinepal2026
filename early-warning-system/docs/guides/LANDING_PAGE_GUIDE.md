@@ -1,9 +1,9 @@
-# LANDING PAGE INTEGRATION GUIDE
+# Climate Compass — landing page integration guide
 
 ## What You Get
 
 A professional, conversion-focused landing page that:
-- ✅ Introduces your Climate Compass
+- ✅ Introduces **Climate Compass**
 - ✅ Explains the problem and solution
 - ✅ Showcases features and impact
 - ✅ Guides visitors to the dashboard

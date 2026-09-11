@@ -1,6 +1,8 @@
 # Climate Compass frontend
 
-Next.js App Router UI, built as a **static export** and served by FastAPI.
+Next.js App Router UI for **Climate Compass**, built as a **static export** and served by FastAPI.
+
+Includes the public landing, guides, registration surfaces, and the situational dashboard (live WAQI-first air scores with AQI fallbacks when PM2.5 µg/m³ is missing, heat/rain context, compare cities, illustrative 24h / 5-day views, stress sandbox).
 
 ## Build (served by FastAPI)
 

@@ -1,6 +1,6 @@
-# Private / partner-restricted documentation
+# Private / partner-restricted documentation (Climate Compass)
 
-Markdown and exports under **`early-warning-system/docs-private/`** are **internal** UNICEF/strategy drafts. They intentionally **do not** appear as links on the public **Guides** page (`GET /guides`).
+Markdown and exports under **`early-warning-system/docs-private/`** are **internal** UNICEF/strategy drafts for **Climate Compass**. They intentionally **do not** appear as links on the public **Guides** page (`GET /guides`).
 
 ## How teammates read them safely
 

@@ -1,6 +1,6 @@
-# Guides (non-private documentation)
+# Climate Compass guides (non-private documentation)
 
-All **public** project markdown for this application lives here. Read on GitHub, or browse rendered pages on a running server at **`/guides`** and **`/guides/md/…`** (Markdown files opened in-browser).
+All **public** markdown for **Climate Compass** lives here. Read on GitHub, or browse rendered pages on a running server at **`/guides`** and **`/guides/md/…`** (Markdown files opened in-browser).
 
 Do **not** put partner-restricted material here — that belongs in **`docs-private/`** and is listed only inside the operator admin dashboard.
 

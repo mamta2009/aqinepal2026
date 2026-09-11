@@ -120,7 +120,7 @@ Use the **official UNICEF checklist** for your vehicle; map files here:
 
 Use this checklist when describing the **live demo** versus **aspirations**:
 
-- **Canonical spec:** `early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md` (resolver: WeatherAPI direct → WAQI → Rapid for `/api/air-quality/current`; provenance field **`deployment_role`**; OpenWeather routes are supplementary; **`DEPLOYMENT_MODE`** default **REGIONAL**).
+- **Canonical spec:** `early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md` (resolver: **WAQI local stations → WeatherAPI → Rapid** for `/api/air-quality/current`; WeatherAPI preferred for heat/rain; provenance field **`deployment_role`**; OpenWeather routes are supplementary; **`DEPLOYMENT_MODE`** default **REGIONAL**). Product name: **Climate Compass**.
 - **Synthetic health data:** Weekly case generator is not DHIS2-derived until you wire ETL (see `DHIS2_*` + `/api/dhis2/system-check`).
 - **AI forecast strip:** `GET /api/models/predict/week/{city}` uses `ai_models` on synthetic weekly input — clarify validation status.
 
