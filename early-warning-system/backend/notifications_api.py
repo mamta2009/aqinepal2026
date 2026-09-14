@@ -72,6 +72,18 @@ _ALERT_LEVEL_COLORS = {
 }
 
 
+def _default_alert_min_level_from_env() -> str:
+    """
+    Read DEFAULT_ALERT_MIN_LEVEL from environment (for testing).
+    Allows operators to lower alert thresholds in production to test SMS/email.
+    Valid values: LOW, MODERATE, HIGH, SEVERE (default: MODERATE).
+    """
+    val = (os.getenv("DEFAULT_ALERT_MIN_LEVEL") or "").strip().upper()
+    if val in ("LOW", "MODERATE", "HIGH", "SEVERE"):
+        return val
+    return "MODERATE"
+
+
 # ---------------------------------------------------------------------------
 # Models
 # ---------------------------------------------------------------------------
@@ -455,14 +467,21 @@ class AlertEvaluateIn(BaseModel):
         None,
         description="Defaults to ``city`` so subscribers in that municipality are targeted.",
     )
-    min_level: AlertLevel = Field(
-        AlertLevel.MODERATE,
-        description="Skip broadcast when the computed level is below this (unless forcing).",
+    min_level: Optional[AlertLevel] = Field(
+        None,
+        description="Skip broadcast when computed level is below this. Defaults to DEFAULT_ALERT_MIN_LEVEL env or MODERATE.",
     )
     force: bool = Field(
         False,
         description="Ignore cooldown window (still respects min_level unless you lower it).",
     )
+
+    @model_validator(mode="after")
+    def _apply_env_default_min_level(self) -> "AlertEvaluateIn":
+        if self.min_level is None:
+            level_str = _default_alert_min_level_from_env()
+            self.min_level = AlertLevel(level_str)
+        return self
 
 
 class HeatEvaluateIn(AlertEvaluateIn):

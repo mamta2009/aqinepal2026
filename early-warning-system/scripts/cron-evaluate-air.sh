@@ -55,7 +55,7 @@ if [[ -z "${API_KEY}" ]]; then
   exit 1
 fi
 
-MIN_LEVEL="${MIN_LEVEL:-MODERATE}"
+MIN_LEVEL="${MIN_LEVEL:-${DEFAULT_ALERT_MIN_LEVEL:-MODERATE}}"
 RECIPIENT_TYPE="${RECIPIENT_TYPE:-all}"
 
 CITIES=(Kathmandu Pokhara Bharatpur Birgunj Biratnagar Janakpur Nepalgunj Dhangadhi)
