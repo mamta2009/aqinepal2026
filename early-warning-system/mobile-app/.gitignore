@@ -40,7 +40,7 @@ yarn-error.*
 example
 
 # generated native folders
-/ios
+# /ios
 # /android
 
 secret/*
