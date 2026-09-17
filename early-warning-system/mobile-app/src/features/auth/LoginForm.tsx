@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
+import { useRouter } from "expo-router";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -32,6 +33,7 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onLoggedIn }: LoginFormProps) {
+  const router = useRouter();
   const setSession = useAuthStore((s) => s.setSession);
   const [mode, setMode] = useState<"password" | "otp">("password");
   const [verifyOpen, setVerifyOpen] = useState(false);
@@ -290,19 +292,36 @@ export function LoginForm({ onLoggedIn }: LoginFormProps) {
         )}
       </View>
 
+      <View className="gap-2">
+        <Text className="text-sm leading-5 text-muted">
+          New here? Register first, then use the activation code from your email
+          or SMS.
+        </Text>
+        <PrimaryButton
+          label="Register for alerts"
+          variant="secondary"
+          onPress={() => router.push("/register")}
+        />
+      </View>
+
       <View className="overflow-hidden rounded-2xl border border-border bg-white">
         <Pressable
           accessibilityRole="button"
           accessibilityState={{ expanded: verifyOpen }}
           onPress={() => setVerifyOpen((v) => !v)}
           className="min-h-11 flex-row items-center justify-between px-4 py-3.5 active:opacity-80">
-          <Text className="font-extrabold text-ink">
-            Verify a new registration
+          <Text className="flex-1 pr-2 font-extrabold text-ink">
+            Already registered? Enter your activation code
           </Text>
           <Text className="text-lg text-muted">{verifyOpen ? "▾" : "▸"}</Text>
         </Pressable>
         {verifyOpen ? (
           <View className="border-t border-border px-4 pb-4 pt-3">
+            <Text className="mb-3 text-sm leading-5 text-muted">
+              Use this only if you already signed up and need to enter the email
+              or SMS code that activates your account. This is not the
+              registration form.
+            </Text>
             <Controller
               control={signupForm.control}
               name="email"
@@ -324,7 +343,7 @@ export function LoginForm({ onLoggedIn }: LoginFormProps) {
               name="verification_code"
               render={({ field: { value, onChange }, fieldState }) => (
                 <AuthTextField
-                  label="Signup verification code"
+                  label="Activation code from email or SMS"
                   value={value}
                   onChangeText={onChange}
                   error={fieldState.error?.message}
@@ -335,8 +354,8 @@ export function LoginForm({ onLoggedIn }: LoginFormProps) {
             <PrimaryButton
               label={
                 signupVerifyMutation.isPending
-                  ? "Verifying…"
-                  : "Verify registration"
+                  ? "Activating…"
+                  : "Activate account"
               }
               variant="action"
               disabled={signupVerifyMutation.isPending}

@@ -113,9 +113,9 @@ export function SiteHeader() {
           ) : (
             <>
               <Link
-                href="/users/profile/"
+                href="/login/"
                 aria-current={
-                  pathname === "/users" || pathname.startsWith("/users/")
+                  pathname === "/login" || pathname.startsWith("/login/")
                     ? "page"
                     : undefined
                 }

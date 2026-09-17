@@ -1,10 +1,6 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, CardKicker } from "@/components/ui/card";
 import { useAccountMutation } from "@/hooks/use-account";
 import {
@@ -22,6 +18,10 @@ import {
   type OtpRequestValues,
   type VerificationValues,
 } from "@/lib/validation/account";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 const inputClass =
   "min-h-11 w-full rounded-xl border border-border-strong bg-white px-3 text-ink outline-none focus:border-forest focus:ring-3 focus:ring-forest/15";
@@ -266,10 +266,23 @@ export function AccountAuthPanel({ onAuthenticated }: { onAuthenticated: () => v
         )}
       </Card>
 
+      <div className="flex max-w-2xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-ink-muted">
+          New here? Register first, then use the activation code from your email or SMS.
+        </p>
+        <ButtonLink href="/registration/" variant="secondary" className="shrink-0">
+          Register for alerts
+        </ButtonLink>
+      </div>
+
       <details className="max-w-2xl rounded-2xl border border-border bg-white p-5">
         <summary className="cursor-pointer font-black text-ink">
-          Verify a new registration
+          Already registered? Enter your activation code
         </summary>
+        <p className="mt-3 text-sm text-ink-muted">
+          Use this only if you already signed up and need to enter the email or
+          SMS code that activates your account. This is not the registration form.
+        </p>
         <form
           className="mt-4 grid gap-3"
           onSubmit={verifyForm.handleSubmit((values) => verify.mutate(values))}
@@ -279,7 +292,7 @@ export function AccountAuthPanel({ onAuthenticated }: { onAuthenticated: () => v
             <input className={inputClass} type="email" {...verifyForm.register("email")} />
           </label>
           <label className={labelClass}>
-            Signup verification code
+            Activation code from email or SMS
             <input
               className={inputClass}
               inputMode="numeric"
@@ -288,7 +301,7 @@ export function AccountAuthPanel({ onAuthenticated }: { onAuthenticated: () => v
             />
           </label>
           <Button type="submit" disabled={verify.isPending}>
-            Verify registration
+            Activate account
           </Button>
         </form>
       </details>

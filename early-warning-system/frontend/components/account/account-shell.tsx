@@ -1,8 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { LogOut, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,14 +16,13 @@ import {
 } from "@/hooks/use-account";
 import { accountApi, AccountApiError, type AccountProfile } from "@/lib/api/account";
 import { cn } from "@/lib/utils/cn";
-import { AccountAuthPanel } from "./account-auth-panel";
 
 export const accountNav = [
   { href: "/users/profile/", label: "Profile" },
-  { href: "/users/facilities/", label: "Facilities" },
   { href: "/users/preferences/", label: "Preferences" },
-  { href: "/users/notifications/", label: "Notifications" },
   { href: "/users/contacts/", label: "Trusted contacts" },
+  { href: "/users/facilities/", label: "Facilities" },
+  { href: "/users/notifications/", label: "Notifications" },
   { href: "/users/security/", label: "Security" },
 ] as const;
 
@@ -43,6 +43,7 @@ export function AccountShell({
   children: (ctx: AccountShellCtx) => ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const profile = useAccountProfile();
   const queryClient = useAccountQueryClient();
   const refresh = useRefreshAccount();
@@ -59,29 +60,23 @@ export function AccountShell({
     },
   });
 
-  const onAuthenticated = async () => {
-    markAccountSessionActive(queryClient);
-    await queryClient.invalidateQueries({ queryKey: ["account"] });
-  };
   const onSignedOut = () => clearAccountSession(queryClient);
 
-  if (profile.isPending) {
+  useEffect(() => {
+    if (profile.isPending || !unauthenticated) return;
+    const next = pathname?.startsWith("/") ? pathname : "/users/profile/";
+    router.replace(`/login/?next=${encodeURIComponent(next)}`);
+  }, [pathname, profile.isPending, router, unauthenticated]);
+
+  if (profile.isPending || unauthenticated) {
     return (
       <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6">
         <p
           className="rounded-2xl border border-border bg-white p-8 text-center font-bold text-ink-muted"
           role="status"
         >
-          Loading your account…
+          {unauthenticated ? "Redirecting to sign in…" : "Loading your account…"}
         </p>
-      </div>
-    );
-  }
-
-  if (unauthenticated) {
-    return (
-      <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
-        <AccountAuthPanel onAuthenticated={onAuthenticated} />
       </div>
     );
   }

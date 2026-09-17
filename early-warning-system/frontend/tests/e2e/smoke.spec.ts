@@ -103,11 +103,18 @@ test.describe("interactive public flows", () => {
 });
 
 test.describe("account and admin shells", () => {
-  test("users page shows account sign-in", async ({ page }) => {
-    await page.goto("/users");
+  test("login page shows account sign-in", async ({ page }) => {
+    await page.goto("/login/");
     await expect(
-      page.getByText(/account|sign in|Climate Compass/i).first(),
+      page.getByText(/sign in|Climate Compass/i).first(),
     ).toBeVisible();
+  });
+
+  test("users page redirects unauthenticated visitors to login", async ({
+    page,
+  }) => {
+    await page.goto("/users/");
+    await expect(page).toHaveURL(/\/login\/?/);
   });
 
   test("admin page shows PIN unlock", async ({ page }) => {

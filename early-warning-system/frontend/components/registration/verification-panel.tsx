@@ -69,7 +69,7 @@ export function VerificationPanel({
       } catch {
         // Prefill is optional if storage is blocked.
       }
-      router.push("/users/profile/");
+      router.push("/login/");
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Verification failed.";
@@ -119,7 +119,7 @@ export function VerificationPanel({
         <p className="mt-2 text-sm text-muted">
           After you register, check your inbox (and SMS/WhatsApp if selected). Paste
           that code in the verification field below, then you can{" "}
-          <Link href="/users/profile/" className="font-bold text-link underline">
+          <Link href="/login/" className="font-bold text-link underline">
             sign in
           </Link>
           .

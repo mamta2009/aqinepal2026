@@ -81,22 +81,6 @@ export default function AccountScreen() {
             </Text>
           </View>
           <LoginForm />
-          <View className="gap-3">
-            <PrimaryButton
-              label="Register for alerts"
-              variant="action"
-              onPress={() => router.push("/register")}
-            />
-            <PrimaryButton
-              label="Verify code"
-              variant="secondary"
-              onPress={() => router.push("/verify")}
-            />
-          </View>
-          <Text className="text-xs text-muted">
-            After registering, verify the code sent to your channels, then
-            sign in here.
-          </Text>
         </View>
       ) : (
         <View className="gap-4">
@@ -122,6 +106,15 @@ export default function AccountScreen() {
             facilityReportingReady={facilityReportingReady}
           />
 
+          <ChannelPreferencesForm profile={profileQuery.data} />
+
+          <AccountNavRow
+            title="Trusted contacts"
+            subtitle="People you trust for shared SMS, WhatsApp, or email alerts"
+            tone="friends"
+            onPress={() => router.push("/account/friends")}
+          />
+
           <AccountNavRow
             title="Facilities"
             subtitle="Sites you cover, PM2.5 thresholds, and preparedness actions"
@@ -129,21 +122,12 @@ export default function AccountScreen() {
             onPress={() => router.push("/account/facility-actions")}
           />
 
-          <ChannelPreferencesForm profile={profileQuery.data} />
-
           <NotificationInboxList
             entries={inboxQuery.data?.entries}
             isLoading={inboxQuery.isLoading}
             previewLimit={2}
             totalCount={inboxQuery.data?.total ?? inboxQuery.data?.count}
             showSeeMore
-          />
-
-          <AccountNavRow
-            title="Trusted contacts"
-            subtitle="People you trust for shared SMS, WhatsApp, or email alerts"
-            tone="friends"
-            onPress={() => router.push("/account/friends")}
           />
 
           <PrimaryButton
