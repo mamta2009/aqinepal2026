@@ -142,3 +142,30 @@ export async function deleteAccount(body: {
   }>("/api/auth/delete-account", body);
   return data;
 }
+
+export async function requestPasswordReset(email: string): Promise<{
+  success: boolean;
+  message?: string;
+  code_ttl_minutes?: number;
+  warnings?: string[];
+}> {
+  const { data } = await apiClient.post<{
+    success: boolean;
+    message?: string;
+    code_ttl_minutes?: number;
+    warnings?: string[];
+  }>("/api/auth/forgot-password/request", { email });
+  return data;
+}
+
+export async function confirmPasswordReset(body: {
+  email: string;
+  code: string;
+  new_password: string;
+}): Promise<{ success: boolean; message?: string }> {
+  const { data } = await apiClient.post<{
+    success: boolean;
+    message?: string;
+  }>("/api/auth/forgot-password/confirm", body);
+  return data;
+}

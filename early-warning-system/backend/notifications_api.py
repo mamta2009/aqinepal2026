@@ -330,8 +330,19 @@ class DeleteAccountConfirmIn(BaseModel):
     )
 
 
+class ForgotPasswordRequestIn(BaseModel):
+    email: EmailStr
+
+
+class ForgotPasswordConfirmIn(BaseModel):
+    email: EmailStr
+    code: str = Field(..., min_length=4, max_length=16)
+    new_password: str = Field(..., min_length=8, max_length=128)
+
+
 _ACCOUNT_DELETION_CONFIRM_PHRASE = "DELETE"
 _ACCOUNT_DELETION_CODE_TTL_MINUTES = 15
+_PASSWORD_RESET_CODE_TTL_MINUTES = 15
 
 
 class FacilityLoginEmailIn(BaseModel):
@@ -1321,6 +1332,113 @@ async def _send_facility_login_code(db: Any, doc: dict[str, Any], code: str) -> 
     except Exception as exc:  # noqa: BLE001
         logger.exception("facility login code dispatch failed: %s", exc)
         warnings.append(f"facility_login_dispatch_exception:{str(exc)[:200]}")
+    return warnings
+
+
+async def _find_contact_by_email(db: Any, email: str) -> dict[str, Any] | None:
+    """Case-tolerant contact lookup by registration email."""
+    email_key = str(email or "").strip()
+    if not email_key:
+        return None
+    doc = await db.contacts.find_one({"email": email_key})
+    if not doc and email_key != email_key.lower():
+        doc = await db.contacts.find_one({"email": email_key.lower()})
+    if not doc:
+        doc = await db.contacts.find_one(
+            {"email": {"$regex": f"^{re.escape(email_key)}$", "$options": "i"}}
+        )
+    return doc
+
+
+async def _send_password_reset_email(db: Any, doc: dict[str, Any], code: str) -> list[str]:
+    """Email-only password reset OTP with a branded HTML template."""
+    warnings: list[str] = []
+    contact_id = doc["_id"]
+    to_email = str(doc.get("email") or "").strip()
+    if not to_email:
+        warnings.append("password_reset_skipped_no_email")
+        return warnings
+    if not _sendgrid_configured():
+        warnings.append("password_reset_skipped_email_not_configured")
+        return warnings
+
+    name = str(doc.get("name") or "").strip()
+    ttl = _PASSWORD_RESET_CODE_TTL_MINUTES
+    safe_name = html.escape(name or "there")
+    safe_code = html.escape(code)
+    accent = "#1f794b"
+    body = f"""
+      <p style="margin:0 0 14px;font-size:15px;color:#374151;">Hi {safe_name},</p>
+      <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.55;">
+        We received a request to reset the password for your
+        <strong>Climate Compass</strong> registrant account. Enter the code below
+        on the forgot-password screen to choose a new password.
+      </p>
+      <p style="margin:0 0 8px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#6b7280;font-weight:700;">
+        Your reset code
+      </p>
+      <div style="margin:0 0 20px;padding:18px 16px;background:#f3faf6;border:1px solid #c6e6d4;border-radius:8px;text-align:center;">
+        <p style="margin:0;font-family:Consolas,Monaco,'Courier New',monospace;font-size:34px;letter-spacing:0.32em;font-weight:700;color:{accent};">
+          {safe_code}
+        </p>
+      </div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 18px;">
+        <tr>
+          <td style="padding:12px 14px;background:#f8fafc;border-radius:8px;border:1px solid #e5e9ef;">
+            <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#1f2933;">What to do next</p>
+            <ol style="margin:0;padding-left:18px;font-size:13px;line-height:1.55;color:#374151;">
+              <li>Open the Climate Compass forgot-password page or app screen.</li>
+              <li>Enter this code with the same email address.</li>
+              <li>Choose a new password (at least 8 characters).</li>
+            </ol>
+          </td>
+        </tr>
+      </table>
+      <p style="margin:0 0 10px;font-size:13px;color:#6b7280;line-height:1.5;">
+        This code expires in <strong>{ttl} minutes</strong>. For your security, it can be used only once.
+      </p>
+      <p style="margin:0;font-size:13px;color:#6b7280;line-height:1.5;">
+        If you did not ask to reset your password, you can safely ignore this email.
+        Your current password will stay the same.
+      </p>
+    """
+    html_content = _email_shell(
+        title="Reset your password",
+        accent=accent,
+        body_html=body,
+        footer_note=(
+            "Climate Compass password reset · Sent only to your registered email. "
+            "Never share this code with anyone."
+        ),
+    )
+    plain = (
+        f"Hi {name or 'there'},\n\n"
+        f"Use this Climate Compass password reset code: {code}\n\n"
+        f"Enter it on the forgot-password screen with your email, then choose a new password "
+        f"(at least 8 characters).\n\n"
+        f"This code expires in {ttl} minutes and can be used only once.\n"
+        f"If you did not request a reset, ignore this email — your password will not change.\n\n"
+        f"— Climate Compass\n"
+    )
+    er = await send_email(
+        to_email,
+        "Reset your Climate Compass password",
+        html_content,
+        plain_text=plain,
+    )
+    if er.get("success"):
+        await db.notification_logs.insert_one(
+            {
+                "recipient_id": str(contact_id),
+                "channel": "email",
+                "recipient": to_email,
+                "type": "password_reset",
+                "status": "sent",
+                "timestamp": datetime.utcnow(),
+            }
+        )
+    else:
+        warnings.append(f"email_password_reset_failed:{er.get('error', 'unknown')}")
     return warnings
 
 
@@ -2486,6 +2604,88 @@ async def public_delete_account_confirm(body: DeleteAccountConfirmIn):
     result = await account_deletion.delete_contact_and_related(db, cid)
     result["message"] = "Account and associated personal data deleted."
     return result
+
+
+@router.post("/api/auth/forgot-password/request")
+async def public_forgot_password_request(body: ForgotPasswordRequestIn):
+    """
+    Email a short-lived password-reset code to the registrant email only.
+    Response shape is uniform so callers cannot probe which emails exist.
+    """
+    db = db_state.require_mongo_db()
+    generic = (
+        "If this email has a Climate Compass password login, a reset code was sent by email."
+    )
+    doc = await _find_contact_by_email(db, str(body.email))
+    if doc and doc.get("password_hash") and doc.get("email"):
+        code = _verification_code()
+        expires = datetime.utcnow() + timedelta(minutes=_PASSWORD_RESET_CODE_TTL_MINUTES)
+        await db.contacts.update_one(
+            {"_id": doc["_id"]},
+            {
+                "$set": {
+                    "password_reset_code": code,
+                    "password_reset_expires_at": expires,
+                }
+            },
+        )
+        warnings = await _send_password_reset_email(db, doc, code)
+        out: dict[str, Any] = {
+            "success": True,
+            "message": generic,
+            "code_ttl_minutes": _PASSWORD_RESET_CODE_TTL_MINUTES,
+        }
+        if warnings:
+            out["warnings"] = warnings
+        return out
+    await asyncio.sleep(0.15)
+    return {
+        "success": True,
+        "message": generic,
+        "code_ttl_minutes": _PASSWORD_RESET_CODE_TTL_MINUTES,
+    }
+
+
+@router.post("/api/auth/forgot-password/confirm")
+async def public_forgot_password_confirm(body: ForgotPasswordConfirmIn):
+    """Confirm password reset with email + email OTP + new password."""
+    db = db_state.require_mongo_db()
+    doc = await _find_contact_by_email(db, str(body.email))
+    if not doc or not doc.get("password_hash"):
+        raise HTTPException(status_code=400, detail="Invalid email or code")
+    stored = doc.get("password_reset_code")
+    if not stored or stored != body.code.strip():
+        raise HTTPException(status_code=400, detail="Invalid email or code")
+    exp_at = doc.get("password_reset_expires_at")
+    if not isinstance(exp_at, datetime):
+        raise HTTPException(
+            status_code=400,
+            detail="Reset code expired — request another",
+        )
+    if datetime.utcnow() > exp_at:
+        raise HTTPException(
+            status_code=400,
+            detail="Reset code expired — request another",
+        )
+
+    await db.contacts.update_one(
+        {"_id": doc["_id"]},
+        {
+            "$set": {
+                "password_hash": registrant_auth.hash_password(body.new_password),
+            },
+            "$unset": {
+                "password_reset_code": "",
+                "password_reset_expires_at": "",
+                "session_reverification_code": "",
+                "session_reverification_expires_at": "",
+            },
+        },
+    )
+    return {
+        "success": True,
+        "message": "Password updated. You can sign in with your new password.",
+    }
 
 
 @router.patch("/api/auth/preferences")

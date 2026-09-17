@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, RefreshCw } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   useAccountMutation,
@@ -113,9 +113,6 @@ export function AccountShell({
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant="secondary" onClick={refresh}>
-              <RefreshCw size={17} aria-hidden /> Refresh
-            </Button>
             <Button
               variant="secondary"
               disabled={logout.isPending}

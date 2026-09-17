@@ -189,6 +189,14 @@ export function LoginForm({ onLoggedIn }: LoginFormProps) {
                 />
               )}
             />
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push("/forgot-password")}
+              className="mb-3 self-start active:opacity-80">
+              <Text className="text-sm font-extrabold text-forest underline">
+                Forgot password?
+              </Text>
+            </Pressable>
             <PrimaryButton
               label={
                 passwordMutation.isPending ? "Signing in…" : "Sign in"

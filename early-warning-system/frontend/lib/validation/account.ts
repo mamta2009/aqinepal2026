@@ -64,6 +64,25 @@ export const deleteAccountSchema = z.object({
   confirm: z.literal("DELETE", { error: "Type DELETE exactly." }),
 });
 
+export const forgotPasswordRequestSchema = z.object({
+  email: z.email("Enter a valid email address."),
+});
+
+export const forgotPasswordConfirmSchema = z
+  .object({
+    email: z.email("Enter a valid email address."),
+    code: z.string().min(4, "Enter the code from your email.").max(16),
+    new_password: z.string().min(8, "Use at least 8 characters.").max(128),
+    new_password_confirm: z
+      .string()
+      .min(8, "Confirm your new password.")
+      .max(128),
+  })
+  .refine((value) => value.new_password === value.new_password_confirm, {
+    message: "Passwords do not match.",
+    path: ["new_password_confirm"],
+  });
+
 export type LoginValues = z.infer<typeof loginSchema>;
 export type OtpRequestValues = z.infer<typeof otpRequestSchema>;
 export type OtpExchangeValues = z.infer<typeof otpExchangeSchema>;
@@ -72,3 +91,9 @@ export type FacilityValues = z.infer<typeof facilitySchema>;
 export type ContactValues = z.infer<typeof contactSchema>;
 export type NotifyValues = z.infer<typeof notifySchema>;
 export type DeleteAccountValues = z.infer<typeof deleteAccountSchema>;
+export type ForgotPasswordRequestValues = z.infer<
+  typeof forgotPasswordRequestSchema
+>;
+export type ForgotPasswordConfirmValues = z.infer<
+  typeof forgotPasswordConfirmSchema
+>;

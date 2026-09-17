@@ -1983,6 +1983,8 @@ def _system_discovery_payload() -> dict:
             "auth_delete_account": "POST /api/auth/delete-account",
             "auth_delete_account_request": "POST /api/auth/delete-account/request",
             "auth_delete_account_confirm": "POST /api/auth/delete-account/confirm",
+            "auth_forgot_password_request": "POST /api/auth/forgot-password/request",
+            "auth_forgot_password_confirm": "POST /api/auth/forgot-password/confirm",
             "admin_registrants": "GET/POST /api/admin/registrants; PATCH …/enrolment (facilities & cities)",
             "admin_blockchain_overview": "GET /api/admin/blockchain/overview",
             "admin_blockchain_runtime_network": "PATCH /api/admin/blockchain/runtime-network",

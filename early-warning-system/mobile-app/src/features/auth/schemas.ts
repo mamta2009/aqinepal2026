@@ -116,6 +116,33 @@ export const signupVerifySchema = z.object({
 
 export type SignupVerifyFormValues = z.infer<typeof signupVerifySchema>;
 
+export const forgotPasswordRequestSchema = z.object({
+  email: z.string().trim().email("Valid email is required"),
+});
+
+export type ForgotPasswordRequestFormValues = z.infer<
+  typeof forgotPasswordRequestSchema
+>;
+
+export const forgotPasswordConfirmSchema = z
+  .object({
+    email: z.string().trim().email("Valid email is required"),
+    code: z.string().trim().min(4, "Code is required").max(16),
+    new_password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .max(128),
+    new_password_confirm: z.string().min(8).max(128),
+  })
+  .refine((data) => data.new_password === data.new_password_confirm, {
+    message: "Passwords do not match",
+    path: ["new_password_confirm"],
+  });
+
+export type ForgotPasswordConfirmFormValues = z.infer<
+  typeof forgotPasswordConfirmSchema
+>;
+
 export const channelPrefsSchema = z.object({
   preferred_channels: z
     .array(channelSchema)

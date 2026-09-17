@@ -19,6 +19,7 @@ import {
   type VerificationValues,
 } from "@/lib/validation/account";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -183,6 +184,12 @@ export function AccountAuthPanel({ onAuthenticated }: { onAuthenticated: () => v
               />
             </label>
             <ErrorText message={loginForm.formState.errors.password?.message} />
+
+            <p className="text-sm text-ink-muted">
+              <Link href="/forgot-password/" className="font-bold text-link underline">
+                Forgot password?
+              </Link>
+            </p>
 
             {reverify ? (
               <fieldset className="grid gap-3 rounded-xl border border-warning-amber/40 bg-warning-amber/10 p-4">

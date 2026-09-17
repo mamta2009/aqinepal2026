@@ -23,6 +23,10 @@ export default function HomeStackLayout() {
       <Stack.Screen name="alerts" options={{ title: "Recent Alerts" }} />
       <Stack.Screen name="register" options={{ title: "Register" }} />
       <Stack.Screen name="verify" options={{ title: "Verify" }} />
+      <Stack.Screen
+        name="forgot-password"
+        options={{ title: "Forgot password" }}
+      />
       <Stack.Screen name="guides" options={{ title: "Guides" }} />
     </Stack>
   );

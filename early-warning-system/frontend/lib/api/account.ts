@@ -229,4 +229,20 @@ export const accountApi = {
       "/api/auth/delete-account",
       { method: "POST", body },
     ),
+  requestPasswordReset: (body: { email: string }) =>
+    accountRequest<{
+      success: boolean;
+      message?: string;
+      code_ttl_minutes?: number;
+      warnings?: string[];
+    }>("/api/auth/forgot-password/request", { method: "POST", body }),
+  confirmPasswordReset: (body: {
+    email: string;
+    code: string;
+    new_password: string;
+  }) =>
+    accountRequest<{ success: boolean; message?: string }>(
+      "/api/auth/forgot-password/confirm",
+      { method: "POST", body },
+    ),
 };
