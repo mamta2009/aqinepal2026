@@ -1336,18 +1336,17 @@ async def _send_facility_login_code(db: Any, doc: dict[str, Any], code: str) -> 
 
 
 async def _find_contact_by_email(db: Any, email: str) -> dict[str, Any] | None:
-    """Case-tolerant contact lookup by registration email."""
-    email_key = str(email or "").strip()
+    """Case-tolerant contact lookup by registration email (normalized to lowercase)."""
+    email_key = str(email or "").strip().lower()
     if not email_key:
         return None
     doc = await db.contacts.find_one({"email": email_key})
-    if not doc and email_key != email_key.lower():
-        doc = await db.contacts.find_one({"email": email_key.lower()})
-    if not doc:
-        doc = await db.contacts.find_one(
-            {"email": {"$regex": f"^{re.escape(email_key)}$", "$options": "i"}}
-        )
-    return doc
+    if doc:
+        return doc
+    # Legacy rows may still store mixed-case emails.
+    return await db.contacts.find_one(
+        {"email": {"$regex": f"^{re.escape(email_key)}$", "$options": "i"}}
+    )
 
 
 async def _send_password_reset_email(db: Any, doc: dict[str, Any], code: str) -> list[str]:
@@ -2607,65 +2606,99 @@ async def public_delete_account_confirm(body: DeleteAccountConfirmIn):
 
 
 @router.post("/api/auth/forgot-password/request")
+@router.post("/api/auth/forgot-password/request/")
 async def public_forgot_password_request(body: ForgotPasswordRequestIn):
     """
     Email a short-lived password-reset code to the registrant email only.
-    Response shape is uniform so callers cannot probe which emails exist.
+    Requires a registered account with a password login.
     """
     db = db_state.require_mongo_db()
-    generic = (
-        "If this email has a Climate Compass password login, a reset code was sent by email."
-    )
-    doc = await _find_contact_by_email(db, str(body.email))
-    if doc and doc.get("password_hash") and doc.get("email"):
-        code = _verification_code()
-        expires = datetime.utcnow() + timedelta(minutes=_PASSWORD_RESET_CODE_TTL_MINUTES)
-        await db.contacts.update_one(
-            {"_id": doc["_id"]},
-            {
-                "$set": {
-                    "password_reset_code": code,
-                    "password_reset_expires_at": expires,
-                }
-            },
+    email_norm = str(body.email).strip().lower()
+    doc = await _find_contact_by_email(db, email_norm)
+    if not doc:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "No Climate Compass account was found for that email. "
+                "Check the address or register first."
+            ),
         )
-        warnings = await _send_password_reset_email(db, doc, code)
-        out: dict[str, Any] = {
-            "success": True,
-            "message": generic,
-            "code_ttl_minutes": _PASSWORD_RESET_CODE_TTL_MINUTES,
-        }
-        if warnings:
-            out["warnings"] = warnings
-        return out
-    await asyncio.sleep(0.15)
+    if not doc.get("password_hash"):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "This email is registered but does not have a password login. "
+                "Try facility OTP sign-in, or contact support."
+            ),
+        )
+    if not str(doc.get("email") or "").strip():
+        raise HTTPException(
+            status_code=400,
+            detail="This account has no email on file, so a reset code cannot be sent.",
+        )
+
+    code = _verification_code()
+    expires = datetime.utcnow() + timedelta(minutes=_PASSWORD_RESET_CODE_TTL_MINUTES)
+    await db.contacts.update_one(
+        {"_id": doc["_id"]},
+        {
+            "$set": {
+                "password_reset_code": code,
+                "password_reset_expires_at": expires,
+                # Keep stored email lowercase for consistent future lookups.
+                "email": email_norm,
+            }
+        },
+    )
+    # Prefer the normalized address for delivery.
+    send_doc = {**doc, "email": email_norm}
+    warnings = await _send_password_reset_email(db, send_doc, code)
+    if warnings and any("failed" in w or "skipped" in w for w in warnings):
+        # Surface delivery problems so the user is not left waiting on a code that never arrives.
+        if any("not_configured" in w for w in warnings):
+            raise HTTPException(
+                status_code=503,
+                detail="Email sending is temporarily unavailable. Try again later.",
+            )
+        raise HTTPException(
+            status_code=502,
+            detail="We could not send the reset email. Try again in a few minutes.",
+        )
     return {
         "success": True,
-        "message": generic,
+        "message": "We sent a password reset code to your email. Check your inbox and spam folder.",
         "code_ttl_minutes": _PASSWORD_RESET_CODE_TTL_MINUTES,
     }
 
 
 @router.post("/api/auth/forgot-password/confirm")
+@router.post("/api/auth/forgot-password/confirm/")
 async def public_forgot_password_confirm(body: ForgotPasswordConfirmIn):
     """Confirm password reset with email + email OTP + new password."""
     db = db_state.require_mongo_db()
-    doc = await _find_contact_by_email(db, str(body.email))
+    email_norm = str(body.email).strip().lower()
+    doc = await _find_contact_by_email(db, email_norm)
     if not doc or not doc.get("password_hash"):
-        raise HTTPException(status_code=400, detail="Invalid email or code")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid email or reset code. Request a new code and try again.",
+        )
     stored = doc.get("password_reset_code")
     if not stored or stored != body.code.strip():
-        raise HTTPException(status_code=400, detail="Invalid email or code")
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid email or reset code. Request a new code and try again.",
+        )
     exp_at = doc.get("password_reset_expires_at")
     if not isinstance(exp_at, datetime):
         raise HTTPException(
             status_code=400,
-            detail="Reset code expired — request another",
+            detail="That reset code has expired. Request a new code.",
         )
     if datetime.utcnow() > exp_at:
         raise HTTPException(
             status_code=400,
-            detail="Reset code expired — request another",
+            detail="That reset code has expired. Request a new code.",
         )
 
     await db.contacts.update_one(
@@ -2673,6 +2706,7 @@ async def public_forgot_password_confirm(body: ForgotPasswordConfirmIn):
         {
             "$set": {
                 "password_hash": registrant_auth.hash_password(body.new_password),
+                "email": email_norm,
             },
             "$unset": {
                 "password_reset_code": "",

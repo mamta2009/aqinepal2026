@@ -235,14 +235,24 @@ export const accountApi = {
       message?: string;
       code_ttl_minutes?: number;
       warnings?: string[];
-    }>("/api/auth/forgot-password/request", { method: "POST", body }),
+    }>("/api/auth/forgot-password/request/", {
+      method: "POST",
+      body: { email: body.email.trim().toLowerCase() },
+    }),
   confirmPasswordReset: (body: {
     email: string;
     code: string;
     new_password: string;
   }) =>
     accountRequest<{ success: boolean; message?: string }>(
-      "/api/auth/forgot-password/confirm",
-      { method: "POST", body },
+      "/api/auth/forgot-password/confirm/",
+      {
+        method: "POST",
+        body: {
+          email: body.email.trim().toLowerCase(),
+          code: body.code,
+          new_password: body.new_password,
+        },
+      },
     ),
 };

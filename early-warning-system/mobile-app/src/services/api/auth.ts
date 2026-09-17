@@ -154,7 +154,9 @@ export async function requestPasswordReset(email: string): Promise<{
     message?: string;
     code_ttl_minutes?: number;
     warnings?: string[];
-  }>("/api/auth/forgot-password/request", { email });
+  }>("/api/auth/forgot-password/request/", {
+    email: email.trim().toLowerCase(),
+  });
   return data;
 }
 
@@ -166,6 +168,10 @@ export async function confirmPasswordReset(body: {
   const { data } = await apiClient.post<{
     success: boolean;
     message?: string;
-  }>("/api/auth/forgot-password/confirm", body);
+  }>("/api/auth/forgot-password/confirm/", {
+    email: body.email.trim().toLowerCase(),
+    code: body.code,
+    new_password: body.new_password,
+  });
   return data;
 }

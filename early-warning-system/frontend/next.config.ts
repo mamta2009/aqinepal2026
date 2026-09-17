@@ -15,6 +15,10 @@ const baseConfig: NextConfig = {
  * Proxy /api → FastAPI so the browser can use same-origin /api (cookies work).
  * Set BACKEND_PROXY_TARGET on the server (e.g. http://127.0.0.1:8010).
  * Leave NEXT_PUBLIC_API_BASE empty unless you intentionally call the API host directly.
+ *
+ * skipTrailingSlashRedirect avoids 308 /api/foo → /api/foo/, which breaks some
+ * mobile/axios clients (followed POST can become Method Not Allowed on FastAPI).
+ * Page links still use trailingSlash via next/link.
  */
 export default function createNextConfig(): NextConfig {
   const apiBase = (
@@ -25,6 +29,7 @@ export default function createNextConfig(): NextConfig {
 
   return {
     ...baseConfig,
+    skipTrailingSlashRedirect: true,
     async redirects() {
       return [
         {
