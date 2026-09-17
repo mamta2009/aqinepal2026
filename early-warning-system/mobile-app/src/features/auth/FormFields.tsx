@@ -44,6 +44,7 @@ interface AuthTextFieldProps {
   keyboardType?: 'default' | 'email-address' | 'phone-pad' | 'number-pad';
   multiline?: boolean;
   editable?: boolean;
+  onFocus?: () => void;
 }
 
 export function AuthTextField({
@@ -59,6 +60,7 @@ export function AuthTextField({
   keyboardType = 'default',
   multiline,
   editable = true,
+  onFocus,
 }: AuthTextFieldProps) {
   const [revealed, setRevealed] = useState(false);
   const isSecure = Boolean(secureTextEntry) && !(showSecureToggle && revealed);
@@ -75,6 +77,7 @@ export function AuthTextField({
           ]}
           value={value}
           onChangeText={onChangeText}
+          onFocus={onFocus}
           placeholder={placeholder}
           placeholderTextColor="#526b78"
           secureTextEntry={isSecure}

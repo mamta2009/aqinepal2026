@@ -59,6 +59,8 @@ export function TabScreen({
       edges={["top"]}>
       {scroll ? (
         <ScrollView
+          automaticallyAdjustKeyboardInsets
+          keyboardDismissMode="interactive"
           keyboardShouldPersistTaps={keyboardShouldPersistTaps}
           refreshControl={refreshControl}
           showsVerticalScrollIndicator={showsVerticalScrollIndicator}
@@ -99,6 +101,8 @@ export function StackScreen({
       edges={[]}>
       {scroll ? (
         <ScrollView
+          automaticallyAdjustKeyboardInsets
+          keyboardDismissMode="interactive"
           keyboardShouldPersistTaps={keyboardShouldPersistTaps}
           refreshControl={refreshControl}
           showsVerticalScrollIndicator={showsVerticalScrollIndicator}

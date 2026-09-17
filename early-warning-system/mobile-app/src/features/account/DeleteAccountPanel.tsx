@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Keyboard, Platform, Text, View } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
 import { AccountSectionAccent, FeatureSection } from '@/components/FeatureSection';
 import {
@@ -11,6 +11,7 @@ import { deleteAccount } from '@/services/api/auth';
 import { toApiError } from '@/services/api/client';
 import { useAuthStore } from '@/store/authStore';
 import { toastError, toastSuccess } from '@/utils/toast';
+import { BottomTabInset } from '@/constants/theme';
 
 /**
  * Danger zone: permanently delete the signed-in registrant account.
@@ -21,6 +22,28 @@ export function DeleteAccountPanel() {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [expanded, setExpanded] = useState(false);
+  const [keyboardPad, setKeyboardPad] = useState(0);
+
+  useEffect(() => {
+    if (!expanded) {
+      setKeyboardPad(0);
+      return;
+    }
+    const showEvent =
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent =
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const onShow = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardPad(
+        Math.max(0, event.endCoordinates.height - BottomTabInset),
+      );
+    });
+    const onHide = Keyboard.addListener(hideEvent, () => setKeyboardPad(0));
+    return () => {
+      onShow.remove();
+      onHide.remove();
+    };
+  }, [expanded]);
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -64,7 +87,7 @@ export function DeleteAccountPanel() {
           onPress={() => setExpanded(true)}
         />
       ) : (
-        <>
+        <View style={{ paddingBottom: keyboardPad }}>
           <Banner
             message="Permanently removes your registration, preferences, notification history, and trusted contacts. Type DELETE to confirm. This cannot be undone."
             tone="error"
@@ -108,7 +131,7 @@ export function DeleteAccountPanel() {
               }}
             />
           </View>
-        </>
+        </View>
       )}
     </FeatureSection>
   );

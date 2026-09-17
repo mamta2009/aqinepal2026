@@ -1,6 +1,13 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "expo-router";
-import { RefreshControl, Text, View } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import {
   AccountNavRow,
   ChannelPreferencesForm,
@@ -57,33 +64,58 @@ export default function AccountScreen() {
     profileQuery.data?.email?.trim() ||
     "there";
 
+  if (!isAuthenticated) {
+    return (
+      <TabScreen scroll={false}>
+        <TabChrome title="Account" subtitle="Registrant access" />
+        <KeyboardAvoidingView
+          className="flex-1"
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}>
+          <ScrollView
+            className="flex-1"
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            automaticallyAdjustKeyboardInsets
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 32, gap: 16 }}>
+            <View className="pb-1">
+              <Text className="text-xs font-extrabold uppercase tracking-widest text-forest">
+                Registrant access
+              </Text>
+              <Text className="mt-1 text-2xl font-extrabold text-ink">
+                Sign in to your clean-air account
+              </Text>
+              <Text className="mt-2 text-sm leading-5 text-muted">
+                Manage facilities, alert preferences, preparedness actions, and
+                trusted contacts. Your session is stored securely on this
+                device.
+              </Text>
+            </View>
+            <LoginForm />
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </TabScreen>
+    );
+  }
+
   return (
-    <TabScreen
-      refreshControl={
-        isAuthenticated ? (
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        ) : undefined
-      }>
+    <TabScreen scroll={false}>
       <TabChrome title="Account" subtitle="Registrant access" />
-      {!isAuthenticated ? (
-        <View className="gap-4">
-          <View className="pb-1">
-            <Text className="text-xs font-extrabold uppercase tracking-widest text-forest">
-              Registrant access
-            </Text>
-            <Text className="mt-1 text-2xl font-extrabold text-ink">
-              Sign in to your clean-air account
-            </Text>
-            <Text className="mt-2 text-sm leading-5 text-muted">
-              Manage facilities, alert preferences, preparedness actions, and
-              trusted contacts. Your session is stored securely on this
-              device.
-            </Text>
-          </View>
-          <LoginForm />
-        </View>
-      ) : (
-        <View className="gap-4">
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}>
+        <ScrollView
+          className="flex-1"
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          automaticallyAdjustKeyboardInsets
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          contentContainerStyle={{ paddingBottom: 48, gap: 16 }}>
           <View className="pb-1">
             <Text className="text-xs font-extrabold uppercase tracking-widest text-forest">
               Registrant account
@@ -139,8 +171,8 @@ export default function AccountScreen() {
           />
 
           <DeleteAccountPanel />
-        </View>
-      )}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </TabScreen>
   );
 }

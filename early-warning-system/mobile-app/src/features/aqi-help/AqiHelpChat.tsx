@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
+  Keyboard,
   Platform,
   Pressable,
   ScrollView,
@@ -11,6 +11,7 @@ import {
 } from "react-native";
 
 import { BrandColors } from "@/constants/brand";
+import { BottomTabInset, ScreenPadding } from "@/constants/theme";
 import { useAqiHelp } from "@/hooks/useAqiHelp";
 
 const SUGGESTIONS = [
@@ -19,8 +20,12 @@ const SUGGESTIONS = [
   "How do I register for alerts?",
 ] as const;
 
+/** Screen shell already clears the tab bar; subtract that from keyboard height. */
+const KEYBOARD_BOTTOM_CLEARANCE = BottomTabInset + ScreenPadding.stackBottom;
+
 export function AqiHelpChat() {
   const [question, setQuestion] = useState("");
+  const [keyboardLift, setKeyboardLift] = useState(0);
   const logRef = useRef<ScrollView>(null);
   const {
     ask,
@@ -38,6 +43,28 @@ export function AqiHelpChat() {
     logRef.current?.scrollToEnd({ animated: true });
   }, [messages, sending]);
 
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const onShow = Keyboard.addListener(showEvent, (event) => {
+      // Android uses adjustResize, so the window already shrinks.
+      if (Platform.OS === "android") {
+        setKeyboardLift(0);
+        return;
+      }
+      setKeyboardLift(
+        Math.max(0, event.endCoordinates.height - KEYBOARD_BOTTOM_CLEARANCE),
+      );
+    });
+    const onHide = Keyboard.addListener(hideEvent, () => setKeyboardLift(0));
+    return () => {
+      onShow.remove();
+      onHide.remove();
+    };
+  }, []);
+
   const unavailable =
     !metaLoading && meta && !available
       ? meta.unavailable_message || "aqiHelp is currently unavailable."
@@ -52,10 +79,7 @@ export function AqiHelpChat() {
     !sending && !unavailable && question.trim().length >= 2;
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1"
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 88 : 0}>
+    <View className="flex-1" style={{ paddingBottom: keyboardLift }}>
       {(unavailable || error) && (
         <View className="mb-2 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-2">
           <Text className="text-xs text-amber-950">{unavailable || error}</Text>
@@ -68,6 +92,7 @@ export function AqiHelpChat() {
           className="flex-1"
           contentContainerStyle={{ padding: 10, flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
           onContentSizeChange={() =>
             logRef.current?.scrollToEnd({ animated: true })
           }>
@@ -190,6 +215,6 @@ export function AqiHelpChat() {
           </View>
         </View>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
