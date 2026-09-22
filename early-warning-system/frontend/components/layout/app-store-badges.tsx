@@ -3,6 +3,8 @@ import { cn } from "@/lib/utils/cn";
 
 export const PLAY_STORE_URL =
   "https://play.google.com/store/apps/details?id=com.intelladapt.earlywarningsystem&pcampaignid=web_share";
+export const APP_STORE_URL =
+  "https://apps.apple.com/us/app/climate-compass/id6812618331";
 
 function GooglePlayMark() {
   return (
@@ -102,12 +104,24 @@ export function AppStoreBadges({
             <BadgeCopy kicker="Get it on" name="Google Play" />
           </BadgeShell>
         </a>
-        <span>
-          <BadgeShell tone={tone} className="cursor-default opacity-80">
+        <a
+          href={APP_STORE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Get Climate Compass on the App Store"
+          className="rounded-xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-forest/25 motion-safe:transition-transform motion-safe:hover:-translate-y-px"
+        >
+          <BadgeShell
+            tone={tone}
+            className={cn(
+              "opacity-100 ring-1 ring-inset",
+              tone === "dark" ? "ring-ink/10" : "ring-white/10",
+            )}
+          >
             <AppleMark className="size-7 shrink-0" />
-            <BadgeCopy kicker="Coming soon" name="App Store" />
+            <BadgeCopy kicker="Get it on" name="App Store" />
           </BadgeShell>
-        </span>
+        </a>
       </div>
     </div>
   );
