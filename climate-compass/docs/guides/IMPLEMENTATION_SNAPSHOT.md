@@ -1,6 +1,6 @@
 # Implementation snapshot (Living reference)
 
-Concise technical truth for **Climate Compass** (`early-warning-system/`) backends, env, and public API behaviour. Prefer this over older marketing summaries when wording registrations or integrations. **Rendered on site:** **`/guides/md/IMPLEMENTATION_SNAPSHOT.md`** (Markdown → HTML).
+Concise technical truth for **Climate Compass** (`climate-compass/`) backends, env, and public API behaviour. Prefer this over older marketing summaries when wording registrations or integrations. **Rendered on site:** **`/guides/md/IMPLEMENTATION_SNAPSHOT.md`** (Markdown → HTML).
 
 **Last aligned with codebase:** backend `main.py`, `admin_panel.py`, `cities_config.py`, `notification_auth.py`, `external_integrations.py`, `aq_snapshot_sync.py`, `notifications_api.py`, `twilio_notify.py`, Next.js `frontend/`, Expo `mobile-app/` (Sep 2026).
 

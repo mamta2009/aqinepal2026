@@ -1644,7 +1644,7 @@ async def blockchain_status():
     return {
         "blockchain_packaged": True,
         "blockchain_ai_zip_integrated": True,
-        "docs_path": "early-warning-system/docs/blockchain-ai/",
+        "docs_path": "climate-compass/docs/blockchain-ai/",
         "cryptographic_anchoring": "backend/blockchain_integration.py",
         "polygon_onchain_tx_logging": onchain,
         "polygon_rpc_connected": rpc.get("connected"),
@@ -1679,7 +1679,7 @@ async def blockchain_integration_info():
         },
         "extended_ai_models_reference_only": "docs/blockchain-ai/reference_ai_models_extended.py",
         "guides": [
-            "early-warning-system/docs/blockchain-ai/INTEGRATION_GUIDE.md",
+            "climate-compass/docs/blockchain-ai/INTEGRATION_GUIDE.md",
         ],
         "env_polygon_tx": {
             "POLYGON_ONCHAIN_LOG": "true | 1 | yes to load on-chain logger at startup",

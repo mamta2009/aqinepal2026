@@ -15,7 +15,7 @@ A professional, conversion-focused landing page that:
 
 ## FILE LOCATION
 
-Production landing page in this repo: **`early-warning-system/landing/landing.html`**. The FastAPI app serves it at **`/`** when that file exists (`main.py`), with the dashboard at **`/frontend/index.html`**.
+Production landing page in this repo: **`climate-compass/landing/landing.html`**. The FastAPI app serves it at **`/`** when that file exists (`main.py`), with the dashboard at **`/frontend/index.html`**.
 
 Older copies that expected `landing.html` inside `frontend/` are obsolete for this tree.
 
@@ -26,7 +26,7 @@ Older copies that expected `landing.html` inside `frontend/` are obsolete for th
 ### Option 1: Local development
 
 ```bash
-cd early-warning-system/backend
+cd climate-compass/backend
 python -m uvicorn main:app --reload
 ```
 
@@ -262,7 +262,7 @@ Replace `GA_MEASUREMENT_ID` with your Google Analytics ID.
 ### File Structure After Integration:
 
 ```
-early-warning-system/
+climate-compass/
 ├── frontend/
 │   ├── landing.html        ← Landing page
 │   ├── index.html          ← Dashboard
@@ -291,7 +291,7 @@ early-warning-system/
 ### Step 1: Add landing.html to GitHub
 
 ```bash
-cd early-warning-system/frontend
+cd climate-compass/frontend
 # landing.html is already here
 
 git add landing.html

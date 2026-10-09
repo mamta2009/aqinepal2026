@@ -16,7 +16,7 @@ module.exports = {
   apps: [
     {
       name: "climate-compass-nextjs",
-      cwd: "/home/intelladapt/aqinepal2026/early-warning-system/frontend",
+      cwd: "/home/intelladapt/aqinepal2026/climate-compass/frontend",
       script: "npm",
       args: "start",
       exec_mode: "fork",

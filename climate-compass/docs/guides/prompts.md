@@ -2,7 +2,7 @@
 
 These were the suggested prompts vs what **Climate Compass** implements now.
 
-**Resolver order, env variables, and provenance fields:** see **`early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md`**.
+**Resolver order, env variables, and provenance fields:** see **`climate-compass/docs/guides/IMPLEMENTATION_SNAPSHOT.md`**.
 
 ### For `backend/main.py`
 
@@ -42,7 +42,7 @@ curl http://localhost:8000/api/dhis2/system-check
 
 | Prompt | Status |
 |--------|--------|
-| `health_data_generator.py` | **Done** — `HealthDataGenerator` lives in **`early-warning-system/backend/health_data_generator.py`** and is imported by `main.py`. |
+| `health_data_generator.py` | **Done** — `HealthDataGenerator` lives in **`climate-compass/backend/health_data_generator.py`** and is imported by `main.py`. |
 | `blockchain_integration.py` | **Done** — Polygon RPC ping, payload anchoring, optional signing (**`POLYGON_PRIVATE_KEY`**). |
 | `ai_models.py` | **Done** — `predict_week_trend()` (**sklearn linear regression** when available, else moving average); exposed at **`GET /api/models/predict/week/{city}`** and used by the dashboard forecast strip. |
 
@@ -53,7 +53,7 @@ curl http://localhost:8000/api/dhis2/system-check
 ### "Module not found"
 
 ```bash
-cd early-warning-system/backend && source .venv/bin/activate
+cd climate-compass/backend && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -64,7 +64,7 @@ Pin is in **`requirements.txt`**: **`setuptools>=69,<82`**. Re-run `pip install 
 ### Port 8000 in use / clean restart
 
 ```bash
-cd early-warning-system && ./scripts/stop.sh && ./scripts/start.sh
+cd climate-compass && ./scripts/stop.sh && ./scripts/start.sh
 ```
 
 Or: `python -m uvicorn main:app --reload --port 8001` from `backend/`.
@@ -81,7 +81,7 @@ Copy **`config/.env.example` → `config/.env`** and replace placeholders with *
 
 ## PACKAGE REMINDERS
 
-- Run **`python backend/main.py`** or **`./scripts/start.sh`** from **`early-warning-system`**.
+- Run **`python backend/main.py`** or **`./scripts/start.sh`** from **`climate-compass`**.
 - Dashboard: **`http://localhost:8000/frontend/index.html`**.
 
 ---

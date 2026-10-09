@@ -10,7 +10,7 @@
 
 ```bash
 git clone https://github.com/mamta2009/aqinepal2026.git
-cd aqinepal2026/early-warning-system
+cd aqinepal2026/climate-compass
 ```
 
 Documentation for behaviour and APIs: **[`IMPLEMENTATION_SNAPSHOT.md`](IMPLEMENTATION_SNAPSHOT.md)** (this folder).  
@@ -18,7 +18,7 @@ Hands-on Cursor walkthrough: **[`CURSOR_SETUP_GUIDE.md`](CURSOR_SETUP_GUIDE.md)*
 
 ### Optional ZIP delivery
 
-An **`early-warning-system.zip`** (if someone shared one) mirrors the **`early-warning-system/`** folder: backend, **`landing/`** (marketing **`/guides`** via **`guides.html`**, **`/registration`**, **`/admin/dashboard`**), **`frontend/`**, **`config/`**, **`docs/`** (guides under **`docs/guides/`**).
+An **`climate-compass.zip`** (if someone shared one) mirrors the **`climate-compass/`** folder: backend, **`landing/`** (marketing **`/guides`** via **`guides.html`**, **`/registration`**, **`/admin/dashboard`**), **`frontend/`**, **`config/`**, **`docs/`** (guides under **`docs/guides/`**).
 
 ---
 
@@ -26,7 +26,7 @@ An **`early-warning-system.zip`** (if someone shared one) mirrors the **`early-w
 
 ```bash
 git clone https://github.com/mamta2009/aqinepal2026.git
-cd aqinepal2026/early-warning-system/backend
+cd aqinepal2026/climate-compass/backend
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env
@@ -52,8 +52,8 @@ Use **`http://127.0.0.1:8000`** in the browser (avoid **`http://0.0.0.0:8000`** 
 
 | File                                                       | Purpose                                                                     |
 | ---------------------------------------------------------- | --------------------------------------------------------------------------- |
-| [`README.md`](../../../README.md)                          | Repository root — points into `early-warning-system/`                       |
-| [`../../README.md`](../../README.md)                       | App **`early-warning-system/README.md`** stub (links here)                  |
+| [`README.md`](../../../README.md)                          | Repository root — points into `climate-compass/`                       |
+| [`../../README.md`](../../README.md)                       | App **`climate-compass/README.md`** stub (links here)                  |
 | [`DATA_FETCHING.md`](DATA_FETCHING.md)                 | How live air / heat / weather is fetched and used by the UI         |
 | [`ALERTS_AND_NOTIFICATIONS.md`](ALERTS_AND_NOTIFICATIONS.md) | When SMS / email / WhatsApp evaluate broadcasts fire            |
 | [`IMPLEMENTATION_SNAPSHOT.md`](IMPLEMENTATION_SNAPSHOT.md) | Canonical APIs, env, Mongo, AQ resolver, **`/api/admin/*`**                 |
@@ -82,7 +82,7 @@ Older “`/outputs`” or duplicate guides elsewhere may exist from packaging hi
 ## 📋 Repository layout (app tree)
 
 ```
-early-warning-system/
+climate-compass/
 ├── backend/           ← main.py, admin_panel.py, notifications_api.py, …
 ├── landing/           ← landing.html, guides.html, registration_portal.html, admin_dashboard.html
 ├── frontend/index.html
@@ -111,7 +111,7 @@ curl "http://127.0.0.1:8000/api/air-quality/current?city=Kathmandu"
 ## 📤 Deploy
 
 1. Repo is already on GitHub: **mamta2009/aqinepal2026**. Fork or mirror to a **private** repo if you must exclude materials under **`docs-private/`** from publication.
-2. Connect **Render** (or another host): run **`uvicorn`** from **`early-warning-system/backend`** with production env vars. See **`early-warning-system/render.yaml`** as a starting blueprint.
+2. Connect **Render** (or another host): run **`uvicorn`** from **`climate-compass/backend`** with production env vars. See **`climate-compass/render.yaml`** as a starting blueprint.
 3. Hosting cost depends on provider and tiers — size the service to traffic and MongoDB separately.
 
 ---

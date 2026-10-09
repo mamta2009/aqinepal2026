@@ -1,6 +1,6 @@
 # Private / partner-restricted documentation (Climate Compass)
 
-Markdown and exports under **`early-warning-system/docs-private/`** are **internal** UNICEF/strategy drafts for **Climate Compass**. They intentionally **do not** appear as links on the public **Guides** page (`GET /guides`).
+Markdown and exports under **`climate-compass/docs-private/`** are **internal** UNICEF/strategy drafts for **Climate Compass**. They intentionally **do not** appear as links on the public **Guides** page (`GET /guides`).
 
 ## How teammates read them safely
 
@@ -19,7 +19,7 @@ Technical **diagrams** (non-confidential SVG) stay in **`docs/tech/`** and are e
 Before exporting claims to UNICEF portals, reconcile wording with **`../docs/guides/IMPLEMENTATION_SNAPSHOT.md`** (resolver order, synthetic data, **`provenance.deployment_role`**). Export scripts:
 
 ```bash
-./early-warning-system/scripts/export-unicef-strategy.sh
+./climate-compass/scripts/export-unicef-strategy.sh
 ```
 
 These files remain in **git**: if your GitHub repo is public, recognise that clones still contain **`docs-private/`** — confidentiality is organisational, not URL-hiding alone.

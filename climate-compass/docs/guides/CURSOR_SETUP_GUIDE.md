@@ -1,16 +1,16 @@
 # Climate Compass — complete package guide (Cursor)
 
-You can work from a **git clone** (recommended) or from an **`early-warning-system.zip`** extract. Both contain the same **Climate Compass** application tree under **`early-warning-system/`**.
+You can work from a **git clone** (recommended) or from an **`climate-compass.zip`** extract. Both contain the same **Climate Compass** application tree under **`climate-compass/`**.
 
 **Public repository:** [https://github.com/mamta2009/aqinepal2026](https://github.com/mamta2009/aqinepal2026)  
 **Technical truth:** [`IMPLEMENTATION_SNAPSHOT.md`](IMPLEMENTATION_SNAPSHOT.md) (APIs/env) and [`DATA_FETCHING.md`](DATA_FETCHING.md) (live air/heat/weather flow). Headline air is **WAQI-station-first** (WeatherAPI for heat/rain and air fallback).
 
 ---
 
-## 📦 What's in `early-warning-system/`
+## 📦 What's in `climate-compass/`
 
 ```
-early-warning-system/
+climate-compass/
 ├── backend/
 │   ├── main.py                 ← FastAPI app; mounts /frontend, landing pages, /guides, /admin/dashboard
 │   ├── admin_panel.py          ← Operator JSON APIs under /api/admin/*
@@ -51,13 +51,13 @@ early-warning-system/
 ### Step 1a: Clone from GitHub (recommended)
 ```bash
 git clone https://github.com/mamta2009/aqinepal2026.git
-cd aqinepal2026/early-warning-system   # or open repo root and cd into early-warning-system/
+cd aqinepal2026/climate-compass   # or open repo root and cd into climate-compass/
 ```
 
 ### Step 1b: Or extract ZIP
 ```bash
-unzip early-warning-system.zip
-cd early-warning-system
+unzip climate-compass.zip
+cd climate-compass
 ```
 
 ### Step 2: Open in Cursor
@@ -68,7 +68,7 @@ cursor .
 
 ### Step 3: Cursor sees (typical)
 ```
-📁 early-warning-system
+📁 climate-compass
   📁 backend
     📄 main.py, admin_panel.py, notifications_api.py …
     📄 requirements.txt, .env.example
@@ -101,7 +101,7 @@ pip install -r requirements.txt
 
 Use **Python 3.10+** (3.12 OK). If `pip install` fails, upgrade pip: `pip install -U pip`.
 
-**Important:** `requirements.txt` lives in **`early-warning-system/backend/`**, not the repo root. If you run `pip install -r requirements.txt` from `Project_1_aqi/` you will get “file not found.” Prefer the **project venv** (`backend/.venv`) so other global packages (for example `google-genai`) do not conflict with pinned versions.
+**Important:** `requirements.txt` lives in **`climate-compass/backend/`**, not the repo root. If you run `pip install -r requirements.txt` from `Project_1_aqi/` you will get “file not found.” Prefer the **project venv** (`backend/.venv`) so other global packages (for example `google-genai`) do not conflict with pinned versions.
 
 After install, keep using the same interpreter for the API: `backend/.venv/bin/python` or activate the venv before `uvicorn`.
 
@@ -181,7 +181,7 @@ python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 
 When **`MONGODB_URL`** is configured, startup ensures indexes for contact registration and notification logs. Twilio and Resend are optional; configure only the channels you use.
 
-**Diagram (code-aligned):** [`early-warning-system/docs/tech/NOTIFICATION_FLOW_DIAGRAM.svg`](early-warning-system/docs/tech/NOTIFICATION_FLOW_DIAGRAM.svg) — also embedded on **`/guides`** (*Notification & alert flow*). **Evaluate:** **`POST /api/alerts/evaluate`** pulls live AQ for a **`CITIES_CONFIG`** city and broadcasts when **`min_level`** and cooldown allow (cron-friendly). **Alternate:** your job may call **`/api/air-quality/current`** and then **`POST /api/alerts/broadcast`**. **Daily cases:** optional spike→broadcast after **`POST /api/health/cases/daily-report`** when daily surge env vars are enabled (see **Notifications** env bullets).
+**Diagram (code-aligned):** [`climate-compass/docs/tech/NOTIFICATION_FLOW_DIAGRAM.svg`](climate-compass/docs/tech/NOTIFICATION_FLOW_DIAGRAM.svg) — also embedded on **`/guides`** (*Notification & alert flow*). **Evaluate:** **`POST /api/alerts/evaluate`** pulls live AQ for a **`CITIES_CONFIG`** city and broadcasts when **`min_level`** and cooldown allow (cron-friendly). **Alternate:** your job may call **`/api/air-quality/current`** and then **`POST /api/alerts/broadcast`**. **Daily cases:** optional spike→broadcast after **`POST /api/health/cases/daily-report`** when daily surge env vars are enabled (see **Notifications** env bullets).
 
 **Representative routes** (when **`NOTIFICATION_API_KEY`** is set, routes marked 🔒 require Bearer or `X-API-Key`):
 
@@ -330,7 +330,7 @@ You should see:
 
 ## ✅ SUCCESS CHECKLIST
 
-- [ ] Repo cloned **or** ZIP extracted (`early-warning-system/` as app root)
+- [ ] Repo cloned **or** ZIP extracted (`climate-compass/` as app root)
 - [ ] Opened in Cursor
 - [ ] Backend venv + `pip install -r requirements.txt`
 - [ ] `uvicorn` running (no startup errors), browser uses **`127.0.0.1:8000`** (not **`0.0.0.0`**)
@@ -348,12 +348,12 @@ You should see:
 ## 🎯 NEXT STEPS IN CURSOR
 
 ### Option 1: Deploy to Render (30 minutes)
-The application source already lives at **[github.com/mamta2009/aqinepal2026](https://github.com/mamta2009/aqinepal2026)**. For a fresh machine: clone, set env on the host, deploy `early-warning-system/backend` with `uvicorn` (see **`render.yaml`** in the repo).
+The application source already lives at **[github.com/mamta2009/aqinepal2026](https://github.com/mamta2009/aqinepal2026)**. For a fresh machine: clone, set env on the host, deploy `climate-compass/backend` with `uvicorn` (see **`render.yaml`** in the repo).
 
 ```bash
 git clone https://github.com/mamta2009/aqinepal2026.git
 cd aqinepal2026
-# Configure Render (or another host) to run from early-warning-system with your .env secrets
+# Configure Render (or another host) to run from climate-compass with your .env secrets
 ```
 
 Fork or create a **private** repo copy if you must not publish `docs-private/` or other materials — then point Render at that remote instead.
@@ -461,8 +461,8 @@ Set POLYGON_RPC_URL to a reachable endpoint or ignore for local demos
 
 ### Issue: `Could not open requirements file`
 ```
-Run pip from early-warning-system/backend/ or pass the full path:
-  pip install -r early-warning-system/backend/requirements.txt
+Run pip from climate-compass/backend/ or pass the full path:
+  pip install -r climate-compass/backend/requirements.txt
 ```
 
 ### Issue: pip “dependency conflicts” with `google-genai` / `fastapi-mail`
@@ -487,7 +487,7 @@ For production, use an approved WhatsApp sender and review Twilio/template requi
 
 ## 🚀 YOU'RE READY!
 
-**Clone** [aqinepal2026](https://github.com/mamta2009/aqinepal2026) (or extract the ZIP) → Open `early-warning-system/` in Cursor → install deps → Run `uvicorn` → Open the URLs in the table above.
+**Clone** [aqinepal2026](https://github.com/mamta2009/aqinepal2026) (or extract the ZIP) → Open `climate-compass/` in Cursor → install deps → Run `uvicorn` → Open the URLs in the table above.
 
 1. Clone or extract  
 2. Open in Cursor  
@@ -496,7 +496,7 @@ For production, use an approved WhatsApp sender and review Twilio/template requi
 5. Open **`http://127.0.0.1:8000/`** or the dashboard/guides links  
 
 From there, you can:
-- Deploy via Render (see **`early-warning-system/render.yaml`**) or another **`uvicorn` host — point it at **`github.com/mamta2009/aqinepal2026`**
+- Deploy via Render (see **`climate-compass/render.yaml`**) or another **`uvicorn` host — point it at **`github.com/mamta2009/aqinepal2026`**
 - Modify with Cursor's AI
 - Add real data when ready
 - Show UNICEF a working system
@@ -506,8 +506,8 @@ From there, you can:
 ## 📁 FILE LOCATIONS
 
 ```
-📥 Source: git clone https://github.com/mamta2009/aqinepal2026.git (or early-warning-system.zip)
-📂 App root: aqinepal2026/early-warning-system/ (or unzip folder)
+📥 Source: git clone https://github.com/mamta2009/aqinepal2026.git (or climate-compass.zip)
+📂 App root: aqinepal2026/climate-compass/ (or unzip folder)
 🎯 Open: Cursor → that folder (contains backend/, landing/, frontend/)
 ▶️ Run: cd backend && source .venv/bin/activate && python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 🌐 Landing:    http://127.0.0.1:8000/
@@ -515,14 +515,14 @@ From there, you can:
 📝 Register:   http://127.0.0.1:8000/registration
 📊 Dashboard:  http://127.0.0.1:8000/frontend/index.html
 🔧 Admin:      http://127.0.0.1:8000/admin/dashboard
-📤 Deploy:      Render (see early-warning-system/render.yaml) or any uvicorn-capable host
+📤 Deploy:      Render (see climate-compass/render.yaml) or any uvicorn-capable host
 ```
 
 ---
 
 ## ⏱️ TIMELINE
 
-- **Right now**: Clone or unzip; open **`early-warning-system/`** in Cursor (~2 min)
+- **Right now**: Clone or unzip; open **`climate-compass/`** in Cursor (~2 min)
 - **Next 5 min**: Run backend, test API
 - **Next 5 min**: Open dashboard, verify it works
 - **Next 30 min**: (Optional) Deploy to Render
@@ -534,7 +534,7 @@ From there, you can:
 
 ## FINAL CHECKLIST
 
-- ✅ Repo cloned or ZIP extracted (`early-warning-system/` visible)
+- ✅ Repo cloned or ZIP extracted (`climate-compass/` visible)
 - ✅ `backend/.venv` + `pip install -r requirements.txt`
 - ✅ `backend/.env` from `.env.example` (never commit `.env`)
 - ✅ `uvicorn` running on `127.0.0.1:8000`

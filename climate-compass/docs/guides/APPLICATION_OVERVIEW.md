@@ -78,8 +78,8 @@ curl http://127.0.0.1:8000/api/cities
 
 ## Repository layout — documentation
 
-Public markdown is under **`early-warning-system/docs/guides/`**. Private partner drafts remain in **`early-warning-system/docs-private/`** (browse only via admin API / admin UI).
+Public markdown is under **`climate-compass/docs/guides/`**. Private partner drafts remain in **`climate-compass/docs-private/`** (browse only via admin API / admin UI).
 
-Diagrams (**SVG**) live in **`early-warning-system/docs/tech/`** (`/guides/media/tech/` on the wire).
+Diagrams (**SVG**) live in **`climate-compass/docs/tech/`** (`/guides/media/tech/` on the wire).
 
 See **[README.md](./README.md)** in this folder for a full guides index table. For live provider order and UI seeding, read **[DATA_FETCHING.md](./DATA_FETCHING.md)**.

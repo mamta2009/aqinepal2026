@@ -8,13 +8,13 @@
 
 | Path | Purpose |
 |------|---------|
-| [`early-warning-system/`](early-warning-system/) | **Application root** — run from `early-warning-system/backend/`; [`README.md`](early-warning-system/README.md) is the product entry |
-| [`early-warning-system/docs/guides/`](early-warning-system/docs/guides/README.md) | **All non-private Markdown** (data fetching, implementation snapshot, Cursor guide, prompts, blockchain notes) |
-| [`early-warning-system/docs/guides/DATA_FETCHING.md`](early-warning-system/docs/guides/DATA_FETCHING.md) | **How live air / heat / weather is fetched** and how UIs use AQI vs PM2.5 |
-| [`early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md`](early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md) | **Canonical technical reference** (APIs, env load order, Mongo, AQ resolver, admin routes) |
-| [`early-warning-system/frontend/`](early-warning-system/frontend/) | Next.js static UI (dashboard, landing, guides) |
-| [`early-warning-system/mobile-app/`](early-warning-system/mobile-app/) | Expo / React Native Climate Compass app |
-| [`early-warning-system/docs-private/`](early-warning-system/docs-private/) | Partner-restricted drafts — `docs-private/` Markdown is not linked on `/guides`; preview from **Admin → Private documentation** (requires `NOTIFICATION_API_KEY`). |
+| [`climate-compass/`](climate-compass/) | **Application root** — run from `climate-compass/backend/`; [`README.md`](climate-compass/README.md) is the product entry |
+| [`climate-compass/docs/guides/`](climate-compass/docs/guides/README.md) | **All non-private Markdown** (data fetching, implementation snapshot, Cursor guide, prompts, blockchain notes) |
+| [`climate-compass/docs/guides/DATA_FETCHING.md`](climate-compass/docs/guides/DATA_FETCHING.md) | **How live air / heat / weather is fetched** and how UIs use AQI vs PM2.5 |
+| [`climate-compass/docs/guides/IMPLEMENTATION_SNAPSHOT.md`](climate-compass/docs/guides/IMPLEMENTATION_SNAPSHOT.md) | **Canonical technical reference** (APIs, env load order, Mongo, AQ resolver, admin routes) |
+| [`climate-compass/frontend/`](climate-compass/frontend/) | Next.js static UI (dashboard, landing, guides) |
+| [`climate-compass/mobile-app/`](climate-compass/mobile-app/) | Expo / React Native Climate Compass app |
+| [`climate-compass/docs-private/`](climate-compass/docs-private/) | Partner-restricted drafts — `docs-private/` Markdown is not linked on `/guides`; preview from **Admin → Private documentation** (requires `NOTIFICATION_API_KEY`). |
 
 ## Headline air quality (current behaviour)
 
@@ -23,12 +23,12 @@
 - Broken WAQI `/feed/` paths are skipped so clients are not delayed
 - UI charts and compare views prefer **station AQI** when PM2.5 µg/m³ is not reported; WeatherAPI remains preferred for **heat / rain**
 
-See [`DATA_FETCHING.md`](early-warning-system/docs/guides/DATA_FETCHING.md) and [`IMPLEMENTATION_SNAPSHOT.md`](early-warning-system/docs/guides/IMPLEMENTATION_SNAPSHOT.md) for env keys and route detail.
+See [`DATA_FETCHING.md`](climate-compass/docs/guides/DATA_FETCHING.md) and [`IMPLEMENTATION_SNAPSHOT.md`](climate-compass/docs/guides/IMPLEMENTATION_SNAPSHOT.md) for env keys and route detail.
 
 ## Quick start
 
 ```bash
-cd early-warning-system/backend
+cd climate-compass/backend
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env
@@ -40,8 +40,8 @@ Then open `http://127.0.0.1:8000/`, `http://127.0.0.1:8000/guides`, `http://127.
 
 ## Production (Render)
 
-Deploy **FastAPI + uvicorn** from `early-warning-system/backend` using the blueprint `[early-warning-system/render.yaml](early-warning-system/render.yaml)`. Configure secrets and integration keys in the Render dashboard (`MONGODB_URL` / `DATABASE_URL`, `WAQI_TOKEN`, WeatherAPI, Twilio, etc.). One service URL serves **API routes, HTML pages (**`/`**,** `/guides`**,** `/users`**, …), and static** mounts (`/frontend`, `/landing-assets`, …).
+Deploy **FastAPI + uvicorn** from `climate-compass/backend` using the blueprint `[climate-compass/render.yaml](climate-compass/render.yaml)`. Configure secrets and integration keys in the Render dashboard (`MONGODB_URL` / `DATABASE_URL`, `WAQI_TOKEN`, WeatherAPI, Twilio, etc.). One service URL serves **API routes, HTML pages (**`/`**,** `/guides`**,** `/users`**, …), and static** mounts (`/frontend`, `/landing-assets`, …).
 
-**Python version:** Render’s default for **new** services can be **3.14.x**, which breaks `pip install scikit-learn` (no wheels; Cython compile fails). Set `PYTHON_VERSION` in the dashboard to a full **3.12.x** patch (for example `3.12.11`) — or rely on `[.python-version](.python-version)` and `[early-warning-system/backend/.python-version](early-warning-system/backend/.python-version)` in this repo. If you use **Blueprint**, the `PYTHON_VERSION` in `render.yaml` applies once the blueprint is synced.
+**Python version:** Render’s default for **new** services can be **3.14.x**, which breaks `pip install scikit-learn` (no wheels; Cython compile fails). Set `PYTHON_VERSION` in the dashboard to a full **3.12.x** patch (for example `3.12.11`) — or rely on `[.python-version](.python-version)` and `[climate-compass/backend/.python-version](climate-compass/backend/.python-version)` in this repo. If you use **Blueprint**, the `PYTHON_VERSION` in `render.yaml` applies once the blueprint is synced.
 
 Secrets: `backend/.env` is ignored — never commit it.
