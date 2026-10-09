@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { Nunito_Sans, Outfit } from "next/font/google";
+import { GoogleTag } from "@/components/analytics/google-tag";
 import { Providers } from "@/components/providers";
 import { ChromeShell } from "@/components/layout/chrome-shell";
 import "./globals.css";
@@ -45,6 +46,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${nunito.variable} ${outfit.variable}`}>
       <body className="flex min-h-screen flex-col antialiased">
+        <GoogleTag />
         <Providers>
           <a className="skip-link" href="#main-content">
             Skip to content
