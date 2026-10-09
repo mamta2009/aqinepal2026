@@ -34,9 +34,9 @@ Broken WAQI `/feed/` paths are skipped. Dashboard and mobile charts/compare/fore
 ```bash
 # Terminal 1 — API (and UI once exported)
 cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
 cp .env.example .env
+python3.12 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
 python -m uvicorn main:app --reload --host 127.0.0.1 --port 8000
 
 # Terminal 2 — build (or rebuild) the static UI

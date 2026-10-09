@@ -27,6 +27,33 @@ npm run dev
 
 Browser calls go straight to FastAPI `/api/*` with cookies (`credentials: "include"`).
 
+## Server (PM2)
+
+`ecosystem.config.js` runs `npm start` as the `climate-compass-nextjs` process. Production listens on port **3012**.
+
+Set build-time env before the build (`.env.production` or the shell). Leave `NEXT_PUBLIC_API_BASE` unset so the browser uses same-origin `/api`.
+
+```bash
+cd /home/intelladapt/aqinepal2026/climate-compass/frontend
+
+# .env.production
+# NEXT_PUBLIC_SITE_URL=https://ews.intelladapt.ai
+# BACKEND_PROXY_TARGET=http://127.0.0.1:8010
+
+npm install
+npm run build
+pm2 start ecosystem.config.js
+pm2 save
+```
+
+Useful follow-ups:
+
+```bash
+pm2 status climate-compass-nextjs
+pm2 logs climate-compass-nextjs
+pm2 restart climate-compass-nextjs
+```
+
 ## Auth
 
 Registrant and facility sessions use HttpOnly cookie `cc_registrant_token` set by

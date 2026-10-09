@@ -7,7 +7,7 @@
  *   #   NEXT_PUBLIC_SITE_URL=https://ews.intelladapt.ai
  *   #   BACKEND_PROXY_TARGET=http://127.0.0.1:8010
  *   npm install && npm run build
- *   pm2 startOrReload ecosystem.config.js --env production
+ *   pm2 start ecosystem.config.js
  *   pm2 save
  *
  * Leave NEXT_PUBLIC_API_BASE unset so the browser uses same-origin /api.
@@ -25,10 +25,6 @@ module.exports = {
       watch: false,
       max_memory_restart: "500M",
       env: {
-        NODE_ENV: "development",
-        PORT: 3000,
-      },
-      env_production: {
         NODE_ENV: "production",
         PORT: 3012,
       },
